@@ -17,7 +17,10 @@ defmodule XestWeb.Router do
   scope "/", XestWeb do
     pipe_through :browser
 
-    live "/", PageLive, :index
+    live "/", PageLive, :index  # keep that for domain overview dashboard
+
+    get "/hello", PageController, :index
+
   end
 
   # Other scopes may use custom stacks.
