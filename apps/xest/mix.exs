@@ -36,6 +36,7 @@ defmodule Xest.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:phoenix_pubsub, "~> 2.0"}
     ]
   end
