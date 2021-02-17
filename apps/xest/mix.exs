@@ -38,7 +38,17 @@ defmodule Xest.MixProject do
     [
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:phoenix_pubsub, "~> 2.0"}
+
+      {:phoenix_pubsub, "~> 2.0"},
+
+      {:tesla, "~> 1.4.0"},
+      # optional, but recommended adapter
+      {:hackney, "~> 1.16.0"},
+      # optional, required by JSON middleware
+      {:jason, ">= 1.0.0"},
+
+#      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
+      {:flow_assertions, "~> 0.6", only: :test},
     ]
   end
 
