@@ -13,7 +13,16 @@ defmodule Xest.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
+      # if you want to use espec,
+      # test_coverage: [tool: ExCoveralls, test_task: "espec"]
     ]
   end
 
@@ -38,9 +47,15 @@ defmodule Xest.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      # Tooling
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.10", only: :test},
+
+      # phoenix communication
       {:phoenix_pubsub, "~> 2.0"},
+
+      # HTTP client
       {:tesla, "~> 1.4.0"},
       # optional, but recommended adapter
       {:hackney, "~> 1.16.0"},
@@ -48,6 +63,7 @@ defmodule Xest.MixProject do
       {:jason, ">= 1.0.0"},
       {:fuse, "~> 2.4"},
 
+      # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
       {:flow_assertions, "~> 0.6", only: :test}
     ]

@@ -7,7 +7,16 @@ defmodule Xest.Umbrella.MixProject do
       version: "0.1.0",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
+      # if you want to use espec,
+      # test_coverage: [tool: ExCoveralls, test_task: "espec"]
     ]
   end
 
@@ -24,7 +33,9 @@ defmodule Xest.Umbrella.MixProject do
   # Dependencies listed here are available only for this project
   # and cannot be accessed from applications inside the apps/ folder.
   defp deps do
-    []
+    [
+      {:pre_commit, "~> 0.3.4", only: :dev}
+    ]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.

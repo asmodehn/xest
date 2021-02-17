@@ -14,7 +14,16 @@ defmodule XestWeb.MixProject do
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
+      # if you want to use espec,
+      # test_coverage: [tool: ExCoveralls, test_task: "espec"]
     ]
   end
 
@@ -37,8 +46,12 @@ defmodule XestWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      # Tooling
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.10", only: :test},
+
+      # Phoenix
       {:phoenix, "~> 1.5.7"},
       {:phoenix_live_view, "~> 0.15.0"},
       {:floki, ">= 0.27.0", only: :test},
@@ -51,6 +64,8 @@ defmodule XestWeb.MixProject do
       {:xest, in_umbrella: true},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
+
+      # security checks
       {:sobelow, "~> 0.8", only: :dev}
     ]
   end
