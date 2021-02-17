@@ -16,5 +16,4 @@ defmodule XestWeb.BinanceViewTest do
              %{status: %{"msg" => "binance_status"}}
            ) =~ "binance_status"
   end
-
 end

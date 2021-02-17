@@ -14,5 +14,4 @@ defmodule XestWeb.BinanceControllerTest do
     assert html_response(conn, 200) =~ "Hello Binance"
     assert html_response(conn, 200) =~ "Status: normal"
   end
-
 end

@@ -1,4 +1,3 @@
-
 defmodule Xest.Binance.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
@@ -14,10 +13,7 @@ defmodule Xest.Binance.Test do
     :ok
   end
 
-
   test "system status OK" do
-
     assert Binance.system_status() == %{"msg" => "normal", "status" => 0}
-
   end
 end

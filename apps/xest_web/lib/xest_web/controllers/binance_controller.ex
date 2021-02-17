@@ -8,11 +8,10 @@ defmodule XestWeb.BinanceController do
   def index(conn, _params) do
     status = Binance.system_status()
 
-    Logger.info "status: #{inspect(status)}"
+    Logger.info("status: #{inspect(status)}")
 
     render(conn, "binance.html", %{
       status: status
     })
   end
-
 end

@@ -1,5 +1,4 @@
 defmodule Xest.Binance.ApiMock.Test do
-
   use ExUnit.Case, async: true
   use FlowAssertions
 
@@ -29,5 +28,4 @@ defmodule Xest.Binance.ApiMock.Test do
 
   # TODO : manual process to run the same test with the actual api...
   #  something interactive like with the assert_value package ??
-
 end

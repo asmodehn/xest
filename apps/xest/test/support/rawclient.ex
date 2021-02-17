@@ -1,9 +1,9 @@
 defmodule Xest.Binance.RawClient do
   use Tesla
 
-  plug Tesla.Middleware.BaseUrl, "https://api.binance.com"
-  plug Tesla.Middleware.Headers, []
-  plug Tesla.Middleware.JSON
+  plug(Tesla.Middleware.BaseUrl, "https://api.binance.com")
+  plug(Tesla.Middleware.Headers, [])
+  plug(Tesla.Middleware.JSON)
 
   @moduledoc """
   Simple Bare Tesla client for Binance API.
@@ -17,5 +17,4 @@ defmodule Xest.Binance.RawClient do
   }}
 
   """
-
 end

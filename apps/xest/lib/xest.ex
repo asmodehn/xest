@@ -10,7 +10,4 @@ defmodule Xest do
   def answer do
     42
   end
-
-
-
 end

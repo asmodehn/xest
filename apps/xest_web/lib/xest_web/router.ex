@@ -17,11 +17,14 @@ defmodule XestWeb.Router do
   scope "/", XestWeb do
     pipe_through :browser
 
-    live "/", PageLive, :index  # keep that for overview dashboard
+    # keep that for overview dashboard
+    live "/", PageLive, :index
 
-    get "/hello", PageController, :index  # example controller
+    # example controller
+    get "/hello", PageController, :index
 
-    get "/binance", BinanceController, :index  # simple binance get api for now...
+    # simple binance get api for now...
+    get "/binance", BinanceController, :index
   end
 
   # Other scopes may use custom stacks.

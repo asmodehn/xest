@@ -4,5 +4,4 @@ defmodule XestWeb.PageController do
   def index(conn, _params) do
     render(conn, "hello.html")
   end
-
 end

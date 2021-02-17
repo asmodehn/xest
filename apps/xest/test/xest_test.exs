@@ -4,6 +4,6 @@ defmodule Xest.Test do
   require Xest
 
   test "the answer" do
-    assert Xest.answer == 42
+    assert Xest.answer() == 42
   end
 end

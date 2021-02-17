@@ -5,5 +5,4 @@ defmodule XestWeb.PageControllerTest do
     conn = get(conn, "/hello")
     assert html_response(conn, 200) =~ "Hello User"
   end
-
 end

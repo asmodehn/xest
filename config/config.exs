@@ -9,8 +9,6 @@
 # move said applications out of the umbrella.
 use Mix.Config
 
-
-
 config :xest_web,
   generators: [context_app: :xest]
 

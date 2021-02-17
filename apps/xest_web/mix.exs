@@ -39,7 +39,6 @@ defmodule XestWeb.MixProject do
     [
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-
       {:phoenix, "~> 1.5.7"},
       {:phoenix_live_view, "~> 0.15.0"},
       {:floki, ">= 0.27.0", only: :test},
@@ -52,7 +51,6 @@ defmodule XestWeb.MixProject do
       {:xest, in_umbrella: true},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-
       {:sobelow, "~> 0.8", only: :dev}
     ]
   end

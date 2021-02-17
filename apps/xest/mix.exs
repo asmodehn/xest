@@ -28,7 +28,8 @@ defmodule Xest.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:dev), do: ["lib", "test/support"]  # to be able to interactively use test/support
+  # to be able to interactively use test/support
+  defp elixirc_paths(:dev), do: ["lib", "test/support"]
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
@@ -39,9 +40,7 @@ defmodule Xest.MixProject do
     [
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-
       {:phoenix_pubsub, "~> 2.0"},
-
       {:tesla, "~> 1.4.0"},
       # optional, but recommended adapter
       {:hackney, "~> 1.16.0"},
@@ -49,8 +48,8 @@ defmodule Xest.MixProject do
       {:jason, ">= 1.0.0"},
       {:fuse, "~> 2.4"},
 
-#      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
-      {:flow_assertions, "~> 0.6", only: :test},
+      #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
+      {:flow_assertions, "~> 0.6", only: :test}
     ]
   end
 
