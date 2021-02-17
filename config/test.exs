@@ -8,3 +8,6 @@ config :xest_web, XestWeb.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+# mock for tesla connection on test
+config :tesla, adapter: Tesla.Mock

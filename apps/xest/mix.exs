@@ -46,6 +46,7 @@ defmodule Xest.MixProject do
       {:hackney, "~> 1.16.0"},
       # optional, required by JSON middleware
       {:jason, ">= 1.0.0"},
+      {:fuse, "~> 2.4"},
 
 #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
       {:flow_assertions, "~> 0.6", only: :test},
