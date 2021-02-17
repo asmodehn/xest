@@ -38,6 +38,8 @@ defmodule XestWeb.MixProject do
   defp deps do
     [
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+
       {:phoenix, "~> 1.5.7"},
       {:phoenix_live_view, "~> 0.15.0"},
       {:floki, ">= 0.27.0", only: :test},

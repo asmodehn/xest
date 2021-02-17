@@ -37,6 +37,7 @@ defmodule Xest.MixProject do
   defp deps do
     [
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:phoenix_pubsub, "~> 2.0"}
     ]
   end
