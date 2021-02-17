@@ -2,7 +2,14 @@ defmodule Xest.Binance.ApiMock do
 
   @moduledoc """
   Module defining a mock for binance API. used in automated tests.
-  This is iteratively constructed by manually probing the binance api...
+  This is iteratively constructed by manually probing the binance api in iex
+
+  iex(1)>  Xest.Binance.RawClient.get("https://api.binance.com/wapi/v3/systemStatus.html")
+  {:ok,
+  %Tesla.Env{
+  ...
+  }}
+
   """
 
   require Tesla.Mock

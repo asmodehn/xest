@@ -3,16 +3,8 @@ defmodule Xest.Binance.ApiMock.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
-  defmodule TestClient do
-    use Tesla
-
-    plug Tesla.Middleware.BaseUrl, "https://api.binance.com"
-    plug Tesla.Middleware.Headers, []
-    plug Tesla.Middleware.JSON
-
-  end
-
   alias Xest.Binance.ApiMock
+  alias Xest.Binance.RawClient
 
   import Tesla.Mock
 
@@ -23,7 +15,7 @@ defmodule Xest.Binance.ApiMock.Test do
 
   # Note: this has been extracted from an actual call via unit testing (no mock)...
   test "Binance status Mock OK" do
-    TestClient.get("https://api.binance.com/wapi/v3/systemStatus.html")
+    RawClient.get("https://api.binance.com/wapi/v3/systemStatus.html")
     |> ok_content(Tesla.Env)
     |> assert_fields(%{
       url: "https://api.binance.com/wapi/v3/systemStatus.html",
@@ -34,5 +26,8 @@ defmodule Xest.Binance.ApiMock.Test do
       body: %{"msg" => "normal", "status" => 0}
     })
   end
+
+  # TODO : manual process to run the same test with the actual api...
+  #  something interactive like with the assert_value package ??
 
 end
