@@ -21,7 +21,6 @@ defmodule XestWeb.Router do
     live "/", PageLive, :index
 
     live "/binance", BinanceLive, :index
-
   end
 
   # Other scopes may use custom stacks.
