@@ -20,9 +20,6 @@ defmodule XestWeb.Router do
     # keep that for overview dashboard
     live "/", PageLive, :index
 
-    # example controller
-    get "/hello", PageController, :index
-
     # simple binance get api for now...
     get "/binance", BinanceController, :index
   end
