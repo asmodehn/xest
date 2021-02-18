@@ -20,8 +20,8 @@ defmodule XestWeb.Router do
     # keep that for overview dashboard
     live "/", PageLive, :index
 
-    # simple binance get api for now...
-    get "/binance", BinanceController, :index
+    live "/binance", BinanceLive, :index
+
   end
 
   # Other scopes may use custom stacks.

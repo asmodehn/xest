@@ -1,11 +1,12 @@
 # Xest
 
-Xest connects to various cryptocurrencies exchanges.
+Xest connects to various cryptocurrencies exchanges to provide an overview of your crypto assets
 
-On each exchange, it publically retrieves:
+On each exchange, it publicly retrieves:
   - Exchange status and time
   - market tickers (WIP)
-In your wallet, it privately retrieves:
+
+In your wallet, it privately:
   - retrieves currencies (WIP)
   - visually display your assets (WIP)
 
@@ -59,5 +60,22 @@ Generated xest_web app
 iex(1)> Xest.Binance.system_status()
 %{"msg" => "normal", "status" => 0}
 ```
+
+# Roadmap
+
+Exchanges:
+- [ ] Binance
+- [ ] Kraken
+- [ ] Bitstamp
+- Add your favorite...
+  
+- [ ] Asset visualisation
+- Some way to interface with other systems, for deposit & withdrawal, accounting, trading, etc.
+
+# Will Not Do
+
+- Accounting
+- Advanced Market Data (ie. no candles here, only ticker data)
+- Trading
 
 

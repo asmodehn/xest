@@ -1,4 +1,0 @@
-<div class="container">
-  <h1>Hello Binance!</h1>
-  <p>Status: <%= @status["msg"] %></p>
-</div>
