@@ -49,7 +49,7 @@ defmodule Xest.Binance.ApiMock.Test do
     })
     |> assert_fields(%{
       status: 200,
-      body: %{"serverTime" => 1613638412313}
+      body: %{"serverTime" => 1_613_638_412_313}
     })
   end
 

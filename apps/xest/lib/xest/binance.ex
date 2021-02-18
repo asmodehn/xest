@@ -45,5 +45,4 @@ defmodule Xest.Binance do
     {:ok, %{status: 200, body: body}} = get("/api/v3/time")
     body
   end
-
 end

@@ -41,7 +41,7 @@ defmodule Xest.Binance.ApiMock do
       status: 200,
       method: method,
       url: url,
-      body: %{"serverTime" => 1613638412313}
+      body: %{"serverTime" => 1_613_638_412_313}
     }
   end
 

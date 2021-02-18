@@ -22,7 +22,6 @@ defmodule Xest.Binance.Test do
   end
 
   test "time OK" do
-    assert Binance.time() == %{"serverTime" => 1613638412313}
+    assert Binance.time() == %{"serverTime" => 1_613_638_412_313}
   end
-
 end
