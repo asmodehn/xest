@@ -35,4 +35,15 @@ defmodule Xest.Binance do
     {:ok, %{status: 200, body: body}} = get("/wapi/v3/systemStatus.html")
     body
   end
+
+  def ping() do
+    {:ok, %{status: 200, body: body}} = get("/api/v3/ping")
+    body
+  end
+
+  def time() do
+    {:ok, %{status: 200, body: body}} = get("/api/v3/time")
+    body
+  end
+
 end

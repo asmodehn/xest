@@ -12,7 +12,8 @@ defmodule Xest.Binance.ApiMock.Test do
     :ok
   end
 
-  # Note: this has been extracted from an actual call via unit testing (no mock)...
+  # Note: these have been extracted from an actual call via iex (no mock)...
+
   test "Binance status Mock OK" do
     RawClient.get("https://api.binance.com/wapi/v3/systemStatus.html")
     |> ok_content(Tesla.Env)
@@ -23,6 +24,32 @@ defmodule Xest.Binance.ApiMock.Test do
     |> assert_fields(%{
       status: 200,
       body: %{"msg" => "normal", "status" => 0}
+    })
+  end
+
+  test "Binance ping OK" do
+    RawClient.get("https://api.binance.com/api/v3/ping")
+    |> ok_content(Tesla.Env)
+    |> assert_fields(%{
+      url: "https://api.binance.com/api/v3/ping",
+      method: :get
+    })
+    |> assert_fields(%{
+      status: 200,
+      body: %{}
+    })
+  end
+
+  test "Binance time OK" do
+    RawClient.get("https://api.binance.com/api/v3/time")
+    |> ok_content(Tesla.Env)
+    |> assert_fields(%{
+      url: "https://api.binance.com/api/v3/time",
+      method: :get
+    })
+    |> assert_fields(%{
+      status: 200,
+      body: %{"serverTime" => 1613638412313}
     })
   end
 

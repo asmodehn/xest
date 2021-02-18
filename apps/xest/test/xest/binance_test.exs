@@ -16,4 +16,13 @@ defmodule Xest.Binance.Test do
   test "system status OK" do
     assert Binance.system_status() == %{"msg" => "normal", "status" => 0}
   end
+
+  test "ping OK" do
+    assert Binance.ping() == %{}
+  end
+
+  test "time OK" do
+    assert Binance.time() == %{"serverTime" => 1613638412313}
+  end
+
 end
