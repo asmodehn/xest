@@ -19,7 +19,8 @@ defmodule XestWeb.Router do
 
     # keep that for overview dashboard
     live "/", PageLive, :index
-
+    live "/democlock", ClockLive, :index
+    live "/demoimage", ImageLive, :index
     live "/binance", BinanceLive, :index
   end
 
