@@ -8,6 +8,7 @@ defmodule Xest.Binance do
   plug(Tesla.Middleware.BaseUrl, "https://api.binance.com")
   plug(Tesla.Middleware.Headers, [])
   plug(Tesla.Middleware.JSON)
+  plug(Tesla.Middleware.Logger, filter_headers: [])
 
   # TODO : depending on real world performance we may need one of these...
   #  plug Tesla.Middleware.Timeout, timeout: 2_000
