@@ -8,9 +8,9 @@ defmodule Xest.Application do
   def start(_type, _args) do
     children = [
       # Start the PubSub system
-      {Phoenix.PubSub, name: Xest.PubSub}
-      # Start a worker by calling: Xest.Worker.start_link(arg)
-      # {Xest.Worker, arg}
+      {Phoenix.PubSub, name: Xest.PubSub},
+      # Starting Agents
+      {Xest.BinanceExchange, name: Xest.BinanceExchange}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xest.Supervisor)
