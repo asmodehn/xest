@@ -24,4 +24,6 @@ defmodule Xest.Binance.Test do
   test "time OK" do
     assert Binance.time() == %{"serverTime" => 1_613_638_412_313}
   end
+
+  # TODO : verify tesla behavior with mox expectations: https://hexdocs.pm/mox/Mox.html#expect/4-examples
 end

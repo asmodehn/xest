@@ -65,7 +65,8 @@ defmodule Xest.MixProject do
 
       # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
-      {:flow_assertions, "~> 0.6", only: :test}
+      {:flow_assertions, "~> 0.6", only: :test},
+      {:hammox, "~> 0.4", only: :test}  # only using mox at the moment
     ]
   end
 

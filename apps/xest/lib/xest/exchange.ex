@@ -3,33 +3,69 @@ defmodule Xest.BinanceExchange do
   An Agent attempting to maintain a consistent view (as state) of the exchange
   It holds the knowledge of this system regarding binance.
   """
-  defstruct [
-    url: "http://api.binance.com",
-    status_message: "Unknown",
-    status_code: -1,
-    server_time_skew: 0
-  ]
+
+  defstruct url: "http://api.binance.com",
+            utc_now: &DateTime.utc_now/0,
+            minimum_status_request_period_seconds: 60,
+            server_time_request_period_seconds: 60,
+            # these are the minimal amount of state necessary
+            # to estimate current real world binance exchange status
+            status: %{message: nil, code: nil},
+            server_time_skew: nil
+
+  @behaviour Xest.LocalUTCClock
 
   alias Xest.Binance
 
-  use Agent  # Note the agent should be unique
+  # Note the agent should be unique
+  use Agent
   # -> we can use the module name as a default to identify it
 
   def start_link(opts) do
     # starting the agent by passing the struct as initial value
-    Agent.start_link(fn -> %Xest.BinanceExchange{
-     } end, opts)
+    # Note : mocks should manually modify the initial struct if needed
+    Agent.start_link(
+      fn -> %Xest.BinanceExchange{} end,
+      opts
+    )
   end
 
-  def status_retrieve(exchange) do
+  @impl Xest.LocalUTCClock
+  def utc_now() do
+    DateTime.utc_now()
+  end
+
+  # smart accessor
+  def status(exchange) do
+    case Agent.get(exchange, &Map.get(&1, :status)) do
+      %{message: nil, code: _} -> retrieve_status(exchange)
+      %{message: _, code: nil} -> retrieve_status(exchange)
+      status -> status
+    end
+  end
+
+  # internal functions to trigger REST request, kept internal for isolation purposes
+  defp retrieve_status(exchange) do
     %{"msg" => msg, "status" => status} = Binance.system_status()
-    :ok = Agent.update(exchange, fn state -> %{state | status_message: msg, status_code: status} end)
+    :ok =
+      Agent.update(exchange, fn state ->
+        %{state | status: %{message: msg, code: status}}
+      end)
+    Agent.get(exchange, &Map.get(&1, :status))
   end
 
+#  defp retrieve_servertime(exchange) do
+#    %{"serverTime" => server_time} = Binance.time()
+#    :ok = Agent.update(exchange, fn state ->
+#      %{state | server_time_skew: utc_now() - server_time }
+#    end)
+#  end
+
+  @doc """
+  Access the state of the exchange agent.
+  This encodes our knowledge of binance exchange
+  """
   def state(exchange) do
     Agent.get(exchange, &Function.identity/1)
   end
-
-
 end
-
