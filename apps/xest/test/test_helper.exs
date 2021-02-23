@@ -1,3 +1,3 @@
 ExUnit.start()
 
-Mox.defmock(Xest.LocalUTCClockMock, for: Xest.LocalUTCClock)
+Hammox.defmock(Xest.DateTimeMock, for: Xest.DateTimeBehaviour)

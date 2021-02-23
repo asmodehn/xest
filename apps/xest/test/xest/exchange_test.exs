@@ -9,29 +9,28 @@ defmodule Xest.BinanceExchange.Test do
 
   setup do
     mock(&ApiMock.apimock/1)
-
     {:ok, exg_pid} = start_supervised(BinanceExchange)
     %{exg_pid: exg_pid}
   end
 
-  import Mox
+  import Hammox
 
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
   test "verifying local clock mock is in place", %{exg_pid: _exg_pid} do
-    Xest.LocalUTCClockMock
+    Xest.DateTimeMock
     |> expect(:utc_now, fn ->
       ~U[2020-01-01 00:00:00.000001Z]
     end)
 
     assert Xest.BinanceExchange.utc_now() ==
-      ~U[2020-01-01 00:00:00.000001Z]
+             ~U[2020-01-01 00:00:00.000001Z]
   end
 
-  test "initial value OK", %{exg_pid: exg_pid}  do
+  test "initial value OK", %{exg_pid: exg_pid} do
     exg_pid
-    |> BinanceExchange.state
+    |> BinanceExchange.state()
     |> assert_fields(%{
       status: %{
         message: nil,
@@ -45,28 +44,28 @@ defmodule Xest.BinanceExchange.Test do
 
   test "retrieve status NEEDED", %{exg_pid: exg_pid} do
     exg_pid
-    |> BinanceExchange.status
+    |> BinanceExchange.status()
     |> assert_fields(%{
-        message: "normal",
-        code: 0
+      message: "normal",
+      code: 0
     })
   end
 
   test "retrieve status OPTOUT", %{exg_pid: exg_pid} do
     exg_pid
-    |> BinanceExchange.status
+    |> BinanceExchange.status()
     |> assert_fields(%{
-        message: "normal",
-        code: 0
+      message: "normal",
+      code: 0
     })
   end
 
   test "retrieve status AUTO", %{exg_pid: exg_pid} do
     exg_pid
-    |> BinanceExchange.status
+    |> BinanceExchange.status()
     |> assert_fields(%{
-        message: "normal",
-        code: 0
+      message: "normal",
+      code: 0
     })
   end
 

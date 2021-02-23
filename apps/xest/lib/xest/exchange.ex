@@ -5,7 +5,6 @@ defmodule Xest.BinanceExchange do
   """
 
   defstruct url: "http://api.binance.com",
-            utc_now: &DateTime.utc_now/0,
             minimum_status_request_period_seconds: 60,
             server_time_request_period_seconds: 60,
             # these are the minimal amount of state necessary
@@ -13,9 +12,10 @@ defmodule Xest.BinanceExchange do
             status: %{message: nil, code: nil},
             server_time_skew: nil
 
-  @behaviour Xest.LocalUTCClock
-
   alias Xest.Binance
+
+  # careful to not get mixed up with core DateTime...
+  @datetime Application.get_env(:xest, :datetime)
 
   # Note the agent should be unique
   use Agent
@@ -30,9 +30,9 @@ defmodule Xest.BinanceExchange do
     )
   end
 
-  @impl Xest.LocalUTCClock
+  # redirection to actual or mock implementation depending on app env config
   def utc_now() do
-    DateTime.utc_now()
+    @datetime.utc_now()
   end
 
   # smart accessor
@@ -47,19 +47,21 @@ defmodule Xest.BinanceExchange do
   # internal functions to trigger REST request, kept internal for isolation purposes
   defp retrieve_status(exchange) do
     %{"msg" => msg, "status" => status} = Binance.system_status()
+
     :ok =
       Agent.update(exchange, fn state ->
         %{state | status: %{message: msg, code: status}}
       end)
+
     Agent.get(exchange, &Map.get(&1, :status))
   end
 
-#  defp retrieve_servertime(exchange) do
-#    %{"serverTime" => server_time} = Binance.time()
-#    :ok = Agent.update(exchange, fn state ->
-#      %{state | server_time_skew: utc_now() - server_time }
-#    end)
-#  end
+  #  defp retrieve_servertime(exchange) do
+  #    %{"serverTime" => server_time} = Binance.time()
+  #    :ok = Agent.update(exchange, fn state ->
+  #      %{state | server_time_skew: utc_now() - server_time }
+  #    end)
+  #  end
 
   @doc """
   Access the state of the exchange agent.
