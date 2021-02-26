@@ -12,6 +12,7 @@ defmodule XestWeb.BinanceLive do
     {:ok, assign(socket, status_msg: "N/A")}
   end
 
+  @impl true
   def handle_event("get_status", _value, socket) do
     Logger.debug("clicked !")
 

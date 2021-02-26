@@ -1,7 +1,8 @@
-defmodule Xest.Binance do
+defmodule Xest.BinanceClientTesla do
   @moduledoc """
   A module managing retrieving data from binance API
   """
+  @behaviour Xest.Ports.BinanceClientBehaviour
 
   use Tesla
 
@@ -32,18 +33,31 @@ defmodule Xest.Binance do
   #    {:error, _} -> true
   #  end
 
+  # TODO : rate limiter with https://hexdocs.pm/hammer
+
+  @impl true
   def system_status() do
-    {:ok, %{status: 200, body: body}} = get("/wapi/v3/systemStatus.html")
-    body
+    case get("/wapi/v3/systemStatus.html") do
+      {:ok, %{status: 200, body: body}} -> {:ok, body}
+      tesla_env -> {:error, tesla_env}
+    end
   end
 
+  @impl true
   def ping() do
-    {:ok, %{status: 200, body: body}} = get("/api/v3/ping")
-    body
+    case get("/api/v3/ping") do
+      {:ok, %{status: 200, body: body}} -> {:ok, body}
+      tesla_env -> {:error, tesla_env}
+    end
   end
 
+  @impl true
   def time() do
-    {:ok, %{status: 200, body: body}} = get("/api/v3/time")
-    body
+    case get("/api/v3/time") do
+      {:ok, %{status: 200, body: body}} -> {:ok, body}
+      tesla_env -> {:error, tesla_env}
+    end
   end
+
+  # TODO : register as behaviour implementation , and check with hammock...
 end

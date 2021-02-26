@@ -3,12 +3,12 @@ defmodule XestWeb.BinanceLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Xest.Binance.ApiMock
+  alias Xest.BinanceRestApiMock
   import Tesla.Mock
 
   # TODO : inestigate why we need global here ? local doesnt work ?
   setup_all do
-    mock_global(&ApiMock.apimock/1)
+    mock_global(&BinanceRestApiMock.apimock/1)
     :ok
   end
 

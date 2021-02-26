@@ -12,9 +12,6 @@ config :logger, level: :warn
 # mock for tesla connection on test
 config :tesla, adapter: Tesla.Mock
 
-# mock for local datetime on test
-config :xest, datetime: Xest.DateTimeMock
-
 # NOT YET
 ## Config for Commanded in-memory eventstore for test
 # config :commanded, event_store_adapter: Commanded.EventStore.Adapters.InMemory

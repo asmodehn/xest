@@ -5,11 +5,15 @@ defmodule Xest.Application do
 
   use Application
 
+  alias Xest.Models.Exchange
+
   def start(_type, _args) do
     children = [
       # Start the PubSub system
       {Phoenix.PubSub, name: Xest.PubSub},
-      # Starting Agents
+      # Starting Binance Client GenServer
+      {Xest.BinanceClient, name: Xest.BinanceClient},
+      # Starting Agents managing retrieved state
       {Xest.BinanceExchange, name: Xest.BinanceExchange}
     ]
 

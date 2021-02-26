@@ -63,10 +63,13 @@ defmodule Xest.MixProject do
       {:jason, ">= 1.0.0"},
       {:fuse, "~> 2.4"},
 
+      # Time manipulation
+      {:timex, "~> 3.0"},
+
       # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
       {:flow_assertions, "~> 0.6", only: :test},
-      {:hammox, "~> 0.4", only: :test}
+      {:hammox, "~> 0.4", only: [:test, :dev]},
     ]
   end
 

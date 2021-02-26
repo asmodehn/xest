@@ -2,20 +2,20 @@ defmodule Xest.Binance.ApiMock.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
-  alias Xest.Binance.ApiMock
-  alias Xest.Binance.RawClient
+  alias Xest.BinanceRestApiMock
+  alias Xest.RawBinanceClientTesla
 
   import Tesla.Mock
 
   setup do
-    mock(&ApiMock.apimock/1)
+    mock(&BinanceRestApiMock.apimock/1)
     :ok
   end
 
   # Note: these have been extracted from an actual call via iex (no mock)...
 
   test "Binance status Mock OK" do
-    RawClient.get("https://api.binance.com/wapi/v3/systemStatus.html")
+    RawBinanceClientTesla.get("https://api.binance.com/wapi/v3/systemStatus.html")
     |> ok_content(Tesla.Env)
     |> assert_fields(%{
       url: "https://api.binance.com/wapi/v3/systemStatus.html",
@@ -28,7 +28,7 @@ defmodule Xest.Binance.ApiMock.Test do
   end
 
   test "Binance ping OK" do
-    RawClient.get("https://api.binance.com/api/v3/ping")
+    RawBinanceClientTesla.get("https://api.binance.com/api/v3/ping")
     |> ok_content(Tesla.Env)
     |> assert_fields(%{
       url: "https://api.binance.com/api/v3/ping",
@@ -41,7 +41,7 @@ defmodule Xest.Binance.ApiMock.Test do
   end
 
   test "Binance time OK" do
-    RawClient.get("https://api.binance.com/api/v3/time")
+    RawBinanceClientTesla.get("https://api.binance.com/api/v3/time")
     |> ok_content(Tesla.Env)
     |> assert_fields(%{
       url: "https://api.binance.com/api/v3/time",
