@@ -71,4 +71,16 @@ config :mix_test_watch, clear: true
 
 # to make sure we format before committing
 # TODO : add credo and coveralls
-config :pre_commit, commands: ["format"]
+config :git_hooks,
+  auto_install: true,
+  verbose: true,
+  hooks: [
+    pre_commit: [
+      tasks: [
+        {:cmd, "mix format"},
+#        {:cmd, "mix dialyzer"}, # TODO
+        {:cmd, "mix test"}
+      ]
+    ]
+  ]
+
