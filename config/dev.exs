@@ -78,9 +78,8 @@ config :git_hooks,
     pre_commit: [
       tasks: [
         {:cmd, "mix format"},
-#        {:cmd, "mix dialyzer"}, # TODO
+        {:cmd, "mix dialyzer"},
         {:cmd, "mix test"}
       ]
     ]
   ]
-
