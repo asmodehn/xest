@@ -34,7 +34,7 @@ defmodule Xest.Umbrella.MixProject do
   # and cannot be accessed from applications inside the apps/ folder.
   defp deps do
     [
-      {:pre_commit, "~> 0.3.4", only: :dev}
+      {:committee, "~> 1.0.0", only: :dev, runtime: false}
     ]
   end
 
