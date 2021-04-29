@@ -50,7 +50,9 @@ defmodule Xest.MixProject do
       # Tooling
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:excoveralls, "~> 0.10", only: :test},
+      {:doctor, "~> 0.17.0", only: :dev},
 
       # phoenix communication
       {:phoenix_pubsub, "~> 2.0"},
@@ -69,7 +71,7 @@ defmodule Xest.MixProject do
       # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
       {:flow_assertions, "~> 0.6", only: :test},
-      {:hammox, "~> 0.4", only: [:test, :dev]},
+      {:hammox, "~> 0.4", only: [:test, :dev]}
     ]
   end
 
