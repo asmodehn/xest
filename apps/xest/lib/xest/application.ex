@@ -11,10 +11,18 @@ defmodule Xest.Application do
     children = [
       # Start the PubSub system
       {Phoenix.PubSub, name: Xest.PubSub},
-      # Starting Binance Client GenServer
+
+      # A registry to keep track of dynamic dependent processes
+      {Registry, name: Xest.BinanceRegistry, keys: :unique},
+
+      # Starting main Binance Client GenServer
       {Xest.BinanceClient, name: Xest.BinanceClient},
-      # Starting Agents managing retrieved state
+      # Starting main Exchange Agent managing retrieved state
       {Xest.BinanceExchange, name: Xest.BinanceExchange}
+
+      # TUI process
+      # disabling since this messes up the input terminal...
+      #      {Ratatouille.Runtime.Supervisor, runtime: [app: Xest.TUI]}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xest.Supervisor)

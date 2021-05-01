@@ -1,4 +1,5 @@
-# TODO: change name too confusing with actual http client
+# TODO: change name, it's too confusing with actual http/rest client modules
+#   or maybe change the http to "API ??
 defmodule Xest.BinanceClient do
   use GenServer
 
@@ -6,6 +7,10 @@ defmodule Xest.BinanceClient do
   This is a genserver storing the technical state of the HTTP client to binance.
   This relies on a chosen http library for the binance adapter.
   """
+
+  @doc "Registry and key associated for clients to lookup the process later"
+  # TODO : maybe add a counter to detect restarts ?
+  def process_registration(), do: {Xest.BinanceRegistry, "client"}
 
   # baking in sensible defaults
   @next_ping_wait_time_default :timer.seconds(60)
@@ -36,7 +41,6 @@ defmodule Xest.BinanceClient do
   end
 
   def next_ping_schedule(pid \\ __MODULE__, next_timer_period \\ nil) do
-    # TODO next_timer_period to be able to change it
     GenServer.call(pid, {:next_ping_schedule, next_timer_period})
   end
 
@@ -57,6 +61,16 @@ defmodule Xest.BinanceClient do
 
   def init({:ok, %Xest.BinanceClient{next_ping_wait_time: next_ping_wait_time} = state}) do
     binance_client_adapter = Application.get_env(:xest, :binance_client_adapter)
+
+    IO.inspect(self())
+    # register ourselves
+    apply(
+      Registry,
+      :register,
+      process_registration()
+      |> Tuple.append(:registered_on_init)
+      |> Tuple.to_list()
+    )
 
     # scheduling ping onto itself
     state = reschedule_ping(state)

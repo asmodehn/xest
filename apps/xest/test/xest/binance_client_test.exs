@@ -14,7 +14,7 @@ defmodule Xest.BinanceClient.Test do
     setup do
       # starts client process
       client_pid = start_supervised!({Xest.BinanceClient, name: __MODULE__})
-
+      IO.inspect(client_pid)
       # setting up adapter mock
       BinanceClientBehaviourMock
       |> allow(self(), client_pid)
@@ -34,6 +34,14 @@ defmodule Xest.BinanceClient.Test do
       |> expect(:time, fn -> {:ok, %{"serverTime" => 1_613_638_412_313}} end)
 
       assert BinanceClient.time(client_pid) == {:ok, %{"serverTime" => 1_613_638_412_313}}
+    end
+
+    test "registers itself to the registry", %{client_pid: client_pid} do
+      [{pid, val}] =
+        apply(Registry, :lookup, Xest.BinanceClient.process_registration() |> Tuple.to_list())
+
+      assert pid == client_pid
+      assert val == :registered_on_init
     end
 
     # TODO: test to document default ping behavior
