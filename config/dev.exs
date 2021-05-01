@@ -68,7 +68,3 @@ config :phoenix, :stacktrace_depth, 20
 
 # clear screen when test_watch running again
 config :mix_test_watch, clear: true
-
-# to make sure we format before committing
-# TODO : add credo and coveralls
-config :pre_commit, commands: ["format"]
