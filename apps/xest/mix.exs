@@ -54,8 +54,6 @@ defmodule Xest.MixProject do
       {:excoveralls, "~> 0.10", only: :test},
       {:doctor, "~> 0.17.0", only: :dev},
 
-      # TUI tooling
-      {:ratatouille, "~> 0.5.0"},
       # phoenix communication
       {:phoenix_pubsub, "~> 2.0"},
 

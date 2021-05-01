@@ -8,8 +8,8 @@ defmodule Xest.TUI.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Xest.TUI.Worker.start_link(arg)
-      # {Xest.TUI.Worker, arg}
+      # TUI process
+      {Ratatouille.Runtime.Supervisor, runtime: [app: Xest.TUI.TUI]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

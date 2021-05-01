@@ -14,10 +14,7 @@ defmodule Xest.Application do
       # Starting Binance Client GenServer
       {Xest.BinanceClient, name: Xest.BinanceClient},
       # Starting Agents managing retrieved state
-      {Xest.BinanceExchange, name: Xest.BinanceExchange},
-
-      # TUI process
-      {Ratatouille.Runtime.Supervisor, runtime: [app: Xest.TUI]}
+      {Xest.BinanceExchange, name: Xest.BinanceExchange}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xest.Supervisor)

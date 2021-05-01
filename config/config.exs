@@ -12,6 +12,9 @@ use Mix.Config
 config :xest_web,
   generators: [context_app: :xest]
 
+config :xest_tui,
+  generators: [context_app: :xest]
+
 # Configures the endpoint
 config :xest_web, XestWeb.Endpoint,
   url: [host: "localhost"],
