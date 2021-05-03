@@ -8,9 +8,14 @@ defmodule Xest.BinanceClient do
   This relies on a chosen http library for the binance adapter.
   """
 
-  @doc "Registry and key associated for clients to lookup the process later"
-  # TODO : maybe add a counter to detect restarts ?
-  def process_registration(), do: {Xest.BinanceRegistry, "client"}
+  def process_lookup(), do: {Xest.BinanceRegistry, "client"}
+
+  @doc """
+    Registry and key associated for clients to lookup the process later.
+    value is just the value to store...
+  """
+  # TODO : maybe have a counter to detect restarts ? maybe last started time ?
+  def process_registration(value), do: process_lookup() |> Tuple.append(value)
 
   # baking in sensible defaults
   @next_ping_wait_time_default :timer.seconds(60)
@@ -28,6 +33,8 @@ defmodule Xest.BinanceClient do
   def start_link(opts) do
     {next_ping_wait_time, opts} =
       Keyword.pop(opts, :next_ping_wait_time, @next_ping_wait_time_default)
+
+    opts = opts ++ [name: {:via, Registry, process_registration(:registered_on_start)}]
 
     GenServer.start_link(
       __MODULE__,
@@ -59,18 +66,8 @@ defmodule Xest.BinanceClient do
     init({:ok, %Xest.BinanceClient{state | next_ping_wait_time: nil}})
   end
 
-  def init({:ok, %Xest.BinanceClient{next_ping_wait_time: next_ping_wait_time} = state}) do
+  def init({:ok, %Xest.BinanceClient{next_ping_wait_time: _next_ping_wait_time} = state}) do
     binance_client_adapter = Application.get_env(:xest, :binance_client_adapter)
-
-    IO.inspect(self())
-    # register ourselves
-    apply(
-      Registry,
-      :register,
-      process_registration()
-      |> Tuple.append(:registered_on_init)
-      |> Tuple.to_list()
-    )
 
     # scheduling ping onto itself
     state = reschedule_ping(state)
@@ -124,7 +121,7 @@ defmodule Xest.BinanceClient do
   def handle_call(
         {:next_ping_schedule, next_timer_period},
         _from,
-        %{next_ping_ref: next_ping_ref, next_ping_wait_time: next_ping_wait_time} = state
+        %{next_ping_ref: next_ping_ref, next_ping_wait_time: _next_ping_wait_time} = state
       ) do
     {:reply, %{next_ping_ref: next_ping_ref, next_ping_wait_time: next_timer_period}, state}
   end

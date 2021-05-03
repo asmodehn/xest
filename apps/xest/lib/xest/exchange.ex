@@ -11,6 +11,8 @@ defmodule Xest.BinanceExchange do
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   defstruct model: %Models.Exchange{},
+            # pointing to the binance client pid
+            client: nil,
             minimal_request_period: @default_minimum_request_period
 
   alias Xest.BinanceClient
@@ -18,13 +20,32 @@ defmodule Xest.BinanceExchange do
   use Agent
 
   def start_link(opts, minimal_request_period \\ @default_minimum_request_period) do
+    IO.inspect(opts)
+
+    {client, opts} =
+      Keyword.pop(opts, :client, {:via, Registry, Xest.BinanceClient.process_lookup()})
+
     # starting the agent by passing the struct as initial value
     # - app can tune the minimal_request_period
     # - mocks should manually modify the initial struct if needed
     Agent.start_link(
-      fn -> %{%Xest.BinanceExchange{} | minimal_request_period: minimal_request_period} end,
+      fn ->
+        %{
+          %Xest.BinanceExchange{}
+          | client: client,
+            minimal_request_period: minimal_request_period
+        }
+      end,
       opts
     )
+  end
+
+  defp maybe_find_client(%Xest.BinanceExchange{client: {:via, _, _} = client} = agent) do
+    Registry.lookup(client)
+  end
+
+  defp maybe_find_client(%Xest.BinanceExchange{client: client_pid} = agent) do
+    client_pid
   end
 
   def model(agent) do
@@ -51,14 +72,17 @@ defmodule Xest.BinanceExchange do
 
   # internal functions to trigger REST request, kept internal for isolation purposes
   defp retrieve_status(agent) do
-    %{"msg" => msg, "status" => status} = BinanceClient.system_status()
+    {:ok, %{"msg" => msg, "status" => status}} =
+      Agent.get(agent, fn state ->
+        BinanceClient.system_status(state.client)
+      end)
 
     :ok =
       Agent.update(agent, fn state ->
         %{state | model: %Models.Exchange{status: %{message: msg, code: status}}}
       end)
 
-    Agent.get(agent, &get_in(&1, [:model, :status]))
+    Agent.get(agent, & &1.model.status)
   end
 
   #  defp retrieve_servertime(exchange) do

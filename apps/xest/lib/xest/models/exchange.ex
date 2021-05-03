@@ -8,7 +8,7 @@ defmodule Xest.Models.ExchangeStatus do
 
   @type t :: %__MODULE__{
           message: String.t(),
-          code: Int.t()
+          code: integer()
         }
 end
 

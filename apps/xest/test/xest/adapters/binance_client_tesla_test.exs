@@ -17,7 +17,7 @@ defmodule Xest.BinanceClientTesla.Test do
   end
 
   test "system status OK" do
-    assert BinanceClientTesla.system_status() == {:ok ,%{"msg" => "normal", "status" => 0}}
+    assert BinanceClientTesla.system_status() == {:ok, %{"msg" => "normal", "status" => 0}}
   end
 
   test "ping OK" do

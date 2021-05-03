@@ -1,13 +1,18 @@
 defmodule Xest.Ports.BinanceClientBehaviour do
-
   # TODO : we can refine this to match binance API...
-  @type status :: map  # %{ required(String.t) => String.t | Int.t }
-  @type reason :: String.t
+  # %{ required(String.t) => String.t | Int.t }
+  @type status :: map
+  @type reason :: String.t()
   @type pong :: %{}
-  @type servertime :: map # %{ required(String.t) => String.t }
+  # %{ required(String.t) => String.t }
+  @type servertime :: map
 
-  @callback system_status() :: {:ok, status} #| {:error, reason}
-  @callback ping() :: {:ok, pong} #| {:error, reason}
-  @callback time() :: {:ok, servertime} #| {:error, reason}
+  # | {:error, reason}
+  @callback system_status() :: {:ok, status}
+  # | {:error, reason}
+  @callback ping() :: {:ok, pong}
+  # | {:error, reason}
+  @callback time() :: {:ok, servertime}
 end
+
 # TODO : move this to domain with the models...
