@@ -9,6 +9,7 @@ defmodule Xest.BinanceRestApiMock do
   ...
   }}
 
+    TODO : a solutio with exvcr + bypass might be better, but currently lacks tesla integration...
   """
 
   @base_url "https://api.binance.com"

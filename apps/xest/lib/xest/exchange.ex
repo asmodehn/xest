@@ -10,42 +10,49 @@ defmodule Xest.BinanceExchange do
 
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
+  @enforce_keys [:minimal_request_period, :shadow_clock]
   defstruct model: %Models.Exchange{},
             # pointing to the binance client pid
             client: nil,
+            # TODO : maybe in model instead ?
+            shadow_clock: nil,
             minimal_request_period: @default_minimum_request_period
+
+  @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
+  @type t() :: %__MODULE__{
+          model: Models.Exchange.t(),
+          # TODO: Xest.Ports.BinanceClientBehaviour.t() | nil,
+          client: any(),
+          shadow_clock: Xest.ShadowClock.t() | nil,
+          minimal_request_period: Time.t() | nil
+        }
 
   alias Xest.BinanceClient
 
   use Agent
 
-  def start_link(opts, minimal_request_period \\ @default_minimum_request_period) do
-    IO.inspect(opts)
+  def remote_clock(client) do
+    BinanceClient.time!(client)["serverTime"]
+    |> DateTime.from_unix!(:millisecond)
+  end
 
-    {client, opts} =
-      Keyword.pop(opts, :client, {:via, Registry, Xest.BinanceClient.process_lookup()})
+  def start_link(opts, minimal_request_period \\ @default_minimum_request_period) do
+    {client, opts} = Keyword.pop(opts, :client, {:via, Registry, Xest.BinanceClient.via_tuple()})
+    {clock, opts} = Keyword.pop(opts, :clock, Xest.ShadowClock.new(remote_clock(client)))
 
     # starting the agent by passing the struct as initial value
     # - app can tune the minimal_request_period
     # - mocks should manually modify the initial struct if needed
+    exchange_struct = %Xest.BinanceExchange{
+      shadow_clock: clock,
+      minimal_request_period: minimal_request_period,
+      client: client
+    }
+
     Agent.start_link(
-      fn ->
-        %{
-          %Xest.BinanceExchange{}
-          | client: client,
-            minimal_request_period: minimal_request_period
-        }
-      end,
+      fn -> exchange_struct end,
       opts
     )
-  end
-
-  defp maybe_find_client(%Xest.BinanceExchange{client: {:via, _, _} = client} = agent) do
-    Registry.lookup(client)
-  end
-
-  defp maybe_find_client(%Xest.BinanceExchange{client: client_pid} = agent) do
-    client_pid
   end
 
   def model(agent) do
@@ -63,32 +70,35 @@ defmodule Xest.BinanceExchange do
 
   # lazy accessor
   def status(agent) do
-    case Agent.get(agent, fn state -> state.model.status end) do
-      %{message: nil, code: _} -> retrieve_status(agent)
-      %{message: _, code: nil} -> retrieve_status(agent)
-      status -> status
-    end
+    Agent.get_and_update(agent, fn state ->
+      case state.model.status do
+        status when is_nil(status.message) or is_nil(status.code) ->
+          # TODO this should probably be in the API / some ACL...
+          {:ok, %{"msg" => msg, "status" => code}} = BinanceClient.system_status(state.client)
+          status = %Models.ExchangeStatus{message: msg, code: code}
+
+          {status,
+           state
+           |> Map.put(
+             :model,
+             state.model
+             |> Models.Exchange.update(status: status)
+           )}
+
+        status ->
+          {status, state}
+          # TODO : add a case to check for timeout to request again the status
+      end
+    end)
   end
 
-  # internal functions to trigger REST request, kept internal for isolation purposes
-  defp retrieve_status(agent) do
-    {:ok, %{"msg" => msg, "status" => status}} =
-      Agent.get(agent, fn state ->
-        BinanceClient.system_status(state.client)
+  def servertime(agent) do
+    # TODO : have some refresh to avoid too big a time skew...
+    clock =
+      Agent.get_and_update(agent, fn state ->
+        {state.shadow_clock, state.shadow_clock |> Xest.ShadowClock.update()}
       end)
 
-    :ok =
-      Agent.update(agent, fn state ->
-        %{state | model: %Models.Exchange{status: %{message: msg, code: status}}}
-      end)
-
-    Agent.get(agent, & &1.model.status)
+    Xest.ShadowClock.now(clock)
   end
-
-  #  defp retrieve_servertime(exchange) do
-  #    %{"serverTime" => server_time} = Binance.time()
-  #    :ok = Agent.update(exchange, fn state ->
-  #      %{state | server_time_skew: utc_now() - server_time }
-  #    end)
-  #  end
 end

@@ -8,14 +8,24 @@ defmodule Xest.BinanceClient do
   This relies on a chosen http library for the binance adapter.
   """
 
-  def process_lookup(), do: {Xest.BinanceRegistry, "client"}
+  @process_default_key "client"
 
   @doc """
-    Registry and key associated for clients to lookup the process later.
-    value is just the value to store...
+  via_tuple builds a key: value record to pass to the registry for this process family.
+  It will be stored along with the pid of the process created.
   """
-  # TODO : maybe have a counter to detect restarts ? maybe last started time ?
-  def process_registration(value), do: process_lookup() |> Tuple.append(value)
+  def via_tuple(key \\ @process_default_key) do
+    {Xest.BinanceRegistry, key}
+  end
+
+  def via_tuple(key, value) do
+    via_tuple(key) |> Tuple.append(value)
+  end
+
+  #  def process_lookup(), do: {Xest.BinanceRegistry, "client"}
+  #
+  #  # TODO : maybe have a counter to detect restarts ? maybe last started time ?
+  #  def process_registration(value), do: process_lookup() |> Tuple.append(value)
 
   # baking in sensible defaults
   @next_ping_wait_time_default :timer.seconds(60)
@@ -34,14 +44,19 @@ defmodule Xest.BinanceClient do
     {next_ping_wait_time, opts} =
       Keyword.pop(opts, :next_ping_wait_time, @next_ping_wait_time_default)
 
-    opts = opts ++ [name: {:via, Registry, process_registration(:registered_on_start)}]
+    opts =
+      Keyword.put_new(
+        opts,
+        :name,
+        {:via, Registry, via_tuple(@process_default_key, :self_registered)}
+      )
 
     GenServer.start_link(
       __MODULE__,
       {
         :ok,
         # passing next_ping_wait_time in case it is specified as option from supervisor
-        %Xest.BinanceClient{%Xest.BinanceClient{} | next_ping_wait_time: next_ping_wait_time}
+        %Xest.BinanceClient{} |> Map.put(:next_ping_wait_time, next_ping_wait_time)
       },
       opts
     )
@@ -51,8 +66,18 @@ defmodule Xest.BinanceClient do
     GenServer.call(pid, {:next_ping_schedule, next_timer_period})
   end
 
+  def system_status!(pid \\ __MODULE__) do
+    {:ok, response} = system_status(pid)
+    response
+  end
+
   def system_status(pid \\ __MODULE__) do
     GenServer.call(pid, {:system_status})
+  end
+
+  def time!(pid \\ __MODULE__) do
+    {:ok, response} = time(pid)
+    response
   end
 
   def time(pid \\ __MODULE__) do

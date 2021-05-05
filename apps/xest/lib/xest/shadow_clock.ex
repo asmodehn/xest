@@ -1,11 +1,13 @@
 defmodule Xest.ShadowClock do
-  @docmodule """
-  a shadow clock in micro seconds precision, following a remote clock...
+  @moduledoc """
+  A lazy shadow clock, with micro seconds (estimated) precision, following a remote clock.
+  This is useful when requesting clock time is expensive.
   """
 
   @enforce_keys [:local_clock, :remote_clock]
-  defstruct last_remote_dt_sample: nil,
-            offset: nil,
+  defstruct last_remote_datetime: nil,
+            last_remote_request: nil,
+            last_remote_response: nil,
             local_clock: nil,
             remote_clock: nil
 
@@ -14,37 +16,70 @@ defmodule Xest.ShadowClock do
 
   @typedoc "A shadow clock, estimate an actual remote clock, expensive to retrieve"
   @type t() :: %__MODULE__{
-          last_remote_dt_sample: DateTime.t() | nil,
-          offset: integer() | nil,
+          # these three are just a record of a past event.
+          last_remote_datetime: DateTime.t() | nil,
+          last_remote_request: DateTime.t() | nil,
+          last_remote_response: DateTime.t() | nil,
           local_clock: clock(),
           remote_clock: clock()
         }
 
   @spec new(clock(), clock()) :: t()
   def new(remote_utc_now, utc_now \\ &Timex.now/0) do
-    remote_now = remote_utc_now.()
-    local_now = utc_now.()
-    offset = Timex.diff(remote_now, local_now)
-
     %Xest.ShadowClock{
-      last_remote_dt_sample: remote_now,
-      offset: offset,
       local_clock: utc_now,
       remote_clock: remote_utc_now
     }
   end
 
-  def now(%Xest.ShadowClock{} = clock) do
-    # TODO : check if the last remote sample is too old...
-    Timex.add(clock.local_clock.(), Timex.Duration.from_microseconds(clock.offset))
+  @spec now(t()) :: DateTime.t()
+  def now(%Xest.ShadowClock{last_remote_datetime: nil} = clock) do
+    clock.local_clock.()
   end
 
-  #  def delta(%Xest.ShadowClock{} = clock, local_dt) do
-  #    Timex.diff(utc_now.() ,Timex.from_unix(server_time, :microseconds))
-  #  end
-  #
-  #  def guess(local_dt) do
-  #    Timex.add(local_dt, Timex.Duration.from_microseconds(state.server_time_skew_usec))
-  #      |> IO.inspect
-  #  end
+  def now(
+        %Xest.ShadowClock{
+          local_clock: local_clock,
+          last_remote_datetime: remote_dt,
+          last_remote_request: remote_req,
+          last_remote_response: remote_rep
+        } = clock
+      )
+      when remote_dt != nil do
+    estimated_local_reqrep_time = Timex.add(remote_req, half_time_of_flight(clock))
+    offset = Timex.diff(remote_dt, estimated_local_reqrep_time)
+    Timex.add(local_clock.(), Timex.Duration.from_microseconds(offset))
+  end
+
+  @spec half_time_of_flight(t()) :: Timex.Duration.t()
+  defp half_time_of_flight(%Xest.ShadowClock{
+         last_remote_request: remote_req,
+         last_remote_response: remote_rep
+       }) do
+    Timex.Duration.from_microseconds(Timex.diff(remote_rep, remote_req) / 2)
+  end
+
+  @spec update(t()) :: t()
+  def update(%Xest.ShadowClock{last_remote_datetime: nil} = clock) do
+    remote_request = clock.local_clock.()
+    remote_datetime = clock.remote_clock.()
+
+    %Xest.ShadowClock{
+      clock
+      | last_remote_datetime: remote_datetime,
+        last_remote_request: remote_request,
+        last_remote_response: clock.local_clock.()
+    }
+  end
+
+  def update(%Xest.ShadowClock{last_remote_response: remote_response} = clock) do
+    # TMP some hard coded deadline
+    if Timex.diff(clock.local_clock.(), remote_response) > Timex.Duration.from_time(~T[00:01:00]) do
+      clock
+      |> Map.put(:last_remote_datetime, nil)
+      |> update()
+    else
+      clock
+    end
+  end
 end
