@@ -41,8 +41,7 @@ defmodule Xest.ShadowClock do
         %Xest.ShadowClock{
           local_clock: local_clock,
           last_remote_datetime: remote_dt,
-          last_remote_request: remote_req,
-          last_remote_response: remote_rep
+          last_remote_request: remote_req
         } = clock
       )
       when remote_dt != nil do
@@ -56,7 +55,7 @@ defmodule Xest.ShadowClock do
          last_remote_request: remote_req,
          last_remote_response: remote_rep
        }) do
-    Timex.Duration.from_microseconds(Timex.diff(remote_rep, remote_req) / 2)
+    Timex.Duration.from_microseconds(div(Timex.diff(remote_rep, remote_req), 2))
   end
 
   @spec update(t()) :: t()

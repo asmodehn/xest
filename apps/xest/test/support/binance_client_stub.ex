@@ -7,8 +7,6 @@ defmodule Xest.BinanceClient.Stub do
 
   @behaviour Xest.Ports.BinanceClientBehaviour
 
-  alias Xest.Models.ExchangeStatus
-
   @impl true
   def ping(), do: {:ok, %{}}
 

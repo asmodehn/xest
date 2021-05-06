@@ -14,4 +14,16 @@ defmodule Xest.BinanceServer.Stub do
 
   @impl true
   def time(_pid), do: {:ok, DateTime.utc_now()}
+
+  @impl true
+  def system_status!(pid \\ __MODULE__) do
+    {:ok, response} = system_status(pid)
+    response
+  end
+
+  @impl true
+  def time!(pid \\ __MODULE__) do
+    {:ok, response} = time(pid)
+    response
+  end
 end
