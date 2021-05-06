@@ -13,8 +13,10 @@ defmodule YourApp.Commit do
   To test: `mix committee.runner [pre_commit | post_commit]`
   """
   def pre_commit do
-    {_format_output, 0} = System.cmd("mix", ["format"] ++ staged_files([".ex", ".exs"]))
-    {_add_output, 0} = System.cmd("git", ["add"] ++ staged_files())
+    existing_staged_files = staged_files([".ex", ".exs"]) |> Enum.filter(&File.exists?(&1))
+
+    {_format_output, 0} = System.cmd("mix", ["format"] ++ existing_staged_files)
+    {_add_output, 0} = System.cmd("git", ["add"] ++ existing_staged_files)
     {:ok, "SUCCESS!"}
   end
 end

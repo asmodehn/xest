@@ -8,6 +8,12 @@ Our runtime has two processes
 - A GenServer holding the Binance Client
 - An Agent managing the Exchange state (status and servertime)
 
+Our code structure has 4 levels of (dependent) abstractions:
+- Application ( BEAM application)
+- Exchange (Agent to hold the know state of the remote exchange server)
+- Client (GenServer providing independent Elixir interface to one or more HTTP/REST adapters)
+- HTTP Adapter (Module, dependent on HTTP library structure)
+
 For code design we follow a loose DDD-like architecture, simplified given elixir strength:
 - domain models holding state, providing read and update functions
 - ports specifying interface for external systems (such as an HTTP client)

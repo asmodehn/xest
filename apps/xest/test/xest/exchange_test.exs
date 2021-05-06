@@ -4,42 +4,43 @@ defmodule Xest.BinanceExchange.Test do
 
   alias Xest.Models
   alias Xest.BinanceExchange
-  alias Xest.BinanceClientBehaviourMock
+  alias Xest.BinanceServerBehaviourMock
 
   import Hammox
 
   @time_stop ~U[2021-02-18 08:53:32.313Z]
 
   setup do
-    client_id = {:via, Registry, Xest.BinanceClient.via_tuple("test_client")}
-
-    # starting client process, relying on registry to access it...
-    start_supervised!({Xest.BinanceClient, name: client_id})
+    # starting server mock process...
+    # start_supervised!({BinanceServerBehaviourMock, name: String.to_atom("#{__MODULE__}.ServerProcess")})
+    server_pid = nil
 
     exg_pid =
       start_supervised!({
         BinanceExchange,
-        # passing the created test client to the created test exchange.
-        name: String.to_atom("#{__MODULE__}.Exchange"),
-        client: client_id,
+        # passing nil as we rely on a mock here.
+        name: String.to_atom("#{__MODULE__}.Process"),
+        client: server_pid,
         clock:
           Xest.ShadowClock.new(
-            fn -> BinanceExchange.remote_clock(client_id) end,
+            fn -> BinanceServerBehaviourMock.time!(server_pid) end,
             fn -> @time_stop end
           )
       })
 
-    # setting up adapter mock
-    BinanceClientBehaviourMock
-    |> allow(self(), client_id)
+    # setting up server mock to tes the chain
+    # Exchange -> Agent messaging -> BinanceServer
+    # without relying on a specific server implementation
+    BinanceServerBehaviourMock
+    |> allow(self(), exg_pid)
 
-    %{client_id: client_id, exg_pid: exg_pid}
+    %{server_pid: server_pid, exg_pid: exg_pid}
   end
 
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  test "initial value OK", %{client_id: client_id, exg_pid: exg_pid} do
+  test "initial value OK", %{server_pid: server_pid, exg_pid: exg_pid} do
     exg_pid
     |> BinanceExchange.state()
     |> assert_fields(%{
@@ -49,14 +50,16 @@ defmodule Xest.BinanceExchange.Test do
           code: nil
         }
       },
-      client: client_id
+      client: server_pid
       #      shadow_clock: %Xest.ShadowClock{}
     })
   end
 
   test "retrieve status", %{exg_pid: exg_pid} do
-    BinanceClientBehaviourMock
-    |> expect(:system_status, fn -> {:ok, %{"msg" => "normal", "status" => 0}} end)
+    BinanceServerBehaviourMock
+    |> expect(:system_status, fn _ ->
+      {:ok, %Models.ExchangeStatus{message: "normal", code: 0}}
+    end)
 
     exg_pid
     |> BinanceExchange.status()
@@ -67,10 +70,8 @@ defmodule Xest.BinanceExchange.Test do
   end
 
   test "retrieve servertime OK", %{exg_pid: exg_pid} do
-    BinanceClientBehaviourMock
-    |> expect(:time, fn ->
-      {:ok, %{"serverTime" => @time_stop |> DateTime.to_unix(:millisecond)}}
-    end)
+    BinanceServerBehaviourMock
+    |> expect(:time!, fn _ -> @time_stop end)
 
     assert BinanceExchange.servertime(exg_pid) == @time_stop
   end

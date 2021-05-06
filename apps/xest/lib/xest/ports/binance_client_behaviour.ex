@@ -1,4 +1,8 @@
 defmodule Xest.Ports.BinanceClientBehaviour do
+  @moduledoc """
+    this implements a direct conversion from Binance API into Elixir
+  """
+
   # TODO : we can refine this to match binance API...
   # %{ required(String.t) => String.t | Int.t }
   @type status :: map
@@ -14,5 +18,3 @@ defmodule Xest.Ports.BinanceClientBehaviour do
   # | {:error, reason}
   @callback time() :: {:ok, servertime}
 end
-
-# TODO : move this to domain with the models...

@@ -1,6 +1,4 @@
-# TODO: change name, it's too confusing with actual http/rest client modules
-#   or maybe change the http to "API ??
-defmodule Xest.BinanceClient do
+defmodule Xest.BinanceServer do
   use GenServer
 
   @moduledoc """
@@ -9,6 +7,8 @@ defmodule Xest.BinanceClient do
   """
 
   @process_default_key "client"
+
+  @behaviour Xest.Ports.BinanceServerBehaviour
 
   @doc """
   via_tuple builds a key: value record to pass to the registry for this process family.
@@ -41,22 +41,19 @@ defmodule Xest.BinanceClient do
   Starts reliable binance client.
   """
   def start_link(opts) do
+    name = Keyword.get(opts, :name, __MODULE__)
+    opts = Keyword.put_new(opts, :name, name)
+
     {next_ping_wait_time, opts} =
       Keyword.pop(opts, :next_ping_wait_time, @next_ping_wait_time_default)
-
-    opts =
-      Keyword.put_new(
-        opts,
-        :name,
-        {:via, Registry, via_tuple(@process_default_key, :self_registered)}
-      )
 
     GenServer.start_link(
       __MODULE__,
       {
+        # TODO : remove this (useless here)
         :ok,
         # passing next_ping_wait_time in case it is specified as option from supervisor
-        %Xest.BinanceClient{} |> Map.put(:next_ping_wait_time, next_ping_wait_time)
+        %__MODULE__{} |> Map.put(:next_ping_wait_time, next_ping_wait_time)
       },
       opts
     )
@@ -66,32 +63,39 @@ defmodule Xest.BinanceClient do
     GenServer.call(pid, {:next_ping_schedule, next_timer_period})
   end
 
+  @impl true
   def system_status!(pid \\ __MODULE__) do
     {:ok, response} = system_status(pid)
     response
   end
 
+  @impl true
   def system_status(pid \\ __MODULE__) do
-    GenServer.call(pid, {:system_status})
+    {:ok, %{"msg" => msg, "status" => status}} = GenServer.call(pid, {:system_status})
+
+    {:ok, %Xest.Models.ExchangeStatus{message: msg, code: status}}
   end
 
+  @impl true
   def time!(pid \\ __MODULE__) do
     {:ok, response} = time(pid)
     response
   end
 
+  @impl true
   def time(pid \\ __MODULE__) do
-    GenServer.call(pid, {:time})
+    {:ok, %{"serverTime" => servertime}} = GenServer.call(pid, {:time})
+    {:ok, servertime |> DateTime.from_unix!(:millisecond)}
   end
 
   ## Defining GenServer Callbacks
   @impl true
-  def init({:ok, %Xest.BinanceClient{next_ping_wait_time: nil} = state}) do
+  def init({:ok, %__MODULE__{next_ping_wait_time: nil} = state}) do
     # no ping to start
-    init({:ok, %Xest.BinanceClient{state | next_ping_wait_time: nil}})
+    init({:ok, %__MODULE__{state | next_ping_wait_time: nil}})
   end
 
-  def init({:ok, %Xest.BinanceClient{next_ping_wait_time: _next_ping_wait_time} = state}) do
+  def init({:ok, %__MODULE__{next_ping_wait_time: _next_ping_wait_time} = state}) do
     binance_client_adapter = Application.get_env(:xest, :binance_client_adapter)
 
     # scheduling ping onto itself
@@ -99,29 +103,29 @@ defmodule Xest.BinanceClient do
 
     # TMP no state for now, except the adapter for dynamic dispatch
     # => lets try to manage everything with tesla...
-    {:ok, %Xest.BinanceClient{state | binance_client_adapter: binance_client_adapter}}
+    {:ok, %__MODULE__{state | binance_client_adapter: binance_client_adapter}}
   end
 
-  defp reschedule_ping(%Xest.BinanceClient{next_ping_ref: nil, next_ping_wait_time: nil} = state),
+  defp reschedule_ping(%__MODULE__{next_ping_ref: nil, next_ping_wait_time: nil} = state),
     do: state
 
   defp reschedule_ping(
-         %Xest.BinanceClient{next_ping_ref: nil, next_ping_wait_time: next_ping_wait_time} = state
+         %__MODULE__{next_ping_ref: nil, next_ping_wait_time: next_ping_wait_time} = state
        ) do
     # reschedule ping onto itself
     timer_ref = Process.send_after(self(), :ping, next_ping_wait_time)
 
     # we keep the same wait time for the next ping
-    %Xest.BinanceClient{
+    %__MODULE__{
       state
       | next_ping_ref: timer_ref,
         next_ping_wait_time: next_ping_wait_time
     }
   end
 
-  defp reschedule_ping(%Xest.BinanceClient{next_ping_ref: previous_timer_ref} = state) do
+  defp reschedule_ping(%__MODULE__{next_ping_ref: previous_timer_ref} = state) do
     Process.cancel_timer(previous_timer_ref)
-    reschedule_ping(%Xest.BinanceClient{state | next_ping_ref: nil})
+    reschedule_ping(%__MODULE__{state | next_ping_ref: nil})
   end
 
   @impl true

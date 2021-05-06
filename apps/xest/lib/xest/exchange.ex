@@ -27,18 +27,14 @@ defmodule Xest.BinanceExchange do
           minimal_request_period: Time.t() | nil
         }
 
-  alias Xest.BinanceClient
-
   use Agent
 
-  def remote_clock(client) do
-    BinanceClient.time!(client)["serverTime"]
-    |> DateTime.from_unix!(:millisecond)
-  end
-
   def start_link(opts, minimal_request_period \\ @default_minimum_request_period) do
-    {client, opts} = Keyword.pop(opts, :client, {:via, Registry, Xest.BinanceClient.via_tuple()})
-    {clock, opts} = Keyword.pop(opts, :clock, Xest.ShadowClock.new(remote_clock(client)))
+    {client, opts} = Keyword.pop(opts, :client, binance_server())
+    # REMINDER : we dont want to call external systems on startup.
+    # Other processes need to align before this can safely happen in various environments.
+    {clock, opts} =
+      Keyword.pop(opts, :clock, Xest.ShadowClock.new(fn -> binance_server().time!(client) end))
 
     # starting the agent by passing the struct as initial value
     # - app can tune the minimal_request_period
@@ -53,6 +49,10 @@ defmodule Xest.BinanceExchange do
       fn -> exchange_struct end,
       opts
     )
+  end
+
+  defp binance_server do
+    Application.get_env(:xest, :binance_server)
   end
 
   def model(agent) do
@@ -74,8 +74,7 @@ defmodule Xest.BinanceExchange do
       case state.model.status do
         status when is_nil(status.message) or is_nil(status.code) ->
           # TODO this should probably be in the API / some ACL...
-          {:ok, %{"msg" => msg, "status" => code}} = BinanceClient.system_status(state.client)
-          status = %Models.ExchangeStatus{message: msg, code: code}
+          {:ok, %Models.ExchangeStatus{} = status} = binance_server().system_status(state.client)
 
           {status,
            state

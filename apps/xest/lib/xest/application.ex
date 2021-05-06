@@ -7,16 +7,14 @@ defmodule Xest.Application do
 
   alias Xest.Models.Exchange
 
+  @impl true
   def start(_type, _args) do
     children = [
       # Start the PubSub system
       {Phoenix.PubSub, name: Xest.PubSub},
 
-      # A registry to keep track of dynamic dependent processes
-      {Registry, name: Xest.BinanceRegistry, keys: :unique},
-
-      # Starting main Binance Client GenServer
-      {Xest.BinanceClient, name: Xest.BinanceClient},
+      # Starting main Binance Server
+      {Xest.BinanceServer, name: Xest.BinanceServer},
       # Starting main Exchange Agent managing retrieved state
       {Xest.BinanceExchange, name: Xest.BinanceExchange}
 

@@ -31,6 +31,9 @@ config :phoenix, :json_library, Jason
 # setup adapter for binance http api connections
 config :xest, binance_client_adapter: Xest.BinanceClientTesla
 
+# setup adapter for binance genserver
+config :xest, binance_server: Xest.BinanceServer
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
