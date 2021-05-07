@@ -80,8 +80,7 @@ defmodule Xest.BinanceExchange do
            state
            |> Map.put(
              :model,
-             state.model
-             |> Models.Exchange.update(status: status)
+             Models.Exchange.update(state.model, status: status)
            )}
 
         status ->
@@ -95,7 +94,8 @@ defmodule Xest.BinanceExchange do
     # TODO : have some refresh to avoid too big a time skew...
     clock =
       Agent.get_and_update(agent, fn state ->
-        {state.shadow_clock, state.shadow_clock |> Xest.ShadowClock.update()}
+        {state.shadow_clock,
+         state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
       end)
 
     Xest.ShadowClock.now(clock)

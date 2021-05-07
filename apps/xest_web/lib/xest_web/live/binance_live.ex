@@ -48,6 +48,8 @@ defmodule XestWeb.BinanceLive do
   end
 
   defp put_date(socket) do
+    Logger.debug("get date")
+
     time =
       BinanceExchange.servertime(
         # finding the process via its module name...

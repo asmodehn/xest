@@ -69,10 +69,34 @@ defmodule Xest.BinanceExchange.Test do
     })
   end
 
+  test "after retrieving status, state is still usable", %{exg_pid: exg_pid} do
+    BinanceServerBehaviourMock
+    |> expect(:system_status, fn _ ->
+      {:ok, %Models.ExchangeStatus{message: "normal", code: 0}}
+    end)
+
+    BinanceExchange.status(exg_pid)
+
+    exg_pid
+    |> BinanceExchange.status()
+    |> assert_fields(%{
+      message: "normal",
+      code: 0
+    })
+  end
+
   test "retrieve servertime OK", %{exg_pid: exg_pid} do
     BinanceServerBehaviourMock
     |> expect(:time!, fn _ -> @time_stop end)
 
+    assert BinanceExchange.servertime(exg_pid) == @time_stop
+  end
+
+  test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
+    BinanceServerBehaviourMock
+    |> expect(:time!, fn _ -> @time_stop end)
+
+    BinanceExchange.servertime(exg_pid)
     assert BinanceExchange.servertime(exg_pid) == @time_stop
   end
 end
