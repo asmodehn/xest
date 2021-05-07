@@ -1,4 +1,4 @@
-defmodule Xest.Ports.BinanceClientBehaviour do
+defmodule XestBinance.Ports.ClientBehaviour do
   @moduledoc """
     this implements a direct conversion from Binance API into Elixir
   """

@@ -1,14 +1,14 @@
-defmodule Xest.BinanceClient.Test do
+defmodule XestBinance.Server.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
-  alias Xest.BinanceClientBehaviourMock
+  alias XestBinance.ClientBehaviourMock
 
   # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
   import Hammox
 
   # Importing and protecting our behavior implementation cf. https://github.com/msz/hammox
-  use Hammox.Protect, module: Xest.BinanceServer, behaviour: Xest.Ports.BinanceServerBehaviour
+  use Hammox.Protect, module: XestBinance.Server, behaviour: XestBinance.Ports.ServerBehaviour
 
   setup :verify_on_exit!
 
@@ -70,31 +70,31 @@ defmodule Xest.BinanceClient.Test do
       # starts server test process
       server_pid =
         start_supervised!({
-          Xest.BinanceServer,
-          name: Xest.BinanceServer.Test.Process
+          XestBinance.Server,
+          name: XestBinance.Server.Test.Process
         })
 
       # setting up adapter mock to test the chain :
       # BinanceServer -> GenServer messaging -> BinanceClient / API
       # without relying on specific client implementation (tesla or another)
-      BinanceClientBehaviourMock
+      ClientBehaviourMock
       |> allow(self(), server_pid)
 
       %{server_pid: server_pid}
     end
 
     test "provides system status", %{server_pid: server_pid} do
-      BinanceClientBehaviourMock
+      ClientBehaviourMock
       |> expect(:system_status, fn -> {:ok, %{"msg" => "normal", "status" => 0}} end)
 
       assert system_status(server_pid) ==
-               {:ok, %Xest.Models.ExchangeStatus{message: "normal", code: 0}}
+               {:ok, %XestBinance.Models.ExchangeStatus{message: "normal", code: 0}}
     end
 
     test "provides time", %{server_pid: server_pid} do
       udt = ~U[2021-02-18 08:53:32.313Z]
 
-      BinanceClientBehaviourMock
+      ClientBehaviourMock
       |> expect(:time, fn -> {:ok, %{"serverTime" => DateTime.to_unix(udt, :millisecond)}} end)
 
       assert time(server_pid) == {:ok, udt}
@@ -107,7 +107,7 @@ defmodule Xest.BinanceClient.Test do
     setup do
       server_pid =
         start_supervised!(
-          {Xest.BinanceServer, name: __MODULE__, next_ping_wait_time: :timer.seconds(1)}
+          {XestBinance.Server, name: __MODULE__, next_ping_wait_time: :timer.seconds(1)}
         )
 
       %{server_pid: server_pid}
@@ -117,7 +117,7 @@ defmodule Xest.BinanceClient.Test do
       %{
         next_ping_ref: _ping_timer,
         next_ping_wait_time: period
-      } = Xest.BinanceServer.next_ping_schedule(server_pid)
+      } = XestBinance.Server.next_ping_schedule(server_pid)
 
       # TODO : is there a way to make this public (part of behaviour) somehow ?
 
@@ -128,7 +128,7 @@ defmodule Xest.BinanceClient.Test do
       %{
         next_ping_ref: _ping_timer,
         next_ping_wait_time: period
-      } = Xest.BinanceServer.next_ping_schedule(server_pid, :timer.seconds(0.5))
+      } = XestBinance.Server.next_ping_schedule(server_pid, :timer.seconds(0.5))
 
       assert period == 500
     end
@@ -139,7 +139,7 @@ defmodule Xest.BinanceClient.Test do
       # we need the current pid of this process
       test_pid = self()
 
-      BinanceClientBehaviourMock
+      ClientBehaviourMock
       |> expect(:ping, fn ->
         send(test_pid, :ping_done)
         {:ok, %{}}

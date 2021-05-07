@@ -1,9 +1,9 @@
-defmodule Xest.BinanceExchange do
+defmodule XestBinance.Exchange do
   @moduledoc """
   An Agent attempting to maintain a consistent view (as state) of the exchange
   It holds the knowledge of this system regarding binance.
   """
-  alias Xest.Models
+  alias XestBinance.Models
 
   # TODO : move that to the binance client genserver...
   @default_minimum_request_period ~T[00:00:01]
@@ -39,7 +39,7 @@ defmodule Xest.BinanceExchange do
     # starting the agent by passing the struct as initial value
     # - app can tune the minimal_request_period
     # - mocks should manually modify the initial struct if needed
-    exchange_struct = %Xest.BinanceExchange{
+    exchange_struct = %XestBinance.Exchange{
       shadow_clock: clock,
       minimal_request_period: minimal_request_period,
       client: client

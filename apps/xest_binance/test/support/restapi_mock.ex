@@ -1,4 +1,4 @@
-defmodule Xest.BinanceRestApiMock do
+defmodule XestBinance.RestApiMock do
   @moduledoc """
   Module defining a mock for binance API. used in automated tests.
   This is iteratively constructed by manually probing the binance api in iex

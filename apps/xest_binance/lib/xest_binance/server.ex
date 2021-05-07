@@ -1,4 +1,4 @@
-defmodule Xest.BinanceServer do
+defmodule XestBinance.Server do
   use GenServer
 
   @moduledoc """
@@ -6,21 +6,7 @@ defmodule Xest.BinanceServer do
   This relies on a chosen http library for the binance adapter.
   """
 
-  @process_default_key "client"
-
-  @behaviour Xest.Ports.BinanceServerBehaviour
-
-  @doc """
-  via_tuple builds a key: value record to pass to the registry for this process family.
-  It will be stored along with the pid of the process created.
-  """
-  def via_tuple(key \\ @process_default_key) do
-    {Xest.BinanceRegistry, key}
-  end
-
-  def via_tuple(key, value) do
-    via_tuple(key) |> Tuple.append(value)
-  end
+  @behaviour XestBinance.Ports.ServerBehaviour
 
   #  def process_lookup(), do: {Xest.BinanceRegistry, "client"}
   #
@@ -73,7 +59,12 @@ defmodule Xest.BinanceServer do
   def system_status(pid \\ __MODULE__) do
     {:ok, %{"msg" => msg, "status" => status}} = GenServer.call(pid, {:system_status})
 
-    {:ok, %Xest.Models.ExchangeStatus{message: msg, code: status}}
+    response = %XestBinance.Models.ExchangeStatus{message: msg, code: status}
+
+    # a way to broadcast "low-level" events (we don't need to store them)
+    Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), "binance:system_status", response)
+
+    {:ok, response}
   end
 
   @impl true
@@ -85,7 +76,12 @@ defmodule Xest.BinanceServer do
   @impl true
   def time(pid \\ __MODULE__) do
     {:ok, %{"serverTime" => servertime}} = GenServer.call(pid, {:time})
-    {:ok, servertime |> DateTime.from_unix!(:millisecond)}
+    response = servertime |> DateTime.from_unix!(:millisecond)
+
+    # a way to broadcast "low-level" events (we don't need to store them)
+    Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), "binance:time", response)
+
+    {:ok, response}
   end
 
   ## Defining GenServer Callbacks

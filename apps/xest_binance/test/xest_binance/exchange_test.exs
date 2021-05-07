@@ -1,10 +1,10 @@
-defmodule Xest.BinanceExchange.Test do
+defmodule XestBinance.Exchange.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
-  alias Xest.Models
-  alias Xest.BinanceExchange
-  alias Xest.BinanceServerBehaviourMock
+  alias XestBinance.Models
+  alias XestBinance.Exchange
+  alias XestBinance.ServerBehaviourMock
 
   import Hammox
 
@@ -17,13 +17,13 @@ defmodule Xest.BinanceExchange.Test do
 
     exg_pid =
       start_supervised!({
-        BinanceExchange,
+        Exchange,
         # passing nil as we rely on a mock here.
         name: String.to_atom("#{__MODULE__}.Process"),
         client: server_pid,
         clock:
           Xest.ShadowClock.new(
-            fn -> BinanceServerBehaviourMock.time!(server_pid) end,
+            fn -> ServerBehaviourMock.time!(server_pid) end,
             fn -> @time_stop end
           )
       })
@@ -31,7 +31,7 @@ defmodule Xest.BinanceExchange.Test do
     # setting up server mock to tes the chain
     # Exchange -> Agent messaging -> BinanceServer
     # without relying on a specific server implementation
-    BinanceServerBehaviourMock
+    ServerBehaviourMock
     |> allow(self(), exg_pid)
 
     %{server_pid: server_pid, exg_pid: exg_pid}
@@ -42,7 +42,7 @@ defmodule Xest.BinanceExchange.Test do
 
   test "initial value OK", %{server_pid: server_pid, exg_pid: exg_pid} do
     exg_pid
-    |> BinanceExchange.state()
+    |> Exchange.state()
     |> assert_fields(%{
       model: %Models.Exchange{
         status: %Models.ExchangeStatus{
@@ -56,13 +56,13 @@ defmodule Xest.BinanceExchange.Test do
   end
 
   test "retrieve status", %{exg_pid: exg_pid} do
-    BinanceServerBehaviourMock
+    ServerBehaviourMock
     |> expect(:system_status, fn _ ->
       {:ok, %Models.ExchangeStatus{message: "normal", code: 0}}
     end)
 
     exg_pid
-    |> BinanceExchange.status()
+    |> Exchange.status()
     |> assert_fields(%{
       message: "normal",
       code: 0
@@ -70,15 +70,15 @@ defmodule Xest.BinanceExchange.Test do
   end
 
   test "after retrieving status, state is still usable", %{exg_pid: exg_pid} do
-    BinanceServerBehaviourMock
+    ServerBehaviourMock
     |> expect(:system_status, fn _ ->
       {:ok, %Models.ExchangeStatus{message: "normal", code: 0}}
     end)
 
-    BinanceExchange.status(exg_pid)
+    Exchange.status(exg_pid)
 
     exg_pid
-    |> BinanceExchange.status()
+    |> Exchange.status()
     |> assert_fields(%{
       message: "normal",
       code: 0
@@ -86,17 +86,17 @@ defmodule Xest.BinanceExchange.Test do
   end
 
   test "retrieve servertime OK", %{exg_pid: exg_pid} do
-    BinanceServerBehaviourMock
+    ServerBehaviourMock
     |> expect(:time!, fn _ -> @time_stop end)
 
-    assert BinanceExchange.servertime(exg_pid) == @time_stop
+    assert Exchange.servertime(exg_pid) == @time_stop
   end
 
   test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
-    BinanceServerBehaviourMock
+    ServerBehaviourMock
     |> expect(:time!, fn _ -> @time_stop end)
 
-    BinanceExchange.servertime(exg_pid)
-    assert BinanceExchange.servertime(exg_pid) == @time_stop
+    Exchange.servertime(exg_pid)
+    assert Exchange.servertime(exg_pid) == @time_stop
   end
 end

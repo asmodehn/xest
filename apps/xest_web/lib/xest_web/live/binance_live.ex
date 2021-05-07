@@ -3,12 +3,18 @@ defmodule XestWeb.BinanceLive do
 
   require Logger
 
-  alias Xest.BinanceExchange
+  alias XestBinance.Exchange
 
   @impl true
   def mount(_params, session, socket) do
     # connection or refresh
-    Logger.debug("mount with token: " <> session["_csrf_token"])
+    Logger.debug("Binance liveview mount with token: " <> session["_csrf_token"])
+
+    # subscribe to the binance topic
+
+    :ok = XestWeb.Endpoint.subscribe("binance:requests")
+    :ok = XestWeb.Endpoint.subscribe("binance:time")
+    :ok = XestWeb.Endpoint.subscribe("binance:system_status")
 
     # setup a self tick with a second period
     if connected?(socket), do: :timer.send_interval(1000, self(), :tick)
@@ -27,6 +33,12 @@ defmodule XestWeb.BinanceLive do
   end
 
   @impl true
+  def handle_info(msg, socket) do
+    IO.puts("IN HANDLE RANDOM MSG: " <> msg)
+    {:noreply, socket |> put_flash(:warning, msg)}
+  end
+
+  @impl true
   def handle_event("nav", _path, socket) do
     IO.inspect(socket)
     {:noreply, socket}
@@ -37,9 +49,9 @@ defmodule XestWeb.BinanceLive do
     Logger.debug("clicked !")
 
     status =
-      BinanceExchange.status(
+      Exchange.status(
         # finding the process via its module name...
-        Process.whereis(BinanceExchange)
+        Process.whereis(Exchange)
       )
 
     Logger.info("status: #{inspect(status)}")
@@ -51,9 +63,9 @@ defmodule XestWeb.BinanceLive do
     Logger.debug("get date")
 
     time =
-      BinanceExchange.servertime(
+      Exchange.servertime(
         # finding the process via its module name...
-        Process.whereis(BinanceExchange)
+        Process.whereis(Exchange)
       )
 
     assign(socket, date: time)

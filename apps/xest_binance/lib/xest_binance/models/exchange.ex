@@ -1,6 +1,4 @@
-defmodule Xest.Models.ExchangeStatus do
-  use Xest, :model
-
+defmodule XestBinance.Models.ExchangeStatus do
   require Timex
 
   defstruct message: nil,
@@ -12,13 +10,11 @@ defmodule Xest.Models.ExchangeStatus do
         }
 end
 
-defmodule Xest.Models.Exchange do
-  use Xest, :model
-
-  defstruct status: %Xest.Models.ExchangeStatus{}
+defmodule XestBinance.Models.Exchange do
+  defstruct status: %XestBinance.Models.ExchangeStatus{}
 
   @type t :: %__MODULE__{
-          status: Xest.Models.ExchangeStatus.t()
+          status: XestBinance.Models.ExchangeStatus.t()
         }
 
   def update(exchange, update_fields \\ []) do

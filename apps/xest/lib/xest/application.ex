@@ -9,12 +9,7 @@ defmodule Xest.Application do
   def start(_type, _args) do
     children = [
       # Start the PubSub system
-      {Phoenix.PubSub, name: Xest.PubSub},
-
-      # Starting main Binance Server
-      {Xest.BinanceServer, name: Xest.BinanceServer},
-      # Starting main Exchange Agent managing retrieved state
-      {Xest.BinanceExchange, name: Xest.BinanceExchange}
+      {Phoenix.PubSub, name: Xest.PubSub}
 
       # TUI process
       # disabling since this messes up the input terminal...

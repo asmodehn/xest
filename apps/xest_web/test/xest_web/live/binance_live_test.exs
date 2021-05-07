@@ -3,12 +3,12 @@ defmodule XestWeb.BinanceLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Xest.BinanceRestApiMock
+  alias XestBinance.RestApiMock
   import Tesla.Mock
 
   # TODO : inestigate why we need global here ? local doesnt work ?
   setup_all do
-    mock_global(&BinanceRestApiMock.apimock/1)
+    mock_global(&RestApiMock.apimock/1)
     :ok
   end
 
@@ -19,6 +19,7 @@ defmodule XestWeb.BinanceLiveTest do
     assert render(page_live) =~ "Status: N/A"
   end
 
+  # TODO : server time !
   # as a static page
   #  test "GET /binance", %{conn: conn} do
   #    conn = get(conn, "/binance")

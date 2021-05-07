@@ -1,13 +1,13 @@
-defmodule Xest.BinanceServer.Stub do
+defmodule XestBinance.Server.Stub do
   @moduledoc """
     Since the Binance Client GenServer might call things "internally",
     like calling ping periodically for instance,
     we need a stub implementation of the API_Behavior to implement these on adapter mocks
   """
 
-  @behaviour Xest.Ports.BinanceServerBehaviour
+  @behaviour XestBinance.Ports.ServerBehaviour
 
-  alias Xest.Models.ExchangeStatus
+  alias XestBinance.Models.ExchangeStatus
 
   @impl true
   def system_status(_pid), do: {:ok, %ExchangeStatus{}}

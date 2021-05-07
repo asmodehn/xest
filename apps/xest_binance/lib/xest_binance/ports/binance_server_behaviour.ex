@@ -1,4 +1,4 @@
-defmodule Xest.Ports.BinanceServerBehaviour do
+defmodule XestBinance.Ports.ServerBehaviour do
   @moduledoc """
     this implements a conversion from Binance model into our Xest model.
     It serves to specify the types that must be exposed by a GenServer,
@@ -6,7 +6,7 @@ defmodule Xest.Ports.BinanceServerBehaviour do
     But it remains tied to the Binance model in its overall structure.
   """
 
-  @type status :: Xest.Models.ExchangeStatus.t()
+  @type status :: XestBinance.Models.ExchangeStatus.t()
   @type reason :: String.t()
   @type pong :: %{}
 

@@ -1,9 +1,9 @@
-defmodule Xest.Domain.Exchange.Test do
+defmodule XestBinance.Domain.Exchange.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
-  alias Xest.Models.Exchange
-  alias Xest.Models.ExchangeStatus
+  alias XestBinance.Models.Exchange
+  alias XestBinance.Models.ExchangeStatus
 
   test "test exchange status initial values" do
     %ExchangeStatus{}

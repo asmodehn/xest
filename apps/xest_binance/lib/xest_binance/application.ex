@@ -8,8 +8,10 @@ defmodule XestBinance.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: XestBinance.Worker.start_link(arg)
-      # {XestBinance.Worker, arg}
+      # Starting main Binance Server
+      {XestBinance.Server, name: XestBinance.Server},
+      # Starting main Exchange Agent managing retrieved state
+      {XestBinance.Exchange, name: XestBinance.Exchange}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

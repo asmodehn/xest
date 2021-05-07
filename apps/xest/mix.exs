@@ -57,14 +57,6 @@ defmodule Xest.MixProject do
       # phoenix communication
       {:phoenix_pubsub, "~> 2.0"},
 
-      # HTTP client
-      {:tesla, "~> 1.4.0"},
-      # optional, but recommended adapter
-      {:hackney, "~> 1.16.0"},
-      # optional, required by JSON middleware
-      {:jason, ">= 1.0.0"},
-      {:fuse, "~> 2.4"},
-
       # Time manipulation
       {:timex, "~> 3.0"},
 

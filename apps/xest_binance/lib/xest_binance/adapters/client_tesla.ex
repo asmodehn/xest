@@ -1,8 +1,8 @@
-defmodule Xest.BinanceClientTesla do
+defmodule XestBinance.ClientTesla do
   @moduledoc """
   A module managing retrieving data from binance API
   """
-  @behaviour Xest.Ports.BinanceClientBehaviour
+  @behaviour XestBinance.Ports.ClientBehaviour
 
   use Tesla
 
@@ -35,8 +35,17 @@ defmodule Xest.BinanceClientTesla do
 
   # TODO : rate limiter with https://hexdocs.pm/hammer
 
+  # TODO : a cleaner way (middleware ? adapter in context?) to report request being sent to pubsub
+
+  @request_topic "binance:requests"
+
+  def subscribe(_) do
+    # Phoenix.PubSub.subscribe(Xest.PubSub, @request_topic)
+  end
+
   @impl true
   def system_status() do
+    # Phoenix.PubSub.broadcast_from!(Xest.PubSub,self(), @request_topic, :system_status)
     case get("/wapi/v3/systemStatus.html") do
       {:ok, %{status: 200, body: body}} -> {:ok, body}
       tesla_env -> {:error, tesla_env}
@@ -45,6 +54,7 @@ defmodule Xest.BinanceClientTesla do
 
   @impl true
   def ping() do
+    # Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), @request_topic, :ping)
     case get("/api/v3/ping") do
       {:ok, %{status: 200, body: body}} -> {:ok, body}
       tesla_env -> {:error, tesla_env}
@@ -53,6 +63,7 @@ defmodule Xest.BinanceClientTesla do
 
   @impl true
   def time() do
+    # Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(),@request_topic, :time)
     case get("/api/v3/time") do
       {:ok, %{status: 200, body: body}} -> {:ok, body}
       tesla_env -> {:error, tesla_env}
