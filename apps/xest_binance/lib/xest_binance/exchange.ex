@@ -2,8 +2,16 @@ defmodule XestBinance.Exchange do
   @moduledoc """
   An Agent attempting to maintain a consistent view (as state) of the exchange
   It holds the knowledge of this system regarding binance.
+
+  TODO: this is currently a separated process.
+  Ultimately it should be the process the user starts.
+  There is only logic here and this should be purely functional.
+  There is no reason to keep state around when we can rebuild when needed,
+   from past responses stored in server.
   """
   alias XestBinance.Models
+
+  @behaviour XestBinance.Ports.ExchangeBehaviour
 
   # TODO : move that to the binance client genserver...
   @default_minimum_request_period ~T[00:00:01]
@@ -69,6 +77,7 @@ defmodule XestBinance.Exchange do
   end
 
   # lazy accessor
+  @impl true
   def status(agent) do
     Agent.get_and_update(agent, fn state ->
       case state.model.status do
@@ -90,6 +99,7 @@ defmodule XestBinance.Exchange do
     end)
   end
 
+  @impl true
   def servertime(agent) do
     # TODO : have some refresh to avoid too big a time skew...
     clock =

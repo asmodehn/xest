@@ -8,6 +8,9 @@ defmodule XestBinance.Exchange.Test do
 
   import Hammox
 
+  # Importing and protecting our behavior implementation cf. https://github.com/msz/hammox
+  use Hammox.Protect, module: XestBinance.Exchange, behaviour: XestBinance.Ports.ExchangeBehaviour
+
   @time_stop ~U[2021-02-18 08:53:32.313Z]
 
   setup do

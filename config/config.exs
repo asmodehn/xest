@@ -28,11 +28,14 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# setup adapter for binance http api connections
-config :xest, binance_client_adapter: Xest.BinanceClientTesla
+config :xest,
+  # setup adapter for binance http api connections
+  binance_client_adapter: XestBinance.ClientTesla,
+  # setup adapter for binance genserver
+  binance_server: XestBinance.Server
 
-# setup adapter for binance genserver
-config :xest, binance_server: Xest.BinanceServer
+config :xest_web,
+  binance_exchange: XestBinance.Exchange
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

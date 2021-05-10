@@ -49,9 +49,9 @@ defmodule XestWeb.BinanceLive do
     Logger.debug("clicked !")
 
     status =
-      Exchange.status(
+      binance_exchange().status(
         # finding the process via its module name...
-        Process.whereis(Exchange)
+        Process.whereis(binance_exchange())
       )
 
     Logger.info("status: #{inspect(status)}")
@@ -63,11 +63,15 @@ defmodule XestWeb.BinanceLive do
     Logger.debug("get date")
 
     time =
-      Exchange.servertime(
+      binance_exchange().servertime(
         # finding the process via its module name...
-        Process.whereis(Exchange)
+        Process.whereis(binance_exchange())
       )
 
     assign(socket, date: time)
+  end
+
+  defp binance_exchange() do
+    Application.get_env(:xest_web, :binance_exchange)
   end
 end
