@@ -102,12 +102,9 @@ defmodule XestBinance.Exchange do
   @impl true
   def servertime(agent) do
     # TODO : have some refresh to avoid too big a time skew...
-    clock =
-      Agent.get_and_update(agent, fn state ->
-        {state.shadow_clock,
-         state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
-      end)
-
-    Xest.ShadowClock.now(clock)
+    Agent.get_and_update(agent, fn state ->
+      {state.shadow_clock,
+       state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
+    end)
   end
 end

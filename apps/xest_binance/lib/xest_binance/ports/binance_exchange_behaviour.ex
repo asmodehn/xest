@@ -9,7 +9,7 @@ defmodule XestBinance.Ports.ExchangeBehaviour do
   @type status :: XestBinance.Models.ExchangeStatus.t()
   @type reason :: String.t()
 
-  @type servertime :: DateTime.t()
+  @type servertime :: Xest.ShadowClock.t()
   @type mockable_pid :: nil | pid()
 
   # | {:error, reason}

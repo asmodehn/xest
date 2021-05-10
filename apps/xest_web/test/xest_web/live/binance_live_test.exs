@@ -12,17 +12,32 @@ defmodule XestWeb.BinanceLiveTest do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  test "disconnected and connected render", %{conn: conn} do
+  setup do
+    # Setting up shadow clock to be used in mock
+    clock =
+      Xest.ShadowClock.new(
+        fn -> @time_stop end,
+        fn -> @time_stop end
+      )
+
+    %{clock: clock}
+  end
+
+  test "disconnected and connected render", %{conn: conn, clock: clock} do
     ExchangeBehaviourMock
-    # TODO : fix this, only one call
-    |> expect(:servertime, fn _ -> @time_stop end)
-    |> expect(:servertime, fn _ -> @time_stop end)
+    |> expect(:servertime, fn _ -> clock end)
 
     #    |> expect(:status, fn _ -> %ExchangeStatus{} end)
 
-    {:ok, page_live, disconnected_html} = live(conn, "/binance")
-    assert disconnected_html =~ "Status: N/A"
-    # will switch to normal only after user click button
-    assert render(page_live) =~ "Status: N/A"
+    conn = get(conn, "/binance")
+    assert html_response(conn, 200) =~ "Status: N/A"
+    assert html_response(conn, 200) =~ "00:00:00"
+
+    {:ok, _view, html} = live(conn, "/binance")
+
+    # after websocket connection, message changed
+    assert html =~ "Status: requesting..."
+    assert html =~ "08:53:32"
+    # TODO : more
   end
 end

@@ -2,27 +2,41 @@ defmodule XestWeb.BinanceLive do
   use XestWeb, :live_view
 
   require Logger
-
-  alias XestBinance.Exchange
+  require Xest
 
   @impl true
   def mount(_params, session, socket) do
     # connection or refresh
     Logger.debug("Binance liveview mount with token: " <> session["_csrf_token"])
 
-    # subscribe to the binance topic
-
-    :ok = XestWeb.Endpoint.subscribe("binance:requests")
-    :ok = XestWeb.Endpoint.subscribe("binance:time")
-    :ok = XestWeb.Endpoint.subscribe("binance:system_status")
-
     # setup a self tick with a second period
-    if connected?(socket), do: :timer.send_interval(1000, self(), :tick)
-
     socket =
-      socket
-      |> put_date()
-      |> assign(status_msg: "N/A")
+      case connected?(socket) do
+        # first time, static render
+        false ->
+          socket
+          # assigning now for rendering without assigning the (shadow) clock
+          |> assign(now: DateTime.from_unix!(0))
+          |> assign(status_msg: "N/A")
+
+        # second time websocket info
+        true ->
+          :timer.send_interval(1000, self(), :tick)
+
+          # subscribe to the binance topic
+
+          :ok = XestWeb.Endpoint.subscribe("binance:requests")
+          :ok = XestWeb.Endpoint.subscribe("binance:time")
+          :ok = XestWeb.Endpoint.subscribe("binance:system_status")
+
+          socket
+          # putting actual server date
+          |> put_date()
+          # TODO
+          |> assign(status_msg: "requesting...")
+      end
+
+    IO.inspect(socket)
 
     {:ok, socket}
   end
@@ -62,13 +76,21 @@ defmodule XestWeb.BinanceLive do
   defp put_date(socket) do
     Logger.debug("get date")
 
-    time =
-      binance_exchange().servertime(
-        # finding the process via its module name...
-        Process.whereis(binance_exchange())
+    # Abusing socket here to store the clock...
+    socket =
+      Map.put_new_lazy(
+        socket,
+        :clock,
+        fn ->
+          binance_exchange().servertime(
+            # finding the process via its module name...
+            Process.whereis(binance_exchange())
+          )
+        end
       )
 
-    assign(socket, date: time)
+    # compute now
+    assign(socket, now: Xest.ShadowClock.now(socket.clock))
   end
 
   defp binance_exchange() do
