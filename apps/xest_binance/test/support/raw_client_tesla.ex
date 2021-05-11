@@ -1,4 +1,4 @@
-defmodule Xest.Binance.RawClient do
+defmodule XestBinance.RawClientTesla do
   use Tesla
 
   plug(Tesla.Middleware.BaseUrl, "https://api.binance.com")

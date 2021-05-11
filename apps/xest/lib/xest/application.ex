@@ -5,12 +5,15 @@ defmodule Xest.Application do
 
   use Application
 
+  @impl true
   def start(_type, _args) do
     children = [
       # Start the PubSub system
       {Phoenix.PubSub, name: Xest.PubSub}
-      # Start a worker by calling: Xest.Worker.start_link(arg)
-      # {Xest.Worker, arg}
+
+      # TUI process
+      # disabling since this messes up the input terminal...
+      #      {Ratatouille.Runtime.Supervisor, runtime: [app: Xest.TUI]}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xest.Supervisor)

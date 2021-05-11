@@ -1,4 +1,4 @@
-defmodule Xest.Binance.ApiMock do
+defmodule XestBinance.RestApiMock do
   @moduledoc """
   Module defining a mock for binance API. used in automated tests.
   This is iteratively constructed by manually probing the binance api in iex
@@ -9,6 +9,7 @@ defmodule Xest.Binance.ApiMock do
   ...
   }}
 
+    TODO : a solutio with exvcr + bypass might be better, but currently lacks tesla integration...
   """
 
   @base_url "https://api.binance.com"

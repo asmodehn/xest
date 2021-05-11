@@ -11,3 +11,8 @@ config :logger, level: :warn
 
 # mock for tesla connection on test
 config :tesla, adapter: Tesla.Mock
+
+# NOT YET
+## Config for Commanded in-memory eventstore for test
+# config :commanded, event_store_adapter: Commanded.EventStore.Adapters.InMemory
+# config :commanded, Commanded.EventStore.Adapters.InMemory, serializer: Commanded.Serialization.JsonSerializer

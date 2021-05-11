@@ -1,15 +1,15 @@
-defmodule Xest.MixProject do
+defmodule XestBinance.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :xest,
+      app: :xest_binance,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.7",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -26,13 +26,11 @@ defmodule Xest.MixProject do
     ]
   end
 
-  # Configuration for the OTP application.
-  #
-  # Type `mix help compile.app` for more information.
+  # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Xest.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger],
+      mod: {XestBinance.Application, []}
     ]
   end
 
@@ -42,28 +40,21 @@ defmodule Xest.MixProject do
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
-  # Specifies your project dependencies.
-  #
-  # Type `mix help deps` for examples and options.
+  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # Tooling
-      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:excoveralls, "~> 0.10", only: :test},
-      {:doctor, "~> 0.17.0", only: :dev},
+      {:xest, in_umbrella: true},
 
-      # phoenix communication
-      {:phoenix_pubsub, "~> 2.0"},
+      # HTTP client
+      {:tesla, "~> 1.4.0"},
+      # optional, but recommended adapter
+      {:hackney, "~> 1.16.0"},
+      # optional, required by JSON middleware
+      {:jason, ">= 1.0.0"},
+      {:fuse, "~> 2.4"},
 
       # Time manipulation
-      {:timex, "~> 3.0"},
-
-      # Test libs
-      #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
-      {:flow_assertions, "~> 0.6", only: :test},
-      {:hammox, "~> 0.4", only: [:test, :dev]}
+      {:timex, "~> 3.0"}
     ]
   end
 
