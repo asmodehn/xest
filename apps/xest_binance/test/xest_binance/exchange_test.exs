@@ -2,6 +2,8 @@ defmodule XestBinance.Exchange.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
+  alias Xest.ShadowClock
+
   alias XestBinance.Models
   alias XestBinance.Exchange
   alias XestBinance.ServerBehaviourMock
@@ -92,7 +94,9 @@ defmodule XestBinance.Exchange.Test do
     ServerBehaviourMock
     |> expect(:time!, fn _ -> @time_stop end)
 
-    assert Exchange.servertime(exg_pid) == @time_stop
+    clock = Exchange.servertime(exg_pid)
+    assert %ShadowClock{} = clock
+    assert ShadowClock.now(clock) == @time_stop
   end
 
   test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
@@ -100,6 +104,9 @@ defmodule XestBinance.Exchange.Test do
     |> expect(:time!, fn _ -> @time_stop end)
 
     Exchange.servertime(exg_pid)
-    assert Exchange.servertime(exg_pid) == @time_stop
+
+    clock = Exchange.servertime(exg_pid)
+    assert %ShadowClock{} = clock
+    assert ShadowClock.now(clock) == @time_stop
   end
 end

@@ -4,12 +4,13 @@ defmodule XestWeb.BinanceLive do
   require Logger
   require Xest
 
+  # Idea : https://medium.com/grandcentrix/state-management-with-phoenix-liveview-and-liveex-f53f8f1ec4d7
+
   @impl true
   def mount(_params, session, socket) do
     # connection or refresh
     Logger.debug("Binance liveview mount with token: " <> session["_csrf_token"])
 
-    # setup a self tick with a second period
     socket =
       case connected?(socket) do
         # first time, static render
@@ -21,6 +22,7 @@ defmodule XestWeb.BinanceLive do
 
         # second time websocket info
         true ->
+          # setup a self tick with a second period
           :timer.send_interval(1000, self(), :tick)
 
           # subscribe to the binance topic
@@ -35,8 +37,6 @@ defmodule XestWeb.BinanceLive do
           # TODO
           |> assign(status_msg: "requesting...")
       end
-
-    IO.inspect(socket)
 
     {:ok, socket}
   end
