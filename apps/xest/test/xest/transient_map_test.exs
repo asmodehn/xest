@@ -90,13 +90,12 @@ defmodule Xest.TransientMap.Test do
     |> expect(:utc_now, fn -> @birthdate end)
 
     tmap = TransientMap.new(@lifetime)
-    IO.inspect(tmap)
     %{tmap: tmap}
   end
 
-  defp filled_transient_map(_test) do
+  defp filled_transient_map(test) do
     # TODO : fixture with simpler in/out types...
-    %{tmap: tmap} = empty_transient_map(_test)
+    %{tmap: tmap} = empty_transient_map(test)
 
     # adding a key value pair in valid time
 
@@ -104,7 +103,6 @@ defmodule Xest.TransientMap.Test do
     |> expect(:utc_now, fn -> @valid_clock_time end)
 
     tmap = TransientMap.put(tmap, :existing, "value")
-    IO.inspect(tmap)
     %{tmap: tmap}
   end
 end

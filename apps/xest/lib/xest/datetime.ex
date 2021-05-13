@@ -1,9 +1,7 @@
-# the behaviour
 defmodule Xest.DateTime.Behaviour do
   @callback utc_now :: DateTime.t()
 end
 
-# the Utils Module
 defmodule Xest.DateTime do
   @behaviour Xest.DateTime.Behaviour
 

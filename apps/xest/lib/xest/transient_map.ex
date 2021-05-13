@@ -36,7 +36,7 @@ defmodule Xest.TransientMap do
 
   @spec fetch(map(), key()) :: {:ok, value()} | :error
   def fetch(t, key) do
-    dead_or_alive(t) |> IO.inspect() |> Map.fetch!(:store) |> IO.inspect() |> Map.fetch(key)
+    dead_or_alive(t) |> Map.fetch!(:store) |> Map.fetch(key)
   end
 
   @spec put(map(), key(), value()) :: map()
