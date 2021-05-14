@@ -30,7 +30,7 @@ config :phoenix, :json_library, Jason
 
 config :xest,
   # setup adapter for binance http api connections
-  binance_client_adapter: XestBinance.ClientTesla,
+  binance_client_adapter: XestBinance.Client,
   # setup adapter for binance genserver
   binance_server: XestBinance.Server
 

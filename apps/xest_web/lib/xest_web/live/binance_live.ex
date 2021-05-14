@@ -46,16 +46,16 @@ defmodule XestWeb.BinanceLive do
     {:noreply, assign(socket, status_msg: retrieve_status().message)}
   end
 
+  @impl true
+  def handle_info(msg, socket) do
+    {:noreply, socket |> put_flash(:info, msg)}
+  end
+
   defp retrieve_status() do
     binance_exchange().status(
       # finding the process via its module name...
       Process.whereis(binance_exchange())
     )
-  end
-
-  @impl true
-  def handle_info(msg, socket) do
-    {:noreply, socket |> put_flash(:info, msg)}
   end
 
   defp put_date(socket) do

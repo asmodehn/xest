@@ -35,14 +35,6 @@ defmodule XestBinance.ClientTesla do
 
   # TODO : rate limiter with https://hexdocs.pm/hammer
 
-  # TODO : a cleaner way (middleware ? adapter in context?) to report request being sent to pubsub
-
-  @request_topic "binance:requests"
-
-  def subscribe(_) do
-    # Phoenix.PubSub.subscribe(Xest.PubSub, @request_topic)
-  end
-
   @impl true
   def system_status() do
     # Phoenix.PubSub.broadcast_from!(Xest.PubSub,self(), @request_topic, :system_status)
@@ -69,6 +61,4 @@ defmodule XestBinance.ClientTesla do
       tesla_env -> {:error, tesla_env}
     end
   end
-
-  # TODO : register as behaviour implementation , and check with hammock...
 end

@@ -36,6 +36,12 @@ defmodule Xest.APIServer.Test do
       # useful for testing this behaviour
       Application.get_env(:xest, :api_test_server, __MODULE__)
     end
+
+    @impl true
+    def handle_cachemiss(_request, _from, state) do
+      # stub implementation, just echo the state without any mutation
+      {:reply, state, state}
+    end
   end
 
   @lifetime ~T[00:07:00]

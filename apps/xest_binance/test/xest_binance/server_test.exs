@@ -1,72 +1,24 @@
 defmodule XestBinance.Server.Test do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
+  # integration tests in general don't support async
+  # And should not run in parallel, because of the global mutable state known as "real world"
+
   use FlowAssertions
-
-  alias XestBinance.ClientBehaviourMock
-
-  # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
-  import Hammox
 
   # Importing and protecting our behavior implementation cf. https://github.com/msz/hammox
   use Hammox.Protect, module: XestBinance.Server, behaviour: XestBinance.Ports.ServerBehaviour
 
-  setup :verify_on_exit!
-
-  #  test """
-  #  When using via_tuple() to start the process
-  #  Then process can be looked up via the registry
-  #  """ do
-  #    client_pid =
-  #      start_supervised!(
-  #        {Xest.BinanceClient, name: Xest.BinanceClient}}
-  #      )
-  #
-  #    [{pid, val}] = apply(Registry, :lookup, Xest.BinanceClient.via_tuple() |> Tuple.to_list())
-  #
-  #    assert pid == client_pid
-  #    assert val == nil
-  #  end
-  #
-  #  test """
-  #  When using via_tuple(key, value) to start the process
-  #  Then process and value can be looked up via the registry
-  #  """ do
-  #    client_pid =
-  #      start_supervised!(
-  #        {Xest.BinanceClient, name: {:via, Registry, Xest.BinanceClient.via_tuple("mykey", 42)}}
-  #      )
-  #
-  #    [{pid, val}] =
-  #      apply(Registry, :lookup, Xest.BinanceClient.via_tuple("mykey") |> Tuple.to_list())
-  #
-  #    assert pid == client_pid
-  #    assert val == 42
-  #  end
-  #
-  #  test """
-  #  When starting with no name
-  #  Then process registers itself to the registry
-  #  """ do
-  #    client_pid = start_supervised!(Xest.BinanceClient)
-  #
-  #    [{pid, val}] = apply(Registry, :lookup, Xest.BinanceClient.via_tuple() |> Tuple.to_list())
-  #
-  #    assert pid == client_pid
-  #    assert val == :self_registered
-  #  end
-  #
-  #  test """
-  #  When starting with usual name
-  #  Then does NOT register itself to the registry
-  #  """ do
-  #    start_supervised!({Xest.BinanceClient, name: :binance_client})
-  #
-  #    assert [] ==
-  #             apply(Registry, :lookup, Xest.BinanceClient.via_tuple() |> Tuple.to_list())
-  #  end
+  # DESIGN : here we focus on testing the integration with a real HTTP server, implementing expectations from Docs
+  # rather than from cassettes, as is done for the client.
+  # This allows us to test rare behaviors, like errors, from specification/documentation.
 
   describe "By default" do
+    @describetag :integration
     setup do
+      bypass = Bypass.open()
+      # setup bypass to use as local webserver for binance endpoint
+      Application.put_env(:binance, :end_point, "http://localhost:#{bypass.port}/")
+
       # starts server test process
       server_pid =
         start_supervised!({
@@ -74,28 +26,33 @@ defmodule XestBinance.Server.Test do
           name: XestBinance.Server.Test.Process
         })
 
-      # setting up adapter mock to test the chain :
-      # BinanceServer -> GenServer messaging -> BinanceClient / API
-      # without relying on specific client implementation (tesla or another)
-      ClientBehaviourMock
-      |> allow(self(), server_pid)
-
-      %{server_pid: server_pid}
+      %{server_pid: server_pid, bypass: bypass}
     end
 
-    test "provides system status", %{server_pid: server_pid} do
-      ClientBehaviourMock
-      |> expect(:system_status, fn -> {:ok, %{"msg" => "normal", "status" => 0}} end)
+    test "provides system status", %{server_pid: server_pid, bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/wapi/v3/systemStatus.html", fn conn ->
+        Plug.Conn.resp(conn, 200, """
+        {
+            "status": 0,
+            "msg": "normal"
+        }
+        """)
+      end)
 
       assert system_status(server_pid) ==
                {:ok, %XestBinance.Models.ExchangeStatus{message: "normal", code: 0}}
     end
 
-    test "provides time", %{server_pid: server_pid} do
+    test "provides time", %{server_pid: server_pid, bypass: bypass} do
       udt = ~U[2021-02-18 08:53:32.313Z]
 
-      ClientBehaviourMock
-      |> expect(:time, fn -> {:ok, %{"serverTime" => DateTime.to_unix(udt, :millisecond)}} end)
+      Bypass.expect_once(bypass, "GET", "/api/v3/time", fn conn ->
+        Plug.Conn.resp(conn, 200, """
+        {
+          "serverTime": #{DateTime.to_unix(udt, :millisecond)}
+        }
+        """)
+      end)
 
       assert time(server_pid) == {:ok, udt}
     end
@@ -104,13 +61,20 @@ defmodule XestBinance.Server.Test do
   end
 
   describe "With custom ping period" do
+    @describetag :integration
+
     setup do
+      bypass = Bypass.open()
+      # setup bypass to use as local webserver for binance endpoint
+      Application.put_env(:binance, :end_point, "http://localhost:#{bypass.port}/")
+      %{bypass: bypass}
+
       server_pid =
         start_supervised!(
           {XestBinance.Server, name: __MODULE__, next_ping_wait_time: :timer.seconds(1)}
         )
 
-      %{server_pid: server_pid}
+      %{server_pid: server_pid, bypass: bypass}
     end
 
     test "provides read access to the next ping period", %{server_pid: server_pid} do
@@ -135,18 +99,17 @@ defmodule XestBinance.Server.Test do
 
     # tag for time related tests (should run with side-effect tests)
     @tag :timed
-    test " ping happens in due time ", %{server_pid: server_pid} do
-      # we need the current pid of this process
-      test_pid = self()
+    test " ping happens in due time ", %{server_pid: _server_pid, bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/api/v3/ping", fn conn ->
+        #        send(test_pid, :ping_done)
 
-      ClientBehaviourMock
-      |> expect(:ping, fn ->
-        send(test_pid, :ping_done)
-        {:ok, %{}}
+        Plug.Conn.resp(conn, 200, """
+        {}
+        """)
       end)
-      |> allow(test_pid, server_pid)
 
-      assert_receive :ping_done, :timer.seconds(1) * 2
+      #      assert_receive :ping_done, :timer.seconds(1) * 2
+      Process.sleep(:timer.seconds(1) * 2)
     end
 
     # TODO : test ping reschedule when other request happens...

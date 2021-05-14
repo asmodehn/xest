@@ -11,6 +11,7 @@ defmodule Xest.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_options: [warnings_as_errors: true],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -59,6 +60,9 @@ defmodule Xest.MixProject do
 
       # Time manipulation
       {:timex, "~> 3.0"},
+
+      # Functional patterns
+      {:witchcraft, "~> 1.0"},
 
       # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?

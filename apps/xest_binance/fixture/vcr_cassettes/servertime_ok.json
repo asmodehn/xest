@@ -1,0 +1,44 @@
+[
+  {
+    "request": {
+      "body": "",
+      "headers": [],
+      "method": "get",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.binance.com/api/v3/time"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"serverTime\":1620984697108}",
+      "headers": {
+        "Content-Type": "application/json;charset=UTF-8",
+        "Content-Length": "28",
+        "Connection": "keep-alive",
+        "Date": "Fri, 14 May 2021 09:31:37 GMT",
+        "Server": "nginx",
+        "x-mbx-uuid": "3fab8e97-64cb-44c5-a168-545e928dae9e",
+        "x-mbx-used-weight": "1",
+        "x-mbx-used-weight-1m": "1",
+        "Strict-Transport-Security": "max-age=31536000; includeSubdomains",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Xss-Protection": "1; mode=block",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'self'",
+        "X-Content-Security-Policy": "default-src 'self'",
+        "X-WebKit-CSP": "default-src 'self'",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+        "X-Cache": "Miss from cloudfront",
+        "Via": "1.1 11353e5e706855a44a10829d33622e23.cloudfront.net (CloudFront)",
+        "X-Amz-Cf-Pop": "LHR61-C1",
+        "X-Amz-Cf-Id": "1Nv84wJzmURjZPtE-oRmKe1U_VwZOwcnT3bPVm6jUMRCYMT3hngBxw=="
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]

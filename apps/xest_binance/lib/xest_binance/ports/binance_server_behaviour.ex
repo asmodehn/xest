@@ -8,7 +8,6 @@ defmodule XestBinance.Ports.ServerBehaviour do
 
   @type status :: XestBinance.Models.ExchangeStatus.t()
   @type reason :: String.t()
-  @type pong :: %{}
 
   @type servertime :: DateTime.t()
   @type mockable_pid :: nil | pid()
