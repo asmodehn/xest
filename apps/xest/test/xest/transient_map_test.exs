@@ -53,7 +53,6 @@ defmodule Xest.TransientMap.Test do
       DateTimeMock
       |> expect(:utc_now, fn -> @invalid_clock_time end)
 
-      IO.inspect(tmap)
       assert TransientMap.fetch(tmap, :existing) == :error
       # Note map is immutable, so key is still there in store...
     end

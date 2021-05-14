@@ -34,7 +34,6 @@ defmodule Xest.APIServer do
           start: {__MODULE__, :start_link, [init_arg]}
         }
 
-        IO.inspect(default)
         Supervisor.child_spec(default, unquote(Macro.escape(opts)))
       end
 
