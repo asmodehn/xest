@@ -32,6 +32,10 @@ defmodule XestBinance.Client do
     end
   end
 
+  def get_account() do
+    Binance.get_account()
+  end
+
   #
   #  defp endpoint() do
   #    Application.get_env(:binance, :end_point, "https://api.binance.com")
