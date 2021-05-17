@@ -1,0 +1,47 @@
+[
+  {
+    "request": {
+      "body": "",
+      "headers": {
+        "X-MBX-APIKEY": "***"
+      },
+      "method": "get",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.binance.com/api/v3/account?recvWindow=5000&timestamp=1621268625666&signature=***"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"makerCommission\":10,\"takerCommission\":10,\"buyerCommission\":0,\"sellerCommission\":0,\"canTrade\":true,\"canWithdraw\":true,\"canDeposit\":true,\"updateTime\":1621224142285,\"accountType\":\"SPOT\",\"balances\":[{\"asset\":\"BTC\",\"free\":\"0.00000000\",\"locked\":\"0.00000000\"},{\"asset\":\"BNB\",\"free\":\"0.50000000\",\"locked\":\"0.50000000\"}],\"permissions\":[\"SPOT\"]}",
+      "headers": {
+        "Content-Type": "application/json;charset=UTF-8",
+        "Content-Length": "24725",
+        "Connection": "keep-alive",
+        "Date": "Mon, 18 May 2021 10:42:51 GMT",
+        "Server": "nginx",
+        "Vary": "Accept-Encoding",
+        "x-mbx-uuid": "6edf83ba-66b6-4ea0-8102-c928d6cf2939",
+        "x-mbx-used-weight": "10",
+        "x-mbx-used-weight-1m": "10",
+        "Strict-Transport-Security": "max-age=31536000; includeSubdomains",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Xss-Protection": "1; mode=block",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'self'",
+        "X-Content-Security-Policy": "default-src 'self'",
+        "X-WebKit-CSP": "default-src 'self'",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+        "X-Cache": "Miss from cloudfront",
+        "Via": "1.1 37b29078d1c7132540ca31b9482ea1c6.cloudfront.net (CloudFront)",
+        "X-Amz-Cf-Pop": "LHR61-C1",
+        "X-Amz-Cf-Id": "ydll_upwitBb37r7DD94OMkGi3WjO13Q14fUVqETL9XNhAEKCyGeJA=="
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]

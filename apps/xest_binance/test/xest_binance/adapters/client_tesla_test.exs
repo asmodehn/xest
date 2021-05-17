@@ -21,14 +21,14 @@ defmodule XestBinance.ClientTesla.Test do
   end
 
   test "system status OK" do
-    assert ClientTesla.system_status() == {:ok, %{"msg" => "normal", "status" => 0}}
+    assert ClientTesla.system_status(nil) == {:ok, %{"msg" => "normal", "status" => 0}}
   end
 
   test "ping OK" do
-    assert ClientTesla.ping() == {:ok, %{}}
+    assert ClientTesla.ping(nil) == {:ok, %{}}
   end
 
   test "time OK" do
-    assert ClientTesla.time() == {:ok, %{"serverTime" => 1_613_638_412_313}}
+    assert ClientTesla.time(nil) == {:ok, %{"serverTime" => 1_613_638_412_313}}
   end
 end

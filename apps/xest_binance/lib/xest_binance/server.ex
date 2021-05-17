@@ -21,8 +21,8 @@ defmodule XestBinance.Server do
   defstruct next_ping_wait_time: @next_ping_wait_time_default,
             next_ping_ref: nil,
             # will be defined on init (dynamically upon starting)
-            test_endpoint: nil,
-            binance_client_adapter: nil
+            binance_client_adapter: nil,
+            binance_client_adapter_state: nil
 
   @doc """
   Starts reliable binance client.
@@ -34,8 +34,12 @@ defmodule XestBinance.Server do
     {next_ping_wait_time, opts} =
       Keyword.pop(opts, :next_ping_wait_time, @next_ping_wait_time_default)
 
+    {endpoint, opts} = Keyword.pop(opts, :endpoint)
+    {apikey, opts} = Keyword.pop(opts, :apikey)
+    {secret, opts} = Keyword.pop(opts, :secret)
+
     # nil to denote we use the client lib default
-    {test_endpoint, opts} = Keyword.pop(opts, :test_endpoint, nil)
+    #    {test_endpoint, opts} = Keyword.pop(opts, :test_endpoint, nil)
 
     GenServer.start_link(
       __MODULE__,
@@ -45,7 +49,8 @@ defmodule XestBinance.Server do
         # passing next_ping_wait_time in case it is specified as option from supervisor
         %__MODULE__{}
         |> Map.put(:next_ping_wait_time, next_ping_wait_time)
-        |> Map.put(:test_endpoint, test_endpoint)
+        |> Map.put(:binance_client_adapter, client())
+        |> Map.put(:binance_client_adapter_state, client().new(apikey, secret, endpoint))
       },
       opts
     )
@@ -99,12 +104,12 @@ defmodule XestBinance.Server do
     # scheduling ping onto itself
     state = reschedule_ping(state)
 
-    # TMP no state for now, except the adapter for dynamic dispatch
-    # => lets try to manage everything with tesla...
-    {:ok, %__MODULE__{state | binance_client_adapter: client()}}
+    # just passing state as created in start_link
+    {:ok, state}
   end
 
   defp client() do
+    # config based on mix environment
     Application.get_env(:xest, :binance_client_adapter)
   end
 
@@ -131,9 +136,15 @@ defmodule XestBinance.Server do
   end
 
   @impl true
-  def handle_info(:ping, %{binance_client_adapter: binance_client_adapter} = state) do
-    {:ok, %{}} = binance_client_adapter.ping()
-    # TODO :if ping fail, we should probably crash the genserver...
+  def handle_info(
+        :ping,
+        %{
+          binance_client_adapter: binance_client_adapter,
+          binance_client_adapter_state: binance_client_adapter_state
+        } = state
+      ) do
+    {:ok, %{}} = binance_client_adapter.ping(binance_client_adapter_state)
+    # if ping fail, we should probably crash the genserver...
 
     # reschedule ping after request
     {:noreply, reschedule_ping(state)}
@@ -161,16 +172,26 @@ defmodule XestBinance.Server do
   def handle_call(
         {:system_status},
         _from,
-        %{binance_client_adapter: binance_client_adapter} = state
+        %{
+          binance_client_adapter: binance_client_adapter,
+          binance_client_adapter_state: binance_client_adapter_state
+        } = state
       ) do
-    resp = binance_client_adapter.system_status()
+    resp = binance_client_adapter.system_status(binance_client_adapter_state)
     # reschedule ping after request
     {:reply, resp, reschedule_ping(state)}
   end
 
   @impl true
-  def handle_call({:time}, _from, %{binance_client_adapter: binance_client_adapter} = state) do
-    resp = binance_client_adapter.time()
+  def handle_call(
+        {:time},
+        _from,
+        %{
+          binance_client_adapter: binance_client_adapter,
+          binance_client_adapter_state: binance_client_adapter_state
+        } = state
+      ) do
+    resp = binance_client_adapter.time(binance_client_adapter_state)
     # reschedule ping after request
     {:reply, resp, reschedule_ping(state)}
   end

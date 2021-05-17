@@ -16,14 +16,13 @@ defmodule XestBinance.Server.Test do
     @describetag :integration
     setup do
       bypass = Bypass.open()
-      # setup bypass to use as local webserver for binance endpoint
-      Application.put_env(:binance, :end_point, "http://localhost:#{bypass.port}/")
 
       # starts server test process
       server_pid =
         start_supervised!({
           XestBinance.Server,
-          name: XestBinance.Server.Test.Process
+          # setup bypass to use as local webserver for binance endpoint
+          name: XestBinance.Server.Test.Process, endpoint: "http://localhost:#{bypass.port}/"
         })
 
       %{server_pid: server_pid, bypass: bypass}
@@ -66,12 +65,14 @@ defmodule XestBinance.Server.Test do
     setup do
       bypass = Bypass.open()
       # setup bypass to use as local webserver for binance endpoint
-      Application.put_env(:binance, :end_point, "http://localhost:#{bypass.port}/")
       %{bypass: bypass}
 
       server_pid =
         start_supervised!(
-          {XestBinance.Server, name: __MODULE__, next_ping_wait_time: :timer.seconds(1)}
+          {XestBinance.Server,
+           name: __MODULE__,
+           endpoint: "http://localhost:#{bypass.port}/",
+           next_ping_wait_time: :timer.seconds(1)}
         )
 
       %{server_pid: server_pid, bypass: bypass}

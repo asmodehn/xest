@@ -8,6 +8,8 @@
 # configurations or dependencies per app, it is best to
 # move said applications out of the umbrella.
 use Mix.Config
+# TODO : migrate to Elixir.Config
+# cf. https://hexdocs.pm/elixir/Config.html#module-migrating-from-use-mix-config
 
 config :xest_web,
   generators: [context_app: :xest]

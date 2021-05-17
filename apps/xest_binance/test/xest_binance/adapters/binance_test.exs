@@ -18,82 +18,86 @@ defmodule XestBinance.Binance.Test do
 
   test "system status OK" do
     use_cassette "systemstatus_ok" do
-      assert XestBinance.Client.system_status() ==
+      assert XestBinance.Client.new()
+             |> XestBinance.Client.system_status() ==
                {:ok, %XestBinance.Models.ExchangeStatus{code: 0, message: "normal"}}
     end
   end
 
   test "ping OK" do
     use_cassette "ping_ok" do
-      assert XestBinance.Client.ping() == {:ok, %{}}
+      assert XestBinance.Client.new()
+             |> XestBinance.Client.ping() == {:ok, %{}}
     end
   end
 
   test "time OK" do
     use_cassette "servertime_ok" do
-      assert XestBinance.Client.time() == {:ok, ~U[2021-05-14 09:31:37.108Z]}
+      assert XestBinance.Client.new()
+             |> XestBinance.Client.time() == {:ok, ~U[2021-05-14 09:31:37.108Z]}
     end
   end
 
   describe "without api_key and secret key" do
     setup do
-      # erasing keys for test
-
-      apikey = Application.get_env(:binance, :api_key)
-      secret = Application.get_env(:binance, :secret_key)
-
-      Application.delete_env(:binance, :api_key)
-      Application.delete_env(:binance, :secret_key)
-
-      on_exit(fn ->
-        Application.put_env(:binance, :api_key, apikey)
-        Application.put_env(:binance, :secret_key, secret)
-      end)
+      client_state = XestBinance.Client.new(nil, nil)
+      %{client_state: client_state}
     end
 
-    test "api key missing error returned" do
-      {:error, reason} = XestBinance.Client.get_account()
+    test "api key missing error returned", %{client_state: client_state} do
+      {:error, reason} = XestBinance.Client.get_account(client_state)
       assert reason == {:config_missing, "Secret and API key missing"}
     end
   end
 
   describe "with invalid api_key and secret key" do
     setup do
-      # erasing keys for test
-
-      apikey = Application.get_env(:binance, :api_key)
-      secret = Application.get_env(:binance, :secret_key)
-
-      Application.put_env(:binance, :api_key, "Bad Key")
-      Application.put_env(:binance, :secret_key, "Bad Secret")
-
-      on_exit(fn ->
-        Application.put_env(:binance, :api_key, apikey)
-        Application.put_env(:binance, :secret_key, secret)
-      end)
+      client_state = XestBinance.Client.new("Bad Key", "Bad Secret")
+      %{client_state: client_state}
     end
 
-    test "APIkey invalid error returned" do
-      {:error, reason} = XestBinance.Client.get_account()
+    test "APIkey invalid error returned", %{client_state: client_state} do
+      {:error, reason} = XestBinance.Client.get_account(client_state)
       assert reason == %{"code" => -2014, "msg" => "API-key format invalid."}
     end
   end
 
-  @tag :integration
-  test "account OK" do
-    {:ok, account} = XestBinance.Client.get_account()
+  describe "with configured api_key, secret and endpoint" do
+    @describetag :integration
+    setup do
+      # getting config as application would do
+      # WARNING this will retrieve your actual account
+      config = Vapor.load!(XestBinance.Config)
 
-    # match account struct...
-    %Binance.Account{
-      balances: _balances,
-      buyer_commission: _buyer_commission,
-      can_deposit: _can_deposit,
-      can_trade: _can_trade,
-      can_withdrawl: _can_withdrawl,
-      maker_commission: _maker_commission,
-      seller_commission: _seller_commission,
-      taker_commission: _taker_commission,
-      update_time: _update_time
-    } = account
+      client_state =
+        XestBinance.Client.new(
+          config.binance.apikey,
+          config.binance.secret,
+          config.binance.endpoint
+        )
+
+      %{client_state: client_state}
+    end
+
+    test "account OK", %{client_state: client_state} do
+      use_cassette "account_ok" do
+        ExVCR.Config.filter_request_headers("X-MBX-APIKEY")
+        ExVCR.Config.filter_sensitive_data("signature=[a-zA-Z0-9]*", "signature=***")
+        {:ok, account} = XestBinance.Client.get_account(client_state)
+
+        # match account struct...
+        %Binance.Account{
+          balances: _balances,
+          buyer_commission: _buyer_commission,
+          can_deposit: _can_deposit,
+          can_trade: _can_trade,
+          can_withdrawl: _can_withdrawl,
+          maker_commission: _maker_commission,
+          seller_commission: _seller_commission,
+          taker_commission: _taker_commission,
+          update_time: _update_time
+        } = account
+      end
+    end
   end
 end

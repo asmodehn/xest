@@ -18,8 +18,14 @@ mix phx.server
 
 # Testing
 
+For functional async tests:
 ```
 mix test
+```
+
+For sequential integration tests:
+```
+mix test --include integration
 ```
 
 For a TDD setup, you can use
@@ -41,8 +47,9 @@ mix credo
 This is an Elixir Umbrella project, trying to remain monorepo as long as possible.
 
 Currently there are only two apps here:
-  - Xest: the client connecting to the crypto exchanges
-  - XestWeb: the Web interface
+  - Xest: the library containing domain models and various utilities for client apps
+  - XestBinance: the client app connecting to binance
+  - XestWeb: the Web interface with live views
 
 For interactive testing you can use iex:
 

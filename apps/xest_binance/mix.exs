@@ -69,7 +69,10 @@ defmodule XestBinance.MixProject do
       {:bypass, "~> 2.1", only: :test},
 
       # Time manipulation
-      {:timex, "~> 3.0"}
+      {:timex, "~> 3.0"},
+
+      # Runtime configuration
+      {:vapor, "~> 0.10"}
     ]
   end
 

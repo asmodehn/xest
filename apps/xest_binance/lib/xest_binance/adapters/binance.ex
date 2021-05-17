@@ -6,10 +6,14 @@ defmodule XestBinance.Client do
 
   require Binance
 
+  def new(apikey \\ nil, secret \\ nil, endpoint \\ "https://api.binance.com") do
+    %Binance{endpoint: endpoint, api_key: apikey, secret_key: secret}
+  end
+
   @impl true
-  def system_status() do
+  def system_status(%Binance{} = binance) do
     # TEMPORARY, until integrated in Binance
-    case Binance.Rest.HTTPClient.get_binance("/wapi/v3/systemStatus.html") do
+    case Binance.Rest.HTTPClient.get_binance(binance.endpoint <> "/wapi/v3/systemStatus.html") do
       {:ok, %{"msg" => msg, "status" => status}} ->
         {:ok, %XestBinance.Models.ExchangeStatus{message: msg, code: status}}
 
@@ -19,25 +23,20 @@ defmodule XestBinance.Client do
   end
 
   @impl true
-  def ping() do
-    Binance.ping()
+  def ping(%Binance{} = binance) do
+    Binance.ping(binance)
   end
 
   @impl true
-  def time() do
+  def time(%Binance{} = binance) do
     # needed translating to our pre-existing behaviour...
-    case Binance.get_server_time() do
+    case Binance.get_server_time(binance) do
       {:ok, servertime_ms} -> {:ok, servertime_ms |> DateTime.from_unix!(:millisecond)}
       {:error, reason} -> {:error, reason}
     end
   end
 
-  def get_account() do
-    Binance.get_account()
+  def get_account(%Binance{} = binance) do
+    Binance.get_account(binance)
   end
-
-  #
-  #  defp endpoint() do
-  #    Application.get_env(:binance, :end_point, "https://api.binance.com")
-  #  end
 end

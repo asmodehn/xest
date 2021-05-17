@@ -36,7 +36,7 @@ defmodule XestBinance.ClientTesla do
   # TODO : rate limiter with https://hexdocs.pm/hammer
 
   @impl true
-  def system_status() do
+  def system_status(_) do
     # Phoenix.PubSub.broadcast_from!(Xest.PubSub,self(), @request_topic, :system_status)
     case get("/wapi/v3/systemStatus.html") do
       {:ok, %{status: 200, body: body}} -> {:ok, body}
@@ -45,7 +45,7 @@ defmodule XestBinance.ClientTesla do
   end
 
   @impl true
-  def ping() do
+  def ping(_) do
     # Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), @request_topic, :ping)
     case get("/api/v3/ping") do
       {:ok, %{status: 200, body: body}} -> {:ok, body}
@@ -54,7 +54,7 @@ defmodule XestBinance.ClientTesla do
   end
 
   @impl true
-  def time() do
+  def time(_) do
     # Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(),@request_topic, :time)
     case get("/api/v3/time") do
       {:ok, %{status: 200, body: body}} -> {:ok, body}
