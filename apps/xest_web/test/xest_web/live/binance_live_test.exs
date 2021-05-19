@@ -3,8 +3,9 @@ defmodule XestWeb.BinanceLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias XestBinance.Models.ExchangeStatus
+  alias XestBinance.Models
   alias XestBinance.ExchangeBehaviourMock
+  alias XestBinance.AccountBehaviourMock
 
   import Hammox
 
@@ -27,18 +28,28 @@ defmodule XestWeb.BinanceLiveTest do
   test "disconnected and connected render", %{conn: conn, clock: clock} do
     ExchangeBehaviourMock
     |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %ExchangeStatus{message: "test"} end)
+    |> expect(:status, fn _ -> %Models.ExchangeStatus{message: "test"} end)
+
+    AccountBehaviourMock
+    |> expect(:account, fn _ ->
+      %Binance.Account{
+        balances: [%{"asset" => "BTC", "free" => "1.23", "locked" => "4.56"}]
+      }
+    end)
 
     conn = get(conn, "/binance")
-    assert html_response(conn, 200) =~ "Status: N/A"
-    assert html_response(conn, 200) =~ "00:00:00"
+
+    html = html_response(conn, 200)
+    assert html =~ "Status: N/A"
+    assert html =~ "00:00:00"
+    refute html =~ "BTC"
 
     {:ok, _view, html} = live(conn, "/binance")
 
     # after websocket connection, message changed
     assert html =~ "Status: test"
     assert html =~ "08:53:32"
-    # TODO : more
+    assert html =~ "BTC\n1.23\n(Locked: 4.56)"
   end
 
   test "sending a message to the liveview process displays it in flash view", %{
@@ -47,7 +58,14 @@ defmodule XestWeb.BinanceLiveTest do
   } do
     ExchangeBehaviourMock
     |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %ExchangeStatus{message: "test"} end)
+    |> expect(:status, fn _ -> %Models.ExchangeStatus{message: "test"} end)
+
+    AccountBehaviourMock
+    |> expect(:account, fn _ ->
+      %Binance.Account{
+        balances: [%{"asset" => "BTC", "free" => "1.23", "locked" => "4.56"}]
+      }
+    end)
 
     {:ok, view, _html} = live(conn, "/binance")
 

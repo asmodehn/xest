@@ -39,7 +39,8 @@ config :xest,
   binance_authenticated: XestBinance.Authenticated
 
 config :xest_web,
-  binance_exchange: XestBinance.Exchange
+  binance_exchange: XestBinance.Exchange,
+  binance_account: XestBinance.Account
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

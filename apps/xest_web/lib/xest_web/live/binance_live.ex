@@ -19,6 +19,8 @@ defmodule XestWeb.BinanceLive do
           # assigning now for rendering without assigning the (shadow) clock
           |> assign(now: DateTime.from_unix!(0))
           |> assign(status_msg: "N/A")
+          # initial balance model
+          |> assign(account_balances: [%{}])
 
         # second time websocket info
         true ->
@@ -26,11 +28,14 @@ defmodule XestWeb.BinanceLive do
           :timer.send_interval(1000, self(), :tick)
           # refresh status every 5 seconds
           :timer.send_interval(5000, self(), :status_refresh)
+          # refresh account every 10 seconds
+          :timer.send_interval(10_000, self(), :account_refresh)
 
           socket
           # putting actual server date
           |> put_date()
           |> assign(status_msg: retrieve_status().message)
+          |> assign(account_balances: filter_null_balances(retrieve_account()))
       end
 
     {:ok, socket}
@@ -47,6 +52,14 @@ defmodule XestWeb.BinanceLive do
   end
 
   @impl true
+  def handle_info(:account_refresh, socket) do
+    {:noreply,
+     assign(socket,
+       account_balances: filter_null_balances(retrieve_account())
+     )}
+  end
+
+  @impl true
   def handle_info(msg, socket) do
     {:noreply, socket |> put_flash(:info, msg)}
   end
@@ -56,6 +69,23 @@ defmodule XestWeb.BinanceLive do
       # finding the process via its module name...
       Process.whereis(binance_exchange())
     )
+  end
+
+  defp retrieve_account() do
+    binance_account().account(
+      # finding the process via its module name...
+      Process.whereis(binance_account())
+    )
+  end
+
+  defp filter_null_balances(account) do
+    account.balances
+    # TODO : this filter should probably be done at a lower level
+    |> Enum.filter(fn b ->
+      {free, ""} = Float.parse(b["free"])
+      {locked, ""} = Float.parse(b["locked"])
+      Float.round(free, 8) != 0 or Float.round(locked, 8) != 0
+    end)
   end
 
   defp put_date(socket) do
@@ -80,5 +110,9 @@ defmodule XestWeb.BinanceLive do
 
   defp binance_exchange() do
     Application.get_env(:xest_web, :binance_exchange)
+  end
+
+  defp binance_account() do
+    Application.get_env(:xest_web, :binance_account)
   end
 end
