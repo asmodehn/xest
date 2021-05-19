@@ -34,7 +34,9 @@ config :xest,
   # setup adapter for binance http api connections
   binance_client_adapter: XestBinance.Client,
   # setup adapter for binance genserver
-  binance_server: XestBinance.Server
+  binance_server: XestBinance.Server,
+  # setup adapter for binance genserver for authenticated requests
+  binance_authenticated: XestBinance.Authenticated
 
 config :xest_web,
   binance_exchange: XestBinance.Exchange
