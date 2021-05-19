@@ -11,3 +11,5 @@ Hammox.defmock(XestBinance.ServerBehaviourMock, for: XestBinance.Ports.ServerBeh
 Hammox.stub_with(XestBinance.ServerBehaviourMock, XestBinance.Server.Stub)
 
 Application.put_env(:xest, :binance_server, XestBinance.ServerBehaviourMock)
+
+# TODO : authenticated mock

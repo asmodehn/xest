@@ -35,8 +35,6 @@ defmodule XestBinance.Server do
       Keyword.pop(opts, :next_ping_wait_time, @next_ping_wait_time_default)
 
     {endpoint, opts} = Keyword.pop(opts, :endpoint)
-    {apikey, opts} = Keyword.pop(opts, :apikey)
-    {secret, opts} = Keyword.pop(opts, :secret)
 
     # nil to denote we use the client lib default
     #    {test_endpoint, opts} = Keyword.pop(opts, :test_endpoint, nil)
@@ -50,7 +48,7 @@ defmodule XestBinance.Server do
         %__MODULE__{}
         |> Map.put(:next_ping_wait_time, next_ping_wait_time)
         |> Map.put(:binance_client_adapter, client())
-        |> Map.put(:binance_client_adapter_state, client().new(apikey, secret, endpoint))
+        |> Map.put(:binance_client_adapter_state, client().new(nil, nil, endpoint))
       },
       opts
     )

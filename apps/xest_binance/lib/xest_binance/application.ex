@@ -27,11 +27,16 @@ defmodule XestBinance.Application do
 
     children = [
       # Starting main Binance Server
-      {XestBinance.Server,
-       name: XestBinance.Server,
+      {XestBinance.Server, name: XestBinance.Server, endpoint: config.binance.endpoint},
+
+      # Starting authenticated Binance Server for user account
+
+      {XestBinance.Authenticated,
+       name: XestBinance.Authenticated,
        apikey: config.binance.apikey,
        secret: config.binance.secret,
        endpoint: config.binance.endpoint},
+
       # Starting main Exchange Agent managing retrieved state
       {XestBinance.Exchange, name: XestBinance.Exchange}
     ]
