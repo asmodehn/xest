@@ -63,6 +63,7 @@ defmodule Xest.MixProject do
 
       # Functional patterns
       {:witchcraft, "~> 1.0"},
+      {:algae, "~> 1.3"},
 
       # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?

@@ -3,14 +3,13 @@ defmodule XestBinance.Account do
     The private part of the client (specific to an account, should not be cached)
 
   """
-  alias XestBinance.Models
 
   @behaviour XestBinance.Ports.AccountBehaviour
 
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   @enforce_keys []
-  defstruct model: %Models.Account{},
+  defstruct model: nil,
             # pointing to the binance client pid
             authsrv: nil
 
@@ -56,23 +55,42 @@ defmodule XestBinance.Account do
     Agent.get_and_update(agent, fn state ->
       case state.model do
         # when default initial model (no valid account)
-        model when model == %Models.Account{} ->
-          # TODO this should probably be in the API / some ACL...
+        model when model == nil ->
           {:ok, acc} = binance_authenticated().account(state.authsrv)
 
           # doing some translation here, like an ACL...
+          xest_acc = binance_to_xest_models(acc)
 
-          {acc,
+          {xest_acc,
            state
            |> Map.put(
              :model,
-             Models.Account.update(state.model, account: acc)
+             xest_acc
            )}
 
+        # TODO : check update time to eventually force refresh...
+
         model ->
-          {model.account, state}
+          {model, state}
           # TODO : add a case to check for timeout to request again the status
       end
     end)
+  end
+
+  defp binance_to_xest_models(%Binance.Account{} = binance) do
+    # TODO this should probably be in some ACL...
+    Xest.Account.new(
+      binance.balances,
+      binance.maker_commission,
+      binance.taker_commission,
+      binance.buyer_commission,
+      binance.seller_commission,
+      binance.can_trade,
+      binance.can_withdrawl,
+      binance.can_deposit,
+      binance.update_time
+      #    binance.account_type,
+      #    binance.permissions
+    )
   end
 end

@@ -14,9 +14,10 @@ defmodule Xest.Account do
     can_trade :: boolean()
     can_withdrawal :: boolean()
     can_deposit :: boolean()
-    # this \\ DateTime.utc_now() default doesnt work because of DateTime.new()
     update_time :: DateTime.t() \\ ~U[1970-01-01 00:00:00Z]
+    # not exposed by binance.ex ?
     account_type :: String.t()
+    # not exposed by binance.ex ?
     permissions :: [String.t()]
   end
 end
