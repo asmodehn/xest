@@ -9,7 +9,7 @@ defmodule XestBinance.Ports.AccountBehaviour do
   @type account :: %Binance.Account{}
   @type reason :: String.t()
 
-  @type mockable_pid :: nil | pid()
+  @type mockable_pid :: nil | pid() | atom()
 
   # | {:error, reason}
   @callback account(mockable_pid()) :: account

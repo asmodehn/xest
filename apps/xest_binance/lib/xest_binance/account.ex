@@ -8,7 +8,7 @@ defmodule XestBinance.Account do
 
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
-  @enforce_keys []
+  @enforce_keys [:authsrv]
   defstruct model: nil,
             # pointing to the binance client pid
             authsrv: nil

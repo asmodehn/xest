@@ -1,5 +1,9 @@
 ExUnit.start()
 
+Hammox.defmock(DateTimeMock, for: Xest.DateTime.Behaviour)
+
+Application.put_env(:xest, :date_time_module, DateTimeMock)
+
 # Client mock to use client interface in tests
 # Hammox.defmock(XestBinance.ClientBehaviourMock, for: XestBinance.Ports.ClientBehaviour)
 # Hammox.stub_with(XestBinance.ClientBehaviourMock, XestBinance.Client.Stub)

@@ -2,7 +2,6 @@ defmodule XestBinance.Account.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
-  alias XestBinance.Models
   alias XestBinance.Account
   alias XestBinance.AuthenticatedBehaviourMock
 
