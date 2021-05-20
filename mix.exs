@@ -35,7 +35,8 @@ defmodule Xest.Umbrella.MixProject do
   defp deps do
     [
       {:committee, "~> 1.0.0", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:hammox, "~> 0.4", only: [:test, :dev]}
     ]
   end
 

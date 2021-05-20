@@ -50,23 +50,15 @@ defmodule XestBinance.MixProject do
     [
       {:xest, in_umbrella: true},
 
-      # HTTP client
-      {:tesla, "~> 1.4.0"},
-      # optional, but recommended adapter
-      {:hackney, "~> 1.16.0"},
-      # optional, required by JSON middleware
-      {:jason, ">= 1.0.0"},
-      {:fuse, "~> 2.4"},
-
       # Binance client !
       #      {:binance, "~> 0.9.0"},
       {:binance, git: "git://github.com/asmodehn/binance.ex.git", branch: "expose_endpoint"},
 
       # Recording API Responses in tests
-      {:exvcr, "~> 0.11", only: :test},
+      {:exvcr, "~> 0.11", only: [:dev, :test]},
 
       # For integration tests with an actual HTTP server
-      {:bypass, "~> 2.1", only: :test},
+      {:bypass, "~> 2.1", only: [:dev, :test]},
 
       # Time manipulation
       {:timex, "~> 3.0"},
