@@ -29,7 +29,7 @@ defmodule XestBinance.Server.Test do
     end
 
     test "provides system status", %{server_pid: server_pid, bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/wapi/v3/systemStatus.html", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/sapi/v1/system/status", fn conn ->
         Plug.Conn.resp(conn, 200, """
         {
             "status": 0,
