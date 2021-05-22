@@ -3,7 +3,6 @@ defmodule XestWeb.BinanceLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias XestBinance.Models
   alias XestBinance.ExchangeBehaviourMock
   alias XestBinance.AccountBehaviourMock
 
@@ -28,7 +27,7 @@ defmodule XestWeb.BinanceLiveTest do
   test "disconnected and connected render", %{conn: conn, clock: clock} do
     ExchangeBehaviourMock
     |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %Models.ExchangeStatus{message: "test"} end)
+    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->
@@ -58,7 +57,7 @@ defmodule XestWeb.BinanceLiveTest do
   } do
     ExchangeBehaviourMock
     |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %Models.ExchangeStatus{message: "test"} end)
+    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->

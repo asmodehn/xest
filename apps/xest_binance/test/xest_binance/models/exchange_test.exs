@@ -3,28 +3,19 @@ defmodule XestBinance.Domain.Exchange.Test do
   use FlowAssertions
 
   alias XestBinance.Models.Exchange
-  alias XestBinance.Models.ExchangeStatus
-
-  test "test exchange status initial values" do
-    %ExchangeStatus{}
-    |> assert_fields(%{
-      message: nil,
-      code: nil
-    })
-  end
 
   test "test exchange model initial values" do
     %Exchange{}
     |> assert_fields(%{
-      status: %ExchangeStatus{}
+      status: %Binance.SystemStatus{}
     })
   end
 
   test "test exchange status update" do
     %Exchange{}
-    |> Exchange.update(status: %ExchangeStatus{message: "testmsg", code: 42})
+    |> Exchange.update(status: %Binance.SystemStatus{msg: "testmsg", status: 42})
     |> assert_fields(%{
-      status: %ExchangeStatus{message: "testmsg", code: 42}
+      status: %Binance.SystemStatus{msg: "testmsg", status: 42}
     })
   end
 end

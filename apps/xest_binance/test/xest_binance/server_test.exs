@@ -39,7 +39,7 @@ defmodule XestBinance.Server.Test do
       end)
 
       assert system_status(server_pid) ==
-               {:ok, %XestBinance.Models.ExchangeStatus{message: "normal", code: 0}}
+               {:ok, %Binance.SystemStatus{msg: "normal", status: 0}}
     end
 
     test "provides time", %{server_pid: server_pid, bypass: bypass} do

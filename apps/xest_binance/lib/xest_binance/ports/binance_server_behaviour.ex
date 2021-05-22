@@ -6,16 +6,15 @@ defmodule XestBinance.Ports.ServerBehaviour do
     But it remains tied to the Binance model in its overall structure.
   """
 
-  @type status :: XestBinance.Models.ExchangeStatus.t()
   @type reason :: String.t()
 
   @type servertime :: DateTime.t()
   @type mockable_pid :: nil | pid()
 
   # | {:error, reason}
-  @callback system_status(mockable_pid()) :: {:ok, status}
+  @callback system_status(mockable_pid()) :: {:ok, %Binance.SystemStatus{}}
 
-  @callback system_status!(mockable_pid()) :: status
+  @callback system_status!(mockable_pid()) :: %Binance.SystemStatus{}
 
   # | {:error, reason}
   @callback time(mockable_pid()) :: {:ok, servertime}

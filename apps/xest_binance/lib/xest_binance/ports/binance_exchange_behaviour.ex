@@ -6,7 +6,7 @@ defmodule XestBinance.Ports.ExchangeBehaviour do
     But it remains tied to the Binance model in its overall structure.
   """
 
-  @type status :: XestBinance.Models.ExchangeStatus.t()
+  @type status :: Xest.ExchangeStatus.t()
   @type reason :: String.t()
 
   @type servertime :: Xest.ShadowClock.t()

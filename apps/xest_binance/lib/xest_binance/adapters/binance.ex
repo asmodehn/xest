@@ -12,13 +12,9 @@ defmodule XestBinance.Client do
 
   @impl true
   def system_status(%Binance{} = binance) do
-    # TEMPORARY, until integrated in Binance
-    case Binance.Rest.HTTPClient.get_binance(binance.endpoint <> "/wapi/v3/systemStatus.html") do
-      {:ok, %{"msg" => msg, "status" => status}} ->
-        {:ok, %XestBinance.Models.ExchangeStatus{message: msg, code: status}}
-
-      err ->
-        err
+    case Binance.get_system_status(binance) do
+      {:ok, status} -> {:ok, status}
+      {:error, err} -> {:error, err}
     end
   end
 
@@ -36,7 +32,8 @@ defmodule XestBinance.Client do
     end
   end
 
-  def get_account(%Binance{} = binance) do
+  @impl true
+  def account(%Binance{} = binance) do
     Binance.get_account(binance)
   end
 end

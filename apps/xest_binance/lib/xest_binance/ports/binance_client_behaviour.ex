@@ -8,16 +8,17 @@ defmodule XestBinance.Ports.ClientBehaviour do
 
   @type binance :: Map.t()
 
-  @type status :: XestBinance.Models.ExchangeStatus.t()
   @type reason :: String.t()
   @type pong :: %{}
 
   @type servertime :: DateTime.t()
 
   # | {:error, reason}
-  @callback system_status(binance) :: {:ok, status}
+  @callback system_status(binance) :: {:ok, %Binance.SystemStatus{}}
   # | {:error, reason}
   @callback ping(binance) :: {:ok, pong}
   # | {:error, reason}
   @callback time(binance) :: {:ok, servertime}
+  # | {:error, reason}
+  @callback account(binance) :: {:ok, %Binance.Account{}}
 end

@@ -66,8 +66,7 @@ defmodule XestBinance.Server do
 
   @impl true
   def system_status(pid \\ __MODULE__) do
-    {:ok, %XestBinance.Models.ExchangeStatus{} = status_model} =
-      GenServer.call(pid, {:system_status})
+    {:ok, status_model} = GenServer.call(pid, {:system_status})
 
     # a way to broadcast "low-level" events (we don't need to store them)
     #    Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), "binance:system_status", response)
