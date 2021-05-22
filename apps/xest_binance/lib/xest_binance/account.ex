@@ -4,6 +4,8 @@ defmodule XestBinance.Account do
 
   """
 
+  alias XestBinance.ACL
+
   @behaviour XestBinance.Ports.AccountBehaviour
 
   # these are the minimal amount of state necessary
@@ -59,7 +61,7 @@ defmodule XestBinance.Account do
           {:ok, acc} = binance_authenticated().account(state.authsrv)
 
           # doing some translation here, like an ACL...
-          xest_acc = binance_to_xest_models(acc)
+          xest_acc = ACL.to_xest(acc)
 
           {xest_acc,
            state
@@ -75,22 +77,5 @@ defmodule XestBinance.Account do
           # TODO : add a case to check for timeout to request again the status
       end
     end)
-  end
-
-  defp binance_to_xest_models(%Binance.Account{} = binance) do
-    # TODO this should probably be in some ACL...
-    Xest.Account.new(
-      binance.balances,
-      binance.maker_commission,
-      binance.taker_commission,
-      binance.buyer_commission,
-      binance.seller_commission,
-      binance.can_trade,
-      binance.can_withdrawl,
-      binance.can_deposit,
-      binance.update_time
-      #    binance.account_type,
-      #    binance.permissions
-    )
   end
 end
