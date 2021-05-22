@@ -79,7 +79,7 @@ defmodule XestBinance.Authenticated do
           binance_client_adapter_state: binance_client_adapter_state
         } = state
       ) do
-    resp = binance_client_adapter.get_account(binance_client_adapter_state)
+    resp = binance_client_adapter.account(binance_client_adapter_state)
     # TODO reschedule ping after request
     {:reply, resp, state}
   end

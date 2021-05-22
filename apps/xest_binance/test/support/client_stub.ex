@@ -15,4 +15,7 @@ defmodule XestBinance.Client.Stub do
 
   @impl true
   def time(_), do: {:ok, %{"serverTime" => 1_613_638_412_313}}
+
+  @impl true
+  def account(_), do: {:ok, %{}}
 end
