@@ -15,7 +15,8 @@ defmodule XestBinance.MonadicExchange do
   # to estimate current real world binance exchange status
   # :minimal_request_period, :shadow_clock]
   @enforce_keys [:pubsrv]
-  defstruct model: nil,
+  defstruct system_status: nil,
+            servertime: nil,
             # pointing to the binance server pid
             # ,
             pubsrv: nil
@@ -29,19 +30,26 @@ defmodule XestBinance.MonadicExchange do
   import Algae.Reader
 
   def new(pubsrv \\ binance_server(), pubsrv_pid \\ binance_server()) do
-    fn _utc_now ->
+    system_status_retrieve = fn _utc_now ->
       # TODO : use utc_now to figure out if retrieving is needed or not.
       # TODO : leverage elixir's 'with' ?
       {:ok, exg_raw} = pubsrv.system_status(pubsrv_pid)
-      model = ACL.to_xest(exg_raw)
-      data = %__MODULE__{model: model, pubsrv: pubsrv}
-      {model, data}
+      {ACL.to_xest(exg_raw), exg_raw}
     end
-    |> ask()
+
+    %__MODULE__{
+      system_status: system_status_retrieve |> ask(),
+      servertime: Xest.ShadowClock.new(fn -> pubsrv.time!(pubsrv_pid) end),
+      pubsrv: pubsrv
+    }
   end
 
-  def system_status(reader, utc_now \\ &DateTime.utc_now/0) do
+  def system_status(%__MODULE__{system_status: reader}, utc_now \\ &DateTime.utc_now/0) do
     reader |> run(utc_now.()) |> elem(0)
+  end
+
+  def servertime(%__MODULE__{servertime: shadowclock}, _utc_now \\ &DateTime.utc_now/0) do
+    Xest.ShadowClock.update(shadowclock)
   end
 
   defp binance_server do
