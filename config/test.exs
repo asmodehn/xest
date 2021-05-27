@@ -1,5 +1,7 @@
 use Mix.Config
 
+alias Hammox
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :xest_web, XestWeb.Endpoint,
@@ -8,9 +10,6 @@ config :xest_web, XestWeb.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
-
-# mock for tesla connection on test
-config :tesla, adapter: Tesla.Mock
 
 # NOT YET
 ## Config for Commanded in-memory eventstore for test

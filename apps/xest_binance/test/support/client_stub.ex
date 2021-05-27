@@ -8,11 +8,14 @@ defmodule XestBinance.Client.Stub do
   @behaviour XestBinance.Ports.ClientBehaviour
 
   @impl true
-  def ping(), do: {:ok, %{}}
+  def ping(_), do: {:ok, %{}}
 
   @impl true
-  def system_status(), do: {:ok, %{"msg" => "normal", "status" => 0}}
+  def system_status(_), do: {:ok, %{"msg" => "normal", "status" => 0}}
 
   @impl true
-  def time(), do: {:ok, %{"serverTime" => 1_613_638_412_313}}
+  def time(_), do: {:ok, %{"serverTime" => 1_613_638_412_313}}
+
+  @impl true
+  def account(_), do: {:ok, %{}}
 end

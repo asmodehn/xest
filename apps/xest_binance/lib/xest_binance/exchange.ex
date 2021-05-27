@@ -11,6 +11,8 @@ defmodule XestBinance.Exchange do
   """
   alias XestBinance.Models
 
+  alias XestBinance.ACL
+
   @behaviour XestBinance.Ports.ExchangeBehaviour
 
   # TODO : move that to the binance client genserver...
@@ -19,7 +21,7 @@ defmodule XestBinance.Exchange do
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   @enforce_keys [:minimal_request_period, :shadow_clock]
-  defstruct model: %Models.Exchange{},
+  defstruct model: nil,
             # pointing to the binance client pid
             client: nil,
             # TODO : maybe in model instead ?
@@ -28,7 +30,7 @@ defmodule XestBinance.Exchange do
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
-          model: Models.Exchange.t(),
+          model: Models.Exchange.t() | nil,
           # TODO: Xest.Ports.BinanceClientBehaviour.t() | nil,
           client: any(),
           shadow_clock: Xest.ShadowClock.t() | nil,
@@ -80,20 +82,22 @@ defmodule XestBinance.Exchange do
   @impl true
   def status(agent) do
     Agent.get_and_update(agent, fn state ->
-      case state.model.status do
-        status when is_nil(status.message) or is_nil(status.code) ->
+      case state.model do
+        model when is_nil(model) ->
           # TODO this should probably be in the API / some ACL...
-          {:ok, %Models.ExchangeStatus{} = status} = binance_server().system_status(state.client)
+          {:ok, %Binance.SystemStatus{} = status} = binance_server().system_status(state.client)
 
-          {status,
+          xest_status = ACL.to_xest(status)
+
+          {xest_status,
            state
            |> Map.put(
              :model,
-             Models.Exchange.update(state.model, status: status)
+             %Models.Exchange{status: xest_status}
            )}
 
-        status ->
-          {status, state}
+        model ->
+          {model.status, state}
           # TODO : add a case to check for timeout to request again the status
       end
     end)

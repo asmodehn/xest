@@ -1,4 +1,4 @@
-defmodule XestBinance.Ports.ServerBehaviour do
+defmodule XestBinance.Ports.AuthenticatedBehaviour do
   @moduledoc """
     this implements a conversion from Binance model into our Xest model.
     It serves to specify the types that must be exposed by a GenServer,
@@ -6,20 +6,16 @@ defmodule XestBinance.Ports.ServerBehaviour do
     But it remains tied to the Binance model in its overall structure.
   """
 
+  # TODO
+  @type account :: Map.t()
   @type reason :: String.t()
 
-  @type servertime :: DateTime.t()
   @type mockable_pid :: nil | pid()
 
   # | {:error, reason}
-  @callback system_status(mockable_pid()) :: {:ok, %Binance.SystemStatus{}}
+  @callback account(mockable_pid()) :: {:ok, %Binance.Account{}}
 
-  @callback system_status!(mockable_pid()) :: %Binance.SystemStatus{}
-
-  # | {:error, reason}
-  @callback time(mockable_pid()) :: {:ok, servertime}
-
-  @callback time!(mockable_pid()) :: servertime
+  @callback account!(mockable_pid()) :: %Binance.Account{}
 
   # TODO : by leveraging __using__ we could implement default function
   #                                   and their unsafe counterparts maybe ?

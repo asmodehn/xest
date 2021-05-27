@@ -4,7 +4,6 @@ defmodule XestBinance.Exchange.Test do
 
   alias Xest.ShadowClock
 
-  alias XestBinance.Models
   alias XestBinance.Exchange
   alias XestBinance.ServerBehaviourMock
 
@@ -49,12 +48,7 @@ defmodule XestBinance.Exchange.Test do
     exg_pid
     |> Exchange.state()
     |> assert_fields(%{
-      model: %Models.Exchange{
-        status: %Models.ExchangeStatus{
-          message: nil,
-          code: nil
-        }
-      },
+      model: nil,
       client: server_pid
       #      shadow_clock: %Xest.ShadowClock{}
     })
@@ -63,21 +57,21 @@ defmodule XestBinance.Exchange.Test do
   test "retrieve status", %{exg_pid: exg_pid} do
     ServerBehaviourMock
     |> expect(:system_status, fn _ ->
-      {:ok, %Models.ExchangeStatus{message: "normal", code: 0}}
+      {:ok, %Binance.SystemStatus{msg: "normal", status: 0}}
     end)
 
     exg_pid
     |> Exchange.status()
     |> assert_fields(%{
       message: "normal",
-      code: 0
+      status: 0
     })
   end
 
   test "after retrieving status, state is still usable", %{exg_pid: exg_pid} do
     ServerBehaviourMock
     |> expect(:system_status, fn _ ->
-      {:ok, %Models.ExchangeStatus{message: "normal", code: 0}}
+      {:ok, %Binance.SystemStatus{msg: "normal", status: 0}}
     end)
 
     Exchange.status(exg_pid)
@@ -86,7 +80,7 @@ defmodule XestBinance.Exchange.Test do
     |> Exchange.status()
     |> assert_fields(%{
       message: "normal",
-      code: 0
+      status: 0
     })
   end
 

@@ -8,6 +8,8 @@
 # configurations or dependencies per app, it is best to
 # move said applications out of the umbrella.
 use Mix.Config
+# TODO : migrate to Elixir.Config
+# cf. https://hexdocs.pm/elixir/Config.html#module-migrating-from-use-mix-config
 
 config :xest_web,
   generators: [context_app: :xest]
@@ -30,12 +32,15 @@ config :phoenix, :json_library, Jason
 
 config :xest,
   # setup adapter for binance http api connections
-  binance_client_adapter: XestBinance.ClientTesla,
+  binance_client_adapter: XestBinance.Client,
   # setup adapter for binance genserver
-  binance_server: XestBinance.Server
+  binance_server: XestBinance.Server,
+  # setup adapter for binance genserver for authenticated requests
+  binance_authenticated: XestBinance.Authenticated
 
 config :xest_web,
-  binance_exchange: XestBinance.Exchange
+  binance_exchange: XestBinance.Exchange,
+  binance_account: XestBinance.Account
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -7,7 +7,7 @@ defmodule XestBinance.Server.Stub do
 
   @behaviour XestBinance.Ports.ServerBehaviour
 
-  alias XestBinance.Models.ExchangeStatus
+  alias Xest.ExchangeStatus
 
   @impl true
   def system_status(_pid), do: {:ok, %ExchangeStatus{}}

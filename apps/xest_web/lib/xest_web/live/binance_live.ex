@@ -19,23 +19,23 @@ defmodule XestWeb.BinanceLive do
           # assigning now for rendering without assigning the (shadow) clock
           |> assign(now: DateTime.from_unix!(0))
           |> assign(status_msg: "N/A")
+          # initial balance model
+          |> assign(account_balances: [%{}])
 
         # second time websocket info
         true ->
           # setup a self tick with a second period
           :timer.send_interval(1000, self(), :tick)
-
-          # subscribe to the binance topic
-
-          :ok = XestWeb.Endpoint.subscribe("binance:requests")
-          :ok = XestWeb.Endpoint.subscribe("binance:time")
-          :ok = XestWeb.Endpoint.subscribe("binance:system_status")
+          # refresh status every 5 seconds
+          :timer.send_interval(5000, self(), :status_refresh)
+          # refresh account every 10 seconds
+          :timer.send_interval(10_000, self(), :account_refresh)
 
           socket
           # putting actual server date
           |> put_date()
-          # TODO
-          |> assign(status_msg: "requesting...")
+          |> assign(status_msg: retrieve_status().message)
+          |> assign(account_balances: filter_null_balances(retrieve_account()))
       end
 
     {:ok, socket}
@@ -47,35 +47,48 @@ defmodule XestWeb.BinanceLive do
   end
 
   @impl true
+  def handle_info(:status_refresh, socket) do
+    {:noreply, assign(socket, status_msg: retrieve_status().message)}
+  end
+
+  @impl true
+  def handle_info(:account_refresh, socket) do
+    {:noreply,
+     assign(socket,
+       account_balances: filter_null_balances(retrieve_account())
+     )}
+  end
+
+  @impl true
   def handle_info(msg, socket) do
-    IO.puts("IN HANDLE RANDOM MSG: " <> msg)
-    {:noreply, socket |> put_flash(:warning, msg)}
+    {:noreply, socket |> put_flash(:info, msg)}
   end
 
-  @impl true
-  def handle_event("nav", _path, socket) do
-    IO.inspect(socket)
-    {:noreply, socket}
+  defp retrieve_status() do
+    binance_exchange().status(
+      # finding the process via its module name...
+      Process.whereis(binance_exchange())
+    )
   end
 
-  @impl true
-  def handle_event("get_status", _value, socket) do
-    Logger.debug("clicked !")
+  defp retrieve_account() do
+    binance_account().account(
+      # finding the process via its module name...
+      Process.whereis(binance_account())
+    )
+  end
 
-    status =
-      binance_exchange().status(
-        # finding the process via its module name...
-        Process.whereis(binance_exchange())
-      )
-
-    Logger.info("status: #{inspect(status)}")
-
-    {:noreply, assign(socket, status_msg: status.message)}
+  defp filter_null_balances(account) do
+    account.balances
+    # TODO : this filter should probably be done at a lower level
+    |> Enum.filter(fn b ->
+      {free, ""} = Float.parse(b["free"])
+      {locked, ""} = Float.parse(b["locked"])
+      Float.round(free, 8) != 0 or Float.round(locked, 8) != 0
+    end)
   end
 
   defp put_date(socket) do
-    Logger.debug("get date")
-
     # Abusing socket here to store the clock...
     socket =
       Map.put_new_lazy(
@@ -90,10 +103,16 @@ defmodule XestWeb.BinanceLive do
       )
 
     # compute now
+    # We keep clock and now in the assign,
+    #    because we want to minimize work on the frontend at the moment
     assign(socket, now: Xest.ShadowClock.now(socket.clock))
   end
 
   defp binance_exchange() do
     Application.get_env(:xest_web, :binance_exchange)
+  end
+
+  defp binance_account() do
+    Application.get_env(:xest_web, :binance_account)
   end
 end

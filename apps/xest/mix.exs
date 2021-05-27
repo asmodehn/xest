@@ -11,6 +11,7 @@ defmodule Xest.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_options: [warnings_as_errors: true],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -51,7 +52,7 @@ defmodule Xest.MixProject do
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:excoveralls, "~> 0.10", only: :test},
+      {:excoveralls, "~> 0.10", only: [:dev, :test]},
       {:doctor, "~> 0.17.0", only: :dev},
 
       # phoenix communication
@@ -60,9 +61,13 @@ defmodule Xest.MixProject do
       # Time manipulation
       {:timex, "~> 3.0"},
 
+      # Functional patterns
+      {:witchcraft, "~> 1.0"},
+      {:algae, "~> 1.3"},
+
       # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
-      {:flow_assertions, "~> 0.6", only: :test},
+      {:flow_assertions, "~> 0.6", only: [:dev, :test]},
       {:hammox, "~> 0.4", only: [:test, :dev]}
     ]
   end

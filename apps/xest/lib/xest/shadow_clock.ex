@@ -11,6 +11,8 @@ defmodule Xest.ShadowClock do
             local_clock: nil,
             remote_clock: nil
 
+  # TODO : this can probably be simplified into a Read or State monad...
+
   @typedoc "A clock, callable (impure) function returning a DateTime"
   @type clock() :: (() -> DateTime.t())
 

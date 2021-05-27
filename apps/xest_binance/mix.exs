@@ -11,6 +11,7 @@ defmodule XestBinance.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_options: [warnings_as_errors: true],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -19,7 +20,11 @@ defmodule XestBinance.MixProject do
         coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.post": :test,
-        "coveralls.html": :test
+        "coveralls.html": :test,
+        vcr: :test,
+        "vcr.delete": :test,
+        "vcr.check": :test,
+        "vcr.show": :test
       ]
       # if you want to use espec,
       # test_coverage: [tool: ExCoveralls, test_task: "espec"]
@@ -45,16 +50,21 @@ defmodule XestBinance.MixProject do
     [
       {:xest, in_umbrella: true},
 
-      # HTTP client
-      {:tesla, "~> 1.4.0"},
-      # optional, but recommended adapter
-      {:hackney, "~> 1.16.0"},
-      # optional, required by JSON middleware
-      {:jason, ">= 1.0.0"},
-      {:fuse, "~> 2.4"},
+      # Binance client !
+      #      {:binance, "~> 0.9.0"},
+      {:binance, git: "git://github.com/asmodehn/binance.ex.git", branch: "expose_endpoint"},
+
+      # Recording API Responses in tests
+      {:exvcr, "~> 0.11", only: [:dev, :test]},
+
+      # For integration tests with an actual HTTP server
+      {:bypass, "~> 2.1", only: [:dev, :test]},
 
       # Time manipulation
-      {:timex, "~> 3.0"}
+      {:timex, "~> 3.0"},
+
+      # Runtime configuration
+      {:vapor, "~> 0.10"}
     ]
   end
 
@@ -63,7 +73,8 @@ defmodule XestBinance.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get"]
+      setup: ["deps.get"],
+      test: ["test --exclude integration"]
     ]
   end
 end
