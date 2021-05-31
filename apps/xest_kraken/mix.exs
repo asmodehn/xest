@@ -47,6 +47,7 @@ defmodule XestKraken.MixProject do
   defp deps do
     [
       {:xest, in_umbrella: true},
+      {:exconstructor, "~> 1.1.0"},
 
       # Kraken client !
       #            {:krakex, "~> 0.6.0"},

@@ -27,7 +27,7 @@ defmodule XestKraken.Krakex do
   @impl true
   def system_status(%Krakex.Client{} = client) do
     case Krakex.system_status(client) do
-      {:ok, status} -> {:ok, status}
+      {:ok, response} -> {:ok, XestKraken.Adapter.SystemStatus.new(response)}
       {:error, err} -> {:error, err}
       other -> IO.inspect(other)
     end

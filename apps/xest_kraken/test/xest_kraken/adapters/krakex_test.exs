@@ -19,10 +19,13 @@ defmodule XestKraken.Krakex.Test do
   test "system status OK" do
     use_cassette "systemstatus_ok" do
       client = XestKraken.Krakex.new()
-      IO.inspect(client)
 
       assert XestKraken.Krakex.system_status(client) ==
-               {:ok, %{"status" => "online", "timestamp" => "2021-05-31T08:50:01Z"}}
+               {:ok,
+                %XestKraken.Adapter.SystemStatus{
+                  status: "online",
+                  timestamp: "2021-05-31T08:50:01Z"
+                }}
     end
   end
 end
