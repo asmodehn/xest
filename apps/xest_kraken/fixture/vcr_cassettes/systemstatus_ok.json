@@ -1,0 +1,35 @@
+[
+  {
+    "request": {
+      "body": "",
+      "headers": {
+        "accept": "application/json"
+      },
+      "method": "get",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.kraken.com/0/public/SystemStatus"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"error\":[],\"result\":{\"status\":\"online\",\"timestamp\":\"2021-05-31T08:50:01Z\"}}",
+      "headers": {
+        "Date": "Mon, 31 May 2021 08:50:01 GMT",
+        "Content-Type": "application/json; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+        "Connection": "keep-alive",
+        "cache-control": "no-cache,max-age=0",
+        "vary": "Accept-Encoding",
+        "strict-transport-security": "max-age=15768000",
+        "CF-Cache-Status": "MISS",
+        "cf-request-id": "0a6336aee80000b77576073000000001",
+        "Expect-CT": "max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"",
+        "Set-Cookie": "__cf_bm=ea215a933f3f230d19e76d3b4e3d3b14ff79cecf-1622451001-1800-AVy31eQDOD7xJBzrGmaC5BD4eOBqN7xFa8qbsgMpwT/2WvQWHxx+PGvWASxObdMxoWpqjDKIEIBLtkdik5rDl90=; path=/; expires=Mon, 31-May-21 09:20:01 GMT; domain=.kraken.com; HttpOnly; Secure; SameSite=None",
+        "Server": "cloudflare",
+        "CF-RAY": "657ef3c4ad81b775-CDG"
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]

@@ -46,7 +46,11 @@ defmodule XestKraken.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:xest, in_umbrella: true}
+      {:xest, in_umbrella: true},
+
+      # Kraken client !
+      #            {:krakex, "~> 0.6.0"},
+      {:krakex, git: "git://github.com/asmodehn/krakex.git", branch: "master"}
 
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
