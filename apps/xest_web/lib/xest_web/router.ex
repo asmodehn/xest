@@ -22,6 +22,7 @@ defmodule XestWeb.Router do
     live "/democlock", ClockLive, :index
     live "/demoimage", ImageLive, :index
     live "/binance", BinanceLive, :index
+    live "/kraken", KrakenLive, :index
   end
 
   # Other scopes may use custom stacks.

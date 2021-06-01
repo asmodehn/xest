@@ -10,6 +10,9 @@ defmodule XestKraken.Application do
     children = [
       # Starts a worker by calling: XestKraken.Worker.start_link(arg)
       # {XestKraken.Worker, arg}
+
+      # Starting main Exchange Agent managing retrieved state
+      {XestKraken.Exchange, name: XestKraken.Exchange}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

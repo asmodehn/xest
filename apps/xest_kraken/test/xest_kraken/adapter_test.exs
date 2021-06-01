@@ -1,4 +1,4 @@
-defmodule XestBinance.Adapter.Test do
+defmodule XestKraken.Adapter.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 

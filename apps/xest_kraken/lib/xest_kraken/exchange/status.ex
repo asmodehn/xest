@@ -32,3 +32,16 @@ defmodule XestKraken.Exchange.Status do
     super(just_map, opts)
   end
 end
+
+# providing implementation for Xest ACL
+defimpl Xest.Exchange.Status.ACL, for: XestKraken.Exchange.Status do
+  def new(%XestKraken.Exchange.Status{status: status}) do
+    Xest.Exchange.Status.new(
+      case status do
+        "online" -> :online
+        "maintenance" -> :maintenance
+      end,
+      status
+    )
+  end
+end
