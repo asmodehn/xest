@@ -1,21 +1,15 @@
 # XestKraken
 
-**TODO: Add description**
+https://mermaid.ink/svg/eyJjb2RlIjoiZ3JhcGggVERcbiAgICBBW1hlc3RdIC0tPiB8cHVibGljfCBCKEV4Y2hhbmdlKVxuICAgIEEgLS0-IHxwcml2YXRlfCBDKEFjY291bnQpXG4gICAgXG4gICAgQiAtLT4gfHRocm90dGxlZHwgRHtBZGFwdGVyfVxuICAgIEMgLS0-IHx0aHJvdHRsZWR8IERcblxuICAgIEQgLS0-IHxBUEkgcmVxdWVzdHwgRVtLcmFrZXhdXG4iLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ
 
-## Installation
+```mermaid
+graph TD
+    A[Xest] --> |public| B(Exchange)
+    A --> |private| C(Account)
+    
+    B --> |throttled| D{Adapter}
+    C --> |throttled| D
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `xest_kraken` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:xest_kraken, "~> 0.1.0"}
-  ]
-end
+    D --> |API request| E[Krakex]
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/xest_kraken](https://hexdocs.pm/xest_kraken).
 

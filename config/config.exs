@@ -38,9 +38,19 @@ config :xest,
   # setup adapter for binance genserver for authenticated requests
   binance_authenticated: XestBinance.Authenticated
 
+config :xest_kraken,
+  adapter: XestKraken.Adapter.Krakex,
+  exchange: XestKraken.Exchange
+
 config :xest_web,
   binance_exchange: XestBinance.Exchange,
   binance_account: XestBinance.Account
+
+config :xest_web,
+  # ,
+  kraken_exchange: XestKraken.Exchange
+
+#  binance_account: XestBinance.Account
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

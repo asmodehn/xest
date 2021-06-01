@@ -1,20 +1,18 @@
-defmodule XestKraken.Ports.AdapterBehaviour do
+defmodule XestKraken.Adapter.Behaviour do
   @moduledoc """
-    this implements a direct conversion from Kraken API into Elixir
+    this behaviour is useful for testing with a mock and
+    decouple this code from the actual implementation
   """
 
-  # TODO : Matching our internal models for binance data
-  #        (close to a subset of Krakex models)
-
-  @type kraken :: Krakex.Client.t()
+  alias XestKraken.Adapter.Client
 
   @type reason :: String.t()
   @type pong :: %{}
 
-  @type servertime :: DateTime.t()
+  #  @type servertime :: DateTime.t()
 
   # | {:error, reason}
-  @callback system_status(kraken) :: {:ok, Map.t()}
+  @callback system_status(Client.t()) :: {:ok, map()}
   # | {:error, reason}
   #  @callback ping(binance) :: {:ok, pong}
   # NO PING IN KRAKEN API ??
