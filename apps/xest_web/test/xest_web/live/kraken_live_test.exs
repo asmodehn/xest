@@ -3,8 +3,7 @@ defmodule XestWeb.KrakenLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias XestBinance.ExchangeBehaviourMock
-  alias XestBinance.AccountBehaviourMock
+  alias Xest.Exchange.Mock
 
   import Hammox
 
@@ -24,9 +23,9 @@ defmodule XestWeb.KrakenLiveTest do
     %{clock: clock}
   end
 
-  test "disconnected and connected render", %{conn: conn, clock: clock} do
-    ExchangeBehaviourMock
-    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
+  test "disconnected and connected render", %{conn: conn, clock: _clock} do
+    Mock
+    |> expect(:status, fn :kraken -> %Xest.Exchange.Status{description: "test"} end)
 
     conn = get(conn, "/kraken")
 
@@ -41,10 +40,10 @@ defmodule XestWeb.KrakenLiveTest do
 
   test "sending a message to the liveview process displays it in flash view", %{
     conn: conn,
-    clock: clock
+    clock: _clock
   } do
-    ExchangeBehaviourMock
-    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
+    Mock
+    |> expect(:status, fn :kraken -> %Xest.Exchange.Status{description: "test"} end)
 
     {:ok, view, _html} = live(conn, "/kraken")
 

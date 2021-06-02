@@ -31,9 +31,14 @@ defmodule XestWeb.KrakenLive do
     {:ok, socket}
   end
 
+  defp exchange() do
+    # indirection to allow mock during tests
+    Application.get_env(:xest_web, :exchange, Xest.Exchange)
+  end
+
   @impl true
   def handle_info(:status_refresh, socket) do
-    %Xest.Exchange.Status{description: descr} = Xest.Exchange.status(:kraken)
+    %Xest.Exchange.Status{description: descr} = exchange().status(:kraken)
     {:noreply, assign(socket, status_msg: descr)}
   end
 

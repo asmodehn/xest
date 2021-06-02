@@ -49,6 +49,10 @@ config :xest_web,
 config :xest,
   kraken_exchange: XestKraken.Exchange
 
+# For clarity, but this may not need to be explicited here...
+# config :xest_web,
+#  exchange: Xest.Exchange
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

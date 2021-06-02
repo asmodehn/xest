@@ -1,4 +1,4 @@
-defmodule XestKraken.Exchange.Test do
+defmodule Xest.Exchange.Adapter.Test do
   use ExUnit.Case, async: true
 
   import Hammox
