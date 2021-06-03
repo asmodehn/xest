@@ -51,7 +51,7 @@ defmodule XestKraken.Exchange.Test do
   test "retrieve status", %{exg_pid: exg_pid} do
     Adapter.Mock
     |> expect(:system_status, fn _ ->
-      {:ok, %{"status" => "normal", "timestamp" => DateTime.to_iso8601(@time_stop)}}
+      {:ok, %{status: "normal", timestamp: @time_stop}}
     end)
 
     exg_pid
@@ -65,7 +65,7 @@ defmodule XestKraken.Exchange.Test do
   test "after retrieving status, state is still usable", %{exg_pid: exg_pid} do
     Adapter.Mock
     |> expect(:system_status, fn _ ->
-      {:ok, %{"status" => "maintenance", "timestamp" => DateTime.to_iso8601(@time_stop)}}
+      {:ok, %{status: "maintenance", timestamp: @time_stop}}
     end)
 
     Exchange.status(exg_pid)
@@ -78,23 +78,30 @@ defmodule XestKraken.Exchange.Test do
     })
   end
 
-  #  test "retrieve servertime OK", %{exg_pid: exg_pid} do
-  #    ServerBehaviourMock
-  #    |> expect(:time!, fn _ -> @time_stop end)
-  #
-  #    clock = Exchange.servertime(exg_pid)
-  #    assert %ShadowClock{} = clock
-  #    assert ShadowClock.now(clock) == @time_stop
-  #  end
-  #
-  #  test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
-  #    ServerBehaviourMock
-  #    |> expect(:time!, fn _ -> @time_stop end)
-  #
-  #    Exchange.servertime(exg_pid)
-  #
-  #    clock = Exchange.servertime(exg_pid)
-  #    assert %ShadowClock{} = clock
-  #    assert ShadowClock.now(clock) == @time_stop
-  #  end
+  test "retrieve servertime OK", %{exg_pid: exg_pid} do
+    Adapter.Mock
+    |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
+
+    servertime = Exchange.servertime(exg_pid)
+
+    assert servertime == %XestKraken.Exchange.ServerTime{
+             unixtime: @time_stop,
+             rfc1123: "some date string"
+           }
+  end
+
+  test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
+    Adapter.Mock
+    |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
+    |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
+
+    Exchange.servertime(exg_pid)
+
+    servertime = Exchange.servertime(exg_pid)
+
+    assert servertime == %XestKraken.Exchange.ServerTime{
+             unixtime: @time_stop,
+             rfc1123: "some date string"
+           }
+  end
 end

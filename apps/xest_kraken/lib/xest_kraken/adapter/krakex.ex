@@ -11,18 +11,29 @@ defmodule XestKraken.Adapter.Krakex do
 
   @impl true
   def system_status(%Client{impl: client}) do
-    Krakex.system_status(client)
+    case Krakex.system_status(client) do
+      {:ok, response} ->
+        atom_resp = response |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+        {:ok, tsz, 0} = DateTime.from_iso8601(atom_resp[:timestamp])
+        {:ok, %{atom_resp | timestamp: tsz}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
-  #
-  #  @impl true
-  #  def time(%Binance{} = binance) do
-  #    # needed translating to our pre-existing behaviour...
-  #    case Binance.get_server_time(binance) do
-  #      {:ok, servertime_ms} -> {:ok, servertime_ms |> DateTime.from_unix!(:millisecond)}
-  #      {:error, reason} -> {:error, reason}
-  #    end
-  #  end
+  @impl true
+  def servertime(%Client{impl: client}) do
+    case Krakex.server_time(client) do
+      {:ok, response} ->
+        atom_resp = response |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+        {:ok, %{atom_resp | unixtime: DateTime.from_unix!(atom_resp[:unixtime], :second)}}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   #
   #  @impl true
   #  def account(%Binance{} = binance) do

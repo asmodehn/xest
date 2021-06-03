@@ -1,4 +1,5 @@
 <div class="container">
   <h1>Hello Kraken!</h1>
   <p>Status: <%= @status_msg %></p>
+  <p>Server Clock: <%= Calendar.strftime(@now, "%H:%M:%S") %></p>
 </div>

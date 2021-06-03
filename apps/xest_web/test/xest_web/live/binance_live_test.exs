@@ -26,8 +26,8 @@ defmodule XestWeb.BinanceLiveTest do
 
   test "disconnected and connected render", %{conn: conn, clock: _clock} do
     Exchange.Mock
-    |> expect(:servertime, fn _ -> %Xest.Exchange.ServerTime{servertime: @time_stop} end)
-    |> expect(:status, fn _ -> %Xest.Exchange.Status{status: :online, description: "test"} end)
+    |> expect(:servertime, fn _ -> %Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:status, fn _ -> %Exchange.Status{status: :online, description: "test"} end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->
@@ -56,8 +56,8 @@ defmodule XestWeb.BinanceLiveTest do
     clock: _clock
   } do
     Exchange.Mock
-    |> expect(:servertime, fn _ -> %Xest.Exchange.ServerTime{servertime: @time_stop} end)
-    |> expect(:status, fn _ -> %Xest.Exchange.Status{status: :online, description: "test"} end)
+    |> expect(:servertime, fn _ -> %Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:status, fn _ -> %Exchange.Status{status: :online, description: "test"} end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->

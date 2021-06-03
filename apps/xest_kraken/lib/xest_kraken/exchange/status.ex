@@ -25,10 +25,6 @@ defmodule XestKraken.Exchange.Status do
 
   @spec new(map(), Keyword.t()) :: %__MODULE__{}
   def new(just_map, opts \\ []) do
-    # converting timestamp to datetime
-    {:ok, tsz, 0} = DateTime.from_iso8601(just_map["timestamp"])
-    just_map = Map.put(just_map, "timestamp", tsz)
-
     super(just_map, opts)
   end
 end

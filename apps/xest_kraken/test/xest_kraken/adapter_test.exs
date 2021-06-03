@@ -18,8 +18,8 @@ defmodule XestKraken.Adapter.Test do
       fn _ ->
         {:ok,
          %{
-           "status" => "online",
-           "timestamp" => "2021-05-31T08:50:01Z"
+           status: "online",
+           timestamp: ~U[2021-05-31T08:50:01Z]
          }}
       end
     )

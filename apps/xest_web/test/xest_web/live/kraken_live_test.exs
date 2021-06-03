@@ -3,7 +3,7 @@ defmodule XestWeb.KrakenLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Xest.Exchange.Mock
+  alias Xest.Exchange
 
   import Hammox
 
@@ -24,26 +24,30 @@ defmodule XestWeb.KrakenLiveTest do
   end
 
   test "disconnected and connected render", %{conn: conn, clock: _clock} do
-    Mock
-    |> expect(:status, fn :kraken -> %Xest.Exchange.Status{description: "test"} end)
+    Exchange.Mock
+    |> expect(:servertime, fn _ -> %Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
     conn = get(conn, "/kraken")
 
     html = html_response(conn, 200)
     assert html =~ "Status: N/A"
+    assert html =~ "00:00:00"
 
     {:ok, _view, html} = live(conn, "/kraken")
 
     # after websocket connection, message changed
     assert html =~ "Status: test"
+    assert html =~ "08:53:32"
   end
 
   test "sending a message to the liveview process displays it in flash view", %{
     conn: conn,
     clock: _clock
   } do
-    Mock
-    |> expect(:status, fn :kraken -> %Xest.Exchange.Status{description: "test"} end)
+    Exchange.Mock
+    |> expect(:servertime, fn _ -> %Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
     {:ok, view, _html} = live(conn, "/kraken")
 

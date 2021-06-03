@@ -18,4 +18,10 @@ defmodule XestKraken.Adapter do
     {:ok, status} = implementation().system_status(client)
     Exchange.Status.new(status)
   end
+
+  @spec servertime(Client.t()) :: Exchange.ServerTime.t()
+  def servertime(%Client{} = client \\ Client.new()) do
+    {:ok, servertime} = implementation().servertime(client)
+    Exchange.ServerTime.new(servertime)
+  end
 end

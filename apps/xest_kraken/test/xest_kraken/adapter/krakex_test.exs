@@ -19,8 +19,21 @@ defmodule XestKraken.Adapter.Krakex.Test do
       assert XestKraken.Adapter.Krakex.system_status(client) ==
                {:ok,
                 %{
-                  "status" => "online",
-                  "timestamp" => "2021-05-31T08:50:01Z"
+                  status: "online",
+                  timestamp: ~U[2021-05-31T08:50:01Z]
+                }}
+    end
+  end
+
+  test "servertime OK" do
+    use_cassette "servertime_ok" do
+      client = XestKraken.Adapter.Client.new()
+
+      assert XestKraken.Adapter.Krakex.servertime(client) ==
+               {:ok,
+                %{
+                  rfc1123: "Thu,  3 Jun 21 12:36:38 +0000",
+                  unixtime: ~U[2021-06-03 12:36:38Z]
                 }}
     end
   end
