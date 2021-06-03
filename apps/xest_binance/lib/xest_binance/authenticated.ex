@@ -27,8 +27,8 @@ defmodule XestBinance.Authenticated do
       __MODULE__,
       # passing next_ping_wait_time in case it is specified as option from supervisor
       %__MODULE__{
-        binance_client_adapter: client(),
-        binance_client_adapter_state: client().new(apikey, secret, endpoint)
+        binance_client_adapter: XestBinance.Adapter,
+        binance_client_adapter_state: XestBinance.Adapter.client(apikey, secret, endpoint)
       },
       opts
     )
@@ -63,11 +63,6 @@ defmodule XestBinance.Authenticated do
     #    Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), "binance:system_status", response)
 
     {:ok, account_model}
-  end
-
-  defp client() do
-    # config based on mix environment
-    Application.get_env(:xest, :binance_client_adapter)
   end
 
   @impl true

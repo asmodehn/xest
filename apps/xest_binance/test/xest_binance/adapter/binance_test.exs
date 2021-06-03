@@ -5,8 +5,8 @@ defmodule XestBinance.Binance.Test do
   import Hammox
 
   use Hammox.Protect,
-    module: XestBinance.Client,
-    behaviour: XestBinance.Ports.ClientBehaviour
+    module: XestBinance.Adapter.Binance,
+    behaviour: XestBinance.Adapter.Behaviour
 
   setup :verify_on_exit!
 
@@ -18,46 +18,46 @@ defmodule XestBinance.Binance.Test do
 
   test "system status OK" do
     use_cassette "systemstatus_ok" do
-      assert XestBinance.Client.new()
-             |> XestBinance.Client.system_status() ==
+      assert XestBinance.Adapter.Client.new()
+             |> XestBinance.Adapter.Binance.system_status() ==
                {:ok, %Binance.SystemStatus{status: 0, msg: "normal"}}
     end
   end
 
   test "ping OK" do
     use_cassette "ping_ok" do
-      assert XestBinance.Client.new()
-             |> XestBinance.Client.ping() == {:ok, %{}}
+      assert XestBinance.Adapter.Client.new()
+             |> XestBinance.Adapter.Binance.ping() == {:ok, %{}}
     end
   end
 
   test "time OK" do
     use_cassette "servertime_ok" do
-      assert XestBinance.Client.new()
-             |> XestBinance.Client.time() == {:ok, ~U[2021-05-14 09:31:37.108Z]}
+      assert XestBinance.Adapter.Client.new()
+             |> XestBinance.Adapter.Binance.servertime() == {:ok, ~U[2021-05-14 09:31:37.108Z]}
     end
   end
 
   describe "without api_key and secret key" do
     setup do
-      client_state = XestBinance.Client.new(nil, nil)
+      client_state = XestBinance.Adapter.Client.new(nil, nil)
       %{client_state: client_state}
     end
 
     test "api key missing error returned", %{client_state: client_state} do
-      {:error, reason} = XestBinance.Client.account(client_state)
+      {:error, reason} = XestBinance.Adapter.Binance.account(client_state)
       assert reason == {:config_missing, "Secret and API key missing"}
     end
   end
 
   describe "with invalid api_key and secret key" do
     setup do
-      client_state = XestBinance.Client.new("Bad Key", "Bad Secret")
+      client_state = XestBinance.Adapter.Client.new("Bad Key", "Bad Secret")
       %{client_state: client_state}
     end
 
     test "APIkey invalid error returned", %{client_state: client_state} do
-      {:error, reason} = XestBinance.Client.account(client_state)
+      {:error, reason} = XestBinance.Adapter.Binance.account(client_state)
       assert reason == %{"code" => -2014, "msg" => "API-key format invalid."}
     end
   end
@@ -70,7 +70,7 @@ defmodule XestBinance.Binance.Test do
       config = Vapor.load!(XestBinance.Config)
 
       client_state =
-        XestBinance.Client.new(
+        XestBinance.Adapter.Client.new(
           config.binance.apikey,
           config.binance.secret,
           config.binance.endpoint
@@ -83,7 +83,7 @@ defmodule XestBinance.Binance.Test do
       use_cassette "account_ok" do
         ExVCR.Config.filter_request_headers("X-MBX-APIKEY")
         ExVCR.Config.filter_sensitive_data("signature=[a-zA-Z0-9]*", "signature=***")
-        {:ok, account} = XestBinance.Client.account(client_state)
+        {:ok, account} = XestBinance.Adapter.Binance.account(client_state)
 
         # match account struct...
         %Binance.Account{

@@ -11,11 +11,32 @@ defmodule XestBinance.Exchange do
   """
   alias XestBinance.Models
 
-  alias XestBinance.ACL
+  defmodule Behaviour do
+    @moduledoc """
+    Behaviour of Exchange, allowing other projects to mock XestBinance.Exchange for tests.
+    """
 
-  @behaviour XestBinance.Ports.ExchangeBehaviour
+    @type status :: XestBinance.Exchange.Status.t()
+    @type reason :: String.t()
 
-  # TODO : move that to the binance client genserver...
+    @type servertime :: Xest.ShadowClock.t()
+    @type mockable_pid :: nil | pid()
+
+    # | {:error, reason}
+    @callback status(mockable_pid()) :: status
+
+    # | {:error, reason}
+    @callback servertime(mockable_pid()) :: servertime
+
+    # TODO : by leveraging __using__ we could implement default function
+    #
+
+    # TODO : move this to Exchange module (out of subdir - confusing).
+    # This is only used for Mock testing of agent anyway, which means internally.
+  end
+
+  @behaviour Behaviour
+
   @default_minimum_request_period ~T[00:00:01]
 
   # these are the minimal amount of state necessary
@@ -26,13 +47,18 @@ defmodule XestBinance.Exchange do
             client: nil,
             # TODO : maybe in model instead ?
             shadow_clock: nil,
-            minimal_request_period: @default_minimum_request_period
+            servertime: nil,
+            minimal_request_period: @default_minimum_request_period,
+            # TODO
+            ping_timer: nil
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
           model: Models.Exchange.t() | nil,
           # TODO: Xest.Ports.BinanceClientBehaviour.t() | nil,
           client: any(),
+          # TODO : refine
+          servertime: any(),
           shadow_clock: Xest.ShadowClock.t() | nil,
           minimal_request_period: Time.t() | nil
         }
@@ -40,11 +66,17 @@ defmodule XestBinance.Exchange do
   use Agent
 
   def start_link(opts, minimal_request_period \\ @default_minimum_request_period) do
-    {client, opts} = Keyword.pop(opts, :client, binance_server())
+    {client, opts} = Keyword.pop(opts, :client, XestBinance.Adapter.client())
     # REMINDER : we dont want to call external systems on startup.
     # Other processes need to align before this can safely happen in various environments.
     {clock, opts} =
-      Keyword.pop(opts, :clock, Xest.ShadowClock.new(fn -> binance_server().time!(client) end))
+      Keyword.pop(
+        opts,
+        :clock,
+        Xest.ShadowClock.new(fn ->
+          XestBinance.Adapter.servertime(client).servertime
+        end)
+      )
 
     # starting the agent by passing the struct as initial value
     # - app can tune the minimal_request_period
@@ -59,10 +91,6 @@ defmodule XestBinance.Exchange do
       fn -> exchange_struct end,
       opts
     )
-  end
-
-  defp binance_server do
-    Application.get_env(:xest, :binance_server)
   end
 
   def model(agent) do
@@ -84,16 +112,13 @@ defmodule XestBinance.Exchange do
     Agent.get_and_update(agent, fn state ->
       case state.model do
         model when is_nil(model) ->
-          # TODO this should probably be in the API / some ACL...
-          {:ok, %Binance.SystemStatus{} = status} = binance_server().system_status(state.client)
+          status = XestBinance.Adapter.system_status()
 
-          xest_status = ACL.to_xest(status)
-
-          {xest_status,
+          {status,
            state
            |> Map.put(
              :model,
-             %Models.Exchange{status: xest_status}
+             %Models.Exchange{status: status}
            )}
 
         model ->
@@ -105,10 +130,38 @@ defmodule XestBinance.Exchange do
 
   @impl true
   def servertime(agent) do
-    # TODO : have some refresh to avoid too big a time skew...
     Agent.get_and_update(agent, fn state ->
-      {state.shadow_clock,
-       state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
+      case state.servertime do
+        nil ->
+          st = XestBinance.Adapter.servertime()
+
+          {st,
+           state
+           |> Map.put(
+             :servertime,
+             st
+           )}
+
+        _ ->
+          # TODO : add some necessary timeout to avoid spamming...
+          st = XestBinance.Adapter.servertime()
+
+          {st,
+           state
+           |> Map.put(
+             :servertime,
+             st
+           )}
+
+          # otherwise skip
+          #          {state.servertime, state}
+      end
     end)
+
+    #    # TODO : have some refresh to avoid too big a time skew...
+    #    Agent.get_and_update(agent, fn state ->
+    #      {state.shadow_clock,
+    #       state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
+    #    end)
   end
 end

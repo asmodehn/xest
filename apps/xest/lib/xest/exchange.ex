@@ -3,5 +3,11 @@ defmodule Xest.Exchange do
     Xest.Exchange.Adapter.retrieve(:kraken, :status)
   end
 
-  # TODO : binance version (and get rid of exchange_status.ex)
+  def status(:binance) do
+    Xest.Exchange.Adapter.retrieve(:binance, :status)
+  end
+
+  def servertime(connector) do
+    Xest.Exchange.Adapter.retrieve(connector, :servertime)
+  end
 end

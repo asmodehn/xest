@@ -68,6 +68,24 @@ iex(1)> Xest.Binance.system_status()
 %{"msg" => "normal", "status" => 0}
 ```
 
+# Design
+
+## apps
+[![](https://mermaid.ink/img/eyJjb2RlIjoiZ3JhcGggVERcbiAgICBCWzp4ZXN0X3dlYl0gLS0-IHxwZXJpb2RpY3wgRHs6eGVzdH1cbiAgICBcbiAgICBEIC0tPiB8cGVyaW9kaWN8IEVbOnhlc3Rfa3Jha2VuXVxuICAgIEQgLS0-IHxwZXJpb2RpY3wgRls6eGVzdF9iaW5hbmNlXVxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifSwidXBkYXRlRWRpdG9yIjpmYWxzZX0)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiZ3JhcGggVERcbiAgICBCWzp4ZXN0X3dlYl0gLS0-IHxwZXJpb2RpY3wgRHs6eGVzdH1cbiAgICBcbiAgICBEIC0tPiB8cGVyaW9kaWN8IEVbOnhlc3Rfa3Jha2VuXVxuICAgIEQgLS0-IHxwZXJpb2RpY3wgRls6eGVzdF9iaW5hbmNlXVxuIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifSwidXBkYXRlRWRpdG9yIjpmYWxzZX0)
+
+```mermaid
+graph TD
+    B[:xest_web] --> |periodic| D{:xest}
+    
+    D --> |periodic| E[:xest_kraken]
+    D --> |periodic| F[:xest_binance]
+
+```
+
+## time
+
+
+
 # Roadmap
 
 Exchanges:

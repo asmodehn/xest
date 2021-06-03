@@ -3,7 +3,7 @@ defmodule XestWeb.BinanceLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias XestBinance.ExchangeBehaviourMock
+  alias Xest.Exchange
   alias XestBinance.AccountBehaviourMock
 
   import Hammox
@@ -24,10 +24,10 @@ defmodule XestWeb.BinanceLiveTest do
     %{clock: clock}
   end
 
-  test "disconnected and connected render", %{conn: conn, clock: clock} do
-    ExchangeBehaviourMock
-    |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
+  test "disconnected and connected render", %{conn: conn, clock: _clock} do
+    Exchange.Mock
+    |> expect(:servertime, fn _ -> %Xest.Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:status, fn _ -> %Xest.Exchange.Status{status: :online, description: "test"} end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->
@@ -53,11 +53,11 @@ defmodule XestWeb.BinanceLiveTest do
 
   test "sending a message to the liveview process displays it in flash view", %{
     conn: conn,
-    clock: clock
+    clock: _clock
   } do
-    ExchangeBehaviourMock
-    |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
+    Exchange.Mock
+    |> expect(:servertime, fn _ -> %Xest.Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:status, fn _ -> %Xest.Exchange.Status{status: :online, description: "test"} end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->

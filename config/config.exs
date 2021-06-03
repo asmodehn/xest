@@ -31,12 +31,13 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :xest,
-  # setup adapter for binance http api connections
-  binance_client_adapter: XestBinance.Client,
-  # setup adapter for binance genserver
-  binance_server: XestBinance.Server,
+  # TODO : deprecate and remove this
   # setup adapter for binance genserver for authenticated requests
   binance_authenticated: XestBinance.Authenticated
+
+# For clarity, but this may not need to be explicited here...
+# config  :xest_binance,
+#        adapter: XestBinance.Adapter.Binance
 
 config :xest_kraken,
   adapter: XestKraken.Adapter.Krakex,
@@ -47,7 +48,8 @@ config :xest_web,
   binance_account: XestBinance.Account
 
 config :xest,
-  kraken_exchange: XestKraken.Exchange
+  kraken_exchange: XestKraken.Exchange,
+  binance_exchange: XestBinance.Exchange
 
 # For clarity, but this may not need to be explicited here...
 # config :xest_web,

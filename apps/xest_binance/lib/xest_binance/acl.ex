@@ -8,6 +8,7 @@ defmodule XestBinance.ACL do
   require Binance
   require Xest
 
+  # TODO : get rid of this
   def to_xest(%Binance.Account{} = binance) do
     Xest.Account.new(
       binance.balances,
@@ -24,6 +25,7 @@ defmodule XestBinance.ACL do
     )
   end
 
+  # TODO : get rid of this
   def to_xest(%Binance.SystemStatus{} = binance) do
     Xest.ExchangeStatus.new(
       binance.status,
