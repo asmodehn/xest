@@ -9,7 +9,6 @@ defmodule XestBinance.Exchange do
   There is no reason to keep state around when we can rebuild when needed,
    from past responses stored in server.
   """
-  alias XestBinance.Models
 
   defmodule Behaviour do
     @moduledoc """
@@ -42,7 +41,7 @@ defmodule XestBinance.Exchange do
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   @enforce_keys [:minimal_request_period, :shadow_clock]
-  defstruct model: nil,
+  defstruct status: nil,
             # pointing to the binance client pid
             client: nil,
             # TODO : maybe in model instead ?
@@ -54,7 +53,7 @@ defmodule XestBinance.Exchange do
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
-          model: Models.Exchange.t() | nil,
+          status: Exchange.Status.t() | nil,
           # TODO: Xest.Ports.BinanceClientBehaviour.t() | nil,
           client: any(),
           # TODO : refine
@@ -110,19 +109,14 @@ defmodule XestBinance.Exchange do
   @impl true
   def status(agent) do
     Agent.get_and_update(agent, fn state ->
-      case state.model do
-        model when is_nil(model) ->
+      case state.status do
+        status when is_nil(status) ->
           status = XestBinance.Adapter.system_status()
+          new_state = state |> Map.put(:status, status)
+          {status, new_state}
 
-          {status,
-           state
-           |> Map.put(
-             :model,
-             %Models.Exchange{status: status}
-           )}
-
-        model ->
-          {model.status, state}
+        status ->
+          {status, state}
           # TODO : add a case to check for timeout to request again the status
       end
     end)

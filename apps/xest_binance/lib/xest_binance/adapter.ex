@@ -31,6 +31,12 @@ defmodule XestBinance.Adapter do
     Exchange.ServerTime.new(%{servertime: servertime})
   end
 
+  # maybe useless ?? we could use the status for this...
+  def ping(%Client{} = cl \\ client()) do
+    {:ok, resp} = implementation().ping(cl)
+    resp
+  end
+
   def account(%Client{} = cl) do
     implementation().account(cl)
     # TODO : wrap into common xest type...

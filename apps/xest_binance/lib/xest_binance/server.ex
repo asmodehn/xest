@@ -95,7 +95,7 @@ defmodule XestBinance.Server do
           binance_client_adapter_state: binance_client_adapter_state
         } = state
       ) do
-    {:ok, %{}} = binance_client_adapter.ping(binance_client_adapter_state)
+    %{} = binance_client_adapter.ping(binance_client_adapter_state)
     # if ping fail, we should probably crash the genserver...
 
     # reschedule ping after request

@@ -42,8 +42,9 @@ defmodule XestBinance.Exchange.Test do
     exg_pid
     |> Exchange.state()
     |> assert_fields(%{
-      model: nil,
-      client: nil
+      status: nil,
+      client: nil,
+      servertime: nil
       #      shadow_clock: %Xest.ShadowClock{}
     })
   end
