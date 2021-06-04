@@ -92,17 +92,12 @@ defmodule XestBinance.Exchange do
     )
   end
 
-  def model(agent) do
-    Agent.get(agent, fn state -> state.model end)
-  end
-
-  # TODO : these 2 should be the same...
   @doc """
   Access the state of the exchange agent.
   This encodes our knowledge of binance exchange
   """
-  def state(exchange) do
-    Agent.get(exchange, &Function.identity/1)
+  def state(agent) do
+    Agent.get(agent, &Function.identity/1)
   end
 
   # lazy accessor

@@ -63,6 +63,14 @@ defmodule XestBinance.MixProject do
       # Time manipulation
       {:timex, "~> 3.0"},
 
+      # Cache
+      {:nebulex, "~> 2.1"},
+      #    {:shards, "~> 1.0"},      #=> When using :shards as backend on high workloads
+      # => When using Caching Annotations
+      {:decorator, "~> 1.3"},
+      # => When using the Telemetry events (Nebulex stats)
+      {:telemetry, "~> 0.4"},
+
       # Runtime configuration
       {:vapor, "~> 0.10"}
     ]

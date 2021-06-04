@@ -8,6 +8,7 @@
 # configurations or dependencies per app, it is best to
 # move said applications out of the umbrella.
 use Mix.Config
+
 # TODO : migrate to Elixir.Config
 # cf. https://hexdocs.pm/elixir/Config.html#module-migrating-from-use-mix-config
 
@@ -38,6 +39,20 @@ config :xest,
 # For clarity, but this may not need to be explicited here...
 # config  :xest_binance,
 #        adapter: XestBinance.Adapter.Binance
+
+config :xest_binance, XestBinance.Adapter.Cache,
+  # When using :shards as backend
+  # backend: :shards,
+  # GC interval for pushing new generation: 1 hrs
+  gc_interval: :timer.hours(1),
+  # Max 1 thousand entries in cache
+  max_size: 1_000,
+  # Max 2 MB of memory
+  allocated_memory: 2_000_000,
+  # GC min timeout: 5 sec
+  gc_cleanup_min_timeout: :timer.seconds(5),
+  # GC max timeout: 15 min
+  gc_cleanup_max_timeout: :timer.minutes(15)
 
 config :xest_kraken,
   adapter: XestKraken.Adapter.Krakex,

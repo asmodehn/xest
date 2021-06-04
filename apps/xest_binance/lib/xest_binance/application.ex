@@ -26,6 +26,9 @@ defmodule XestBinance.Application do
     config = Vapor.load!(XestBinance.Config)
 
     children = [
+      # Cache for Adapter to avoid useless spamming of the exchange from this IP.
+      {XestBinance.Adapter.Cache, []},
+
       # Starting main Binance Server
       {XestBinance.Server, name: XestBinance.Server, endpoint: config.binance.endpoint},
 
@@ -39,6 +42,7 @@ defmodule XestBinance.Application do
 
       # Starting main Exchange Agent managing retrieved state
       {XestBinance.Exchange, name: XestBinance.Exchange},
+
       # Starting main Account Agent managing retrieved state
       {XestBinance.Account, name: XestBinance.Account}
     ]

@@ -11,21 +11,22 @@ defmodule XestBinance.Adapter do
 
   @default_endpoint "https://api.binance.com"
 
-  defp implementation() do
-    Application.get_env(:xest_binance, :adapter, XestBinance.Adapter.Binance)
-  end
-
   defdelegate client(apikey \\ nil, secret \\ nil, endpoint \\ @default_endpoint),
     to: Client,
     as: :new
 
+  alias XestBinance.Adapter.Cache
+  use Nebulex.Caching
+
   @spec system_status(Client.t()) :: Exchange.Status.t()
+  @decorate cacheable(cache: Cache, key: :system_status, opts: [ttl: :timer.minutes(1)])
   def system_status(%Client{} = cl \\ client()) do
     {:ok, status} = implementation().system_status(cl)
     Exchange.Status.new(status)
   end
 
   @spec servertime(Client.t()) :: Exchange.ServerTime.t()
+  @decorate cacheable(cache: Cache, key: :servertime, opts: [ttl: :timer.minutes(5)])
   def servertime(%Client{} = cl \\ client()) do
     {:ok, servertime} = implementation().servertime(cl)
     Exchange.ServerTime.new(%{servertime: servertime})
@@ -40,5 +41,9 @@ defmodule XestBinance.Adapter do
   def account(%Client{} = cl) do
     implementation().account(cl)
     # TODO : wrap into common xest type...
+  end
+
+  defp implementation() do
+    Application.get_env(:xest_binance, :adapter, XestBinance.Adapter.Binance)
   end
 end

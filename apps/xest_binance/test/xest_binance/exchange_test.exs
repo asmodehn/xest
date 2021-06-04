@@ -38,6 +38,13 @@ defmodule XestBinance.Exchange.Test do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
+  setup do
+    #    before each test
+    # cleanup the cache and ignore result
+    _nb_erased = Adapter.Cache.delete_all()
+    %{}
+  end
+
   test "initial value OK", %{exg_pid: exg_pid} do
     exg_pid
     |> Exchange.state()
@@ -89,7 +96,7 @@ defmodule XestBinance.Exchange.Test do
 
   test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
     Adapter.Mock
-    |> expect(:servertime, fn _ -> {:ok, @time_stop} end)
+    # Not needed more than once because of the cache
     |> expect(:servertime, fn _ -> {:ok, @time_stop} end)
 
     Exchange.servertime(exg_pid)
