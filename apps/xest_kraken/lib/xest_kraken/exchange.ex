@@ -12,7 +12,7 @@ defmodule XestKraken.Exchange do
   @public_client Adapter.Client.new(nil, nil)
 
   # these are the minimal amount of state necessary
-  # to estimate current real world binance exchange status
+  # to estimate current real world kraken exchange status
   # , :shadow_clock]
   @enforce_keys [:minimal_request_period]
   defstruct status: nil,
@@ -43,10 +43,10 @@ defmodule XestKraken.Exchange do
     @type mockable_pid :: nil | pid()
 
     # | {:error, reason}
-    @callback status(mockable_pid()) :: status
+    @callback status() :: status
 
     # | {:error, reason}
-    @callback servertime(mockable_pid()) :: servertime
+    @callback servertime() :: servertime
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
@@ -77,74 +77,27 @@ defmodule XestKraken.Exchange do
     )
   end
 
-  defp kraken_adapter do
-    Application.get_env(:xest_kraken, :adapter)
-  end
-
   @doc """
   Access the state of the exchange agent.
-  This encodes our knowledge of binance exchange
+  This encodes our knowledge of kraken exchange
   """
   def state(agent) do
     Agent.get(agent, &Function.identity/1)
   end
 
-  # lazy accessor
+  # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def status(agent) do
-    Agent.get_and_update(agent, fn state ->
-      case state.status do
-        status when is_nil(status) ->
-          {:ok, response} = kraken_adapter().system_status(state.client)
-
-          status = XestKraken.Exchange.Status.new(response)
-
-          {status,
-           state
-           |> Map.put(:status, status)}
-
-        # TODO : add a case to check for timeout to request again the status
-
-        status ->
-          {status, state}
-      end
-    end)
+  def status() do
+    # cached read-through on adapter
+    # No need to keep a cache here
+    Adapter.system_status()
   end
 
+  # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def servertime(agent) do
-    Agent.get_and_update(agent, fn state ->
-      case state.servertime do
-        nil ->
-          st = XestKraken.Adapter.servertime()
-
-          {st,
-           state
-           |> Map.put(
-             :servertime,
-             st
-           )}
-
-        _ ->
-          # TODO : add some necessary timeout to avoid spamming...
-          st = XestKraken.Adapter.servertime()
-
-          {st,
-           state
-           |> Map.put(
-             :servertime,
-             st
-           )}
-
-          # otherwise skip
-          #          {state.servertime, state}
-      end
-    end)
-
-    #    # TODO : have some refresh to avoid too big a time skew...
-    #    Agent.get_and_update(agent, fn state ->
-    #      {state.shadow_clock,
-    #       state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
-    #    end)
+  def servertime() do
+    # cached read-through on adapter
+    # No need to keep a cache here
+    Adapter.servertime()
   end
 end

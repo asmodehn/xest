@@ -32,6 +32,10 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :xest,
+  kraken_exchange: XestKraken.Exchange,
+  binance_exchange: XestBinance.Exchange
+
+config :xest,
   # TODO : deprecate and remove this
   # setup adapter for binance genserver for authenticated requests
   binance_authenticated: XestBinance.Authenticated
@@ -54,6 +58,20 @@ config :xest_binance, XestBinance.Adapter.Cache,
   # GC max timeout: 15 min
   gc_cleanup_max_timeout: :timer.minutes(15)
 
+config :xest_kraken, XestKraken.Adapter.Cache,
+  # When using :shards as backend
+  # backend: :shards,
+  # GC interval for pushing new generation: 1 hrs
+  gc_interval: :timer.hours(1),
+  # Max 1 thousand entries in cache
+  max_size: 1_000,
+  # Max 2 MB of memory
+  allocated_memory: 2_000_000,
+  # GC min timeout: 5 sec
+  gc_cleanup_min_timeout: :timer.seconds(5),
+  # GC min timeout: 15 min
+  gc_cleanup_max_timeout: :timer.minutes(15)
+
 config :xest_kraken,
   adapter: XestKraken.Adapter.Krakex,
   exchange: XestKraken.Exchange
@@ -61,10 +79,6 @@ config :xest_kraken,
 config :xest_web,
   binance_exchange: XestBinance.Exchange,
   binance_account: XestBinance.Account
-
-config :xest,
-  kraken_exchange: XestKraken.Exchange,
-  binance_exchange: XestBinance.Exchange
 
 # For clarity, but this may not need to be explicited here...
 # config :xest_web,

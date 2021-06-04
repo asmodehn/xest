@@ -2,17 +2,12 @@ defmodule XestBinance.Exchange do
   @moduledoc """
   An Agent attempting to maintain a consistent view (as state) of the exchange
   It holds the knowledge of this system regarding binance.
-
-  TODO: this is currently a separated process.
-  Ultimately it should be the process the user starts.
-  There is only logic here and this should be purely functional.
-  There is no reason to keep state around when we can rebuild when needed,
-   from past responses stored in server.
   """
+  alias XestBinance.Adapter
 
   defmodule Behaviour do
     @moduledoc """
-    Behaviour of Exchange, allowing other projects to mock XestBinance.Exchange for tests.
+    Behaviour of Exchange, allowing tests and other projects to mock XestBinance.Exchange.
     """
 
     @type status :: XestBinance.Exchange.Status.t()
@@ -22,16 +17,13 @@ defmodule XestBinance.Exchange do
     @type mockable_pid :: nil | pid()
 
     # | {:error, reason}
-    @callback status(mockable_pid()) :: status
+    @callback status() :: status
 
     # | {:error, reason}
-    @callback servertime(mockable_pid()) :: servertime
+    @callback servertime() :: servertime
 
     # TODO : by leveraging __using__ we could implement default function
     #
-
-    # TODO : move this to Exchange module (out of subdir - confusing).
-    # This is only used for Mock testing of agent anyway, which means internally.
   end
 
   @behaviour Behaviour
@@ -100,57 +92,19 @@ defmodule XestBinance.Exchange do
     Agent.get(agent, &Function.identity/1)
   end
 
-  # lazy accessor
+  # TODO : reverse flow: have client subscribe to status topic
   @impl true
-  def status(agent) do
-    Agent.get_and_update(agent, fn state ->
-      case state.status do
-        status when is_nil(status) ->
-          status = XestBinance.Adapter.system_status()
-          new_state = state |> Map.put(:status, status)
-          {status, new_state}
-
-        status ->
-          {status, state}
-          # TODO : add a case to check for timeout to request again the status
-      end
-    end)
+  def status() do
+    # cached read-through on adapter
+    # No need to keep a cache here
+    Adapter.system_status()
   end
 
+  # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def servertime(agent) do
-    Agent.get_and_update(agent, fn state ->
-      case state.servertime do
-        nil ->
-          st = XestBinance.Adapter.servertime()
-
-          {st,
-           state
-           |> Map.put(
-             :servertime,
-             st
-           )}
-
-        _ ->
-          # TODO : add some necessary timeout to avoid spamming...
-          st = XestBinance.Adapter.servertime()
-
-          {st,
-           state
-           |> Map.put(
-             :servertime,
-             st
-           )}
-
-          # otherwise skip
-          #          {state.servertime, state}
-      end
-    end)
-
-    #    # TODO : have some refresh to avoid too big a time skew...
-    #    Agent.get_and_update(agent, fn state ->
-    #      {state.shadow_clock,
-    #       state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
-    #    end)
+  def servertime() do
+    # cached read-through on adapter
+    # No need to keep a cache here
+    Adapter.servertime()
   end
 end

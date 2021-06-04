@@ -55,7 +55,7 @@ defmodule XestWeb.BinanceLive do
   # NEW design...
   @impl true
   def handle_info(:status_refresh, socket) do
-    %Xest.Exchange.Status{description: descr} = exchange().status(:kraken)
+    %Xest.Exchange.Status{description: descr} = exchange().status(:binance)
     {:noreply, assign(socket, status_msg: descr)}
   end
 

@@ -25,7 +25,7 @@ defmodule XestWeb.KrakenLiveTest do
 
   test "disconnected and connected render", %{conn: conn, clock: _clock} do
     Exchange.Mock
-    |> expect(:servertime, fn _ -> %Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:servertime, fn :kraken -> %Exchange.ServerTime{servertime: @time_stop} end)
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
     conn = get(conn, "/kraken")
@@ -46,7 +46,7 @@ defmodule XestWeb.KrakenLiveTest do
     clock: _clock
   } do
     Exchange.Mock
-    |> expect(:servertime, fn _ -> %Exchange.ServerTime{servertime: @time_stop} end)
+    |> expect(:servertime, fn :kraken -> %Exchange.ServerTime{servertime: @time_stop} end)
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
     {:ok, view, _html} = live(conn, "/kraken")

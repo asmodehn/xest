@@ -36,7 +36,7 @@ defmodule XestKraken.Adapter.Krakex do
 
   #
   #  @impl true
-  #  def account(%Binance{} = binance) do
-  #    Binance.get_account(binance)
+  #  def account(%Kraken{} = kraken) do
+  #    Kraken.get_account(kraken)
   #  end
 end

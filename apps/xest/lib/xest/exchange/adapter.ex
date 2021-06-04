@@ -8,41 +8,25 @@ defmodule Xest.Exchange.Adapter do
   end
 
   def retrieve(:kraken, :status) do
-    connector_response =
-      kraken().status(
-        # finding the process via its module name...
-        Process.whereis(kraken())
-      )
+    connector_response = kraken().status()
 
     Xest.Exchange.Status.ACL.new(connector_response)
   end
 
   def retrieve(:binance, :status) do
-    connector_response =
-      binance().status(
-        # finding th process via its module name...
-        Process.whereis(binance())
-      )
+    connector_response = binance().status()
 
     Xest.Exchange.Status.ACL.new(connector_response)
   end
 
   def retrieve(:binance, :servertime) do
-    response =
-      binance().servertime(
-        # finding th process via its module name...
-        Process.whereis(binance())
-      )
+    response = binance().servertime()
 
     Xest.Exchange.ServerTime.ACL.new(response)
   end
 
   def retrieve(:kraken, :servertime) do
-    response =
-      kraken().servertime(
-        # finding th process via its module name...
-        Process.whereis(kraken())
-      )
+    response = kraken().servertime()
 
     Xest.Exchange.ServerTime.ACL.new(response)
   end

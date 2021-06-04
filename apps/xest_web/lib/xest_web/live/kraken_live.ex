@@ -68,7 +68,7 @@ defmodule XestWeb.KrakenLive do
         :clock,
         fn ->
           # fixed clock for now, until TODO shadowclock is reimplemented...
-          exchange().servertime(:binance).servertime
+          exchange().servertime(:kraken).servertime
         end
       )
 

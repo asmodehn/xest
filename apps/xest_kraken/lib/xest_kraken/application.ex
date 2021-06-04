@@ -8,8 +8,8 @@ defmodule XestKraken.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: XestKraken.Worker.start_link(arg)
-      # {XestKraken.Worker, arg}
+      # Starts the adapter cache
+      {XestKraken.Adapter.Cache, []},
 
       # Starting main Exchange Agent managing retrieved state
       {XestKraken.Exchange, name: XestKraken.Exchange}

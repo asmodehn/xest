@@ -13,7 +13,7 @@ defmodule Xest.Kraken.Test do
   describe "For xest_kraken:" do
     test "status works" do
       XestKraken.Exchange.Mock
-      |> expect(:status, fn _ ->
+      |> expect(:status, fn ->
         %XestKraken.Exchange.Status{}
       end)
 
@@ -27,7 +27,7 @@ defmodule Xest.Kraken.Test do
   describe "For xest_binance:" do
     test "status works" do
       XestBinance.Exchange.Mock
-      |> expect(:status, fn _ ->
+      |> expect(:status, fn ->
         %XestBinance.Exchange.Status{}
       end)
 

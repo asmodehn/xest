@@ -13,12 +13,12 @@ defmodule XestKraken.Adapter.Behaviour do
   # | {:error, reason}
   @callback system_status(Client.t()) :: {:ok, %{status: String.t(), timestamp: DateTime.t()}}
   # | {:error, reason}
-  #  @callback ping(binance) :: {:ok, pong}
+  #  @callback ping(kraken) :: {:ok, pong}
   # NO PING IN KRAKEN API ??
 
   #   | {:error, reason}
   @callback servertime(Client.t()) :: {:ok, %{unixtime: DateTime.t(), rfc1123: String.t()}}
 
   # | {:error, reason}
-  #  @callback account(binance) :: {:ok, %Binance.Account{}}
+  #  @callback account(kraken) :: {:ok, %Kraken.Account{}}
 end
