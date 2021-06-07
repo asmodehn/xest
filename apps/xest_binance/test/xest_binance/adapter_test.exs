@@ -9,6 +9,9 @@ defmodule XestBinance.Adapter.Test do
   import Hammox
 
   setup do
+    # TODO : this is probably the place where we should be doing integration testing with bypass...
+    #   so we should not use a mock nor rely on cassette...
+
     # saving config
     adapter = Application.get_env(:xest_binance, :adapter)
     # using Adapter.Mock in these tests
