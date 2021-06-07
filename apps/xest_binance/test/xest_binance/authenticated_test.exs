@@ -70,7 +70,7 @@ defmodule XestBinance.Authenticated.Test do
         """)
       end)
 
-      assert account(server_pid) ==
+      assert XestBinance.Authenticated.account(server_pid) ==
                {:ok,
                 %Binance.Account{
                   balances: [

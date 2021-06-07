@@ -40,9 +40,7 @@ config :xest,
   # setup adapter for binance genserver for authenticated requests
   binance_authenticated: XestBinance.Authenticated
 
-# For clarity, but this may not need to be explicited here...
-# config  :xest_binance,
-#        adapter: XestBinance.Adapter.Binance
+config :xest_binance, adapter: XestBinance.Adapter.Binance
 
 config :xest_binance, XestBinance.Adapter.Cache,
   # When using :shards as backend
@@ -57,6 +55,8 @@ config :xest_binance, XestBinance.Adapter.Cache,
   gc_cleanup_min_timeout: :timer.seconds(5),
   # GC max timeout: 15 min
   gc_cleanup_max_timeout: :timer.minutes(15)
+
+config :xest_kraken, adapter: XestKraken.Adapter.Krakex
 
 config :xest_kraken, XestKraken.Adapter.Cache,
   # When using :shards as backend
@@ -73,7 +73,6 @@ config :xest_kraken, XestKraken.Adapter.Cache,
   gc_cleanup_max_timeout: :timer.minutes(15)
 
 config :xest_kraken,
-  adapter: XestKraken.Adapter.Krakex,
   exchange: XestKraken.Exchange
 
 config :xest_web,

@@ -13,6 +13,16 @@ defmodule XestBinance.Exchange.Test do
   @time_stop ~U[2021-02-18 08:53:32.313Z]
 
   setup do
+    # saving config
+    adapter = Application.get_env(:xest_binance, :adapter)
+    # using Adapter.Mock in these tests
+    Application.put_env(:xest_binance, :adapter, XestBinance.Adapter.Mock)
+
+    on_exit(fn ->
+      # restoring config
+      Application.put_env(:xest_binance, :adapter, adapter)
+    end)
+
     exg_pid =
       start_supervised!({
         Exchange,

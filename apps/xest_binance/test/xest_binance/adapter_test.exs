@@ -8,6 +8,18 @@ defmodule XestBinance.Adapter.Test do
 
   import Hammox
 
+  setup do
+    # saving config
+    adapter = Application.get_env(:xest_binance, :adapter)
+    # using Adapter.Mock in these tests
+    Application.put_env(:xest_binance, :adapter, XestBinance.Adapter.Mock)
+
+    on_exit(fn ->
+      # restoring config
+      Application.put_env(:xest_binance, :adapter, adapter)
+    end)
+  end
+
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
