@@ -11,6 +11,9 @@ defmodule XestKraken.Application do
       # Starts the adapter cache
       {XestKraken.Adapter.Cache, []},
 
+      # Starting Clock Agent
+      {XestKraken.Clock, name: XestKraken.Clock},
+
       # Starting main Exchange Agent managing retrieved state
       {XestKraken.Exchange, name: XestKraken.Exchange}
     ]

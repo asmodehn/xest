@@ -4,28 +4,18 @@ defmodule XestWeb.KrakenLiveTest do
   import Phoenix.LiveViewTest
 
   alias Xest.Exchange
+  alias Xest.Clock
 
   import Hammox
-
-  @time_stop ~U[2021-02-18 08:53:32.313Z]
 
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  setup do
-    # Setting up shadow clock to be used in mock
-    clock =
-      Xest.ShadowClock.new(
-        fn -> @time_stop end,
-        fn -> @time_stop end
-      )
+  test "disconnected and connected render", %{conn: conn} do
+    Clock.Mock
+    |> expect(:utc_now, fn :kraken -> ~U[2020-02-02 02:02:02.020Z] end)
 
-    %{clock: clock}
-  end
-
-  test "disconnected and connected render", %{conn: conn, clock: _clock} do
     Exchange.Mock
-    |> expect(:servertime, fn :kraken -> %Exchange.ServerTime{servertime: @time_stop} end)
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
     conn = get(conn, "/kraken")
@@ -38,15 +28,16 @@ defmodule XestWeb.KrakenLiveTest do
 
     # after websocket connection, message changed
     assert html =~ "Status: test"
-    assert html =~ "08:53:32"
+    assert html =~ "02:02:02"
   end
 
   test "sending a message to the liveview process displays it in flash view", %{
-    conn: conn,
-    clock: _clock
+    conn: conn
   } do
+    Clock.Mock
+    |> expect(:utc_now, fn :kraken -> ~U[2020-02-02 02:02:02.020Z] end)
+
     Exchange.Mock
-    |> expect(:servertime, fn :kraken -> %Exchange.ServerTime{servertime: @time_stop} end)
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
     {:ok, view, _html} = live(conn, "/kraken")

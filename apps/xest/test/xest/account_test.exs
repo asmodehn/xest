@@ -6,6 +6,11 @@ defmodule Xest.Account.Test do
   # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
   import Hammox
 
+  setup do
+    # setting up datetime mock
+    Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
+  end
+
   test "new account has sensible defaults" do
     assert Account.new() == %Account{
              balances: [],
@@ -21,7 +26,7 @@ defmodule Xest.Account.Test do
              permissions: []
            }
 
-    DateTimeMock
+    Xest.DateTime.Mock
     |> expect(:utc_now, fn -> ~U[1970-01-01 01:01:01Z] end)
 
     assert Account.new([Account.AssetBalance.new("DOGE", 1.23, 4.56)]) == %Account{

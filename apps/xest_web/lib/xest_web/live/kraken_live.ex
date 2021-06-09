@@ -22,8 +22,7 @@ defmodule XestWeb.KrakenLive do
 
         # second time websocket info
         true ->
-          # every 5 seconds until we get shadowclock back in...
-          :timer.send_interval(5000, self(), :tick)
+          :timer.send_interval(1000, self(), :tick)
           # refresh status every 5 seconds
           :timer.send_interval(5000, self(), :status_refresh)
 
@@ -44,6 +43,11 @@ defmodule XestWeb.KrakenLive do
     Application.get_env(:xest_web, :exchange, Xest.Exchange)
   end
 
+  defp clock() do
+    # indirection to allow mock during tests
+    Application.get_env(:xest_web, :clock, Xest.Clock)
+  end
+
   @impl true
   def handle_info(:status_refresh, socket) do
     %Xest.Exchange.Status{description: descr} = exchange().status(:kraken)
@@ -62,20 +66,7 @@ defmodule XestWeb.KrakenLive do
 
   defp put_date(socket) do
     # Abusing socket here to store the clock...
-    socket =
-      Map.put_new_lazy(
-        socket,
-        :clock,
-        fn ->
-          # fixed clock for now, until TODO shadowclock is reimplemented...
-          exchange().servertime(:kraken).servertime
-        end
-      )
-
-    # compute now
-    # We keep clock and now in the assign,
-    #    because we want to minimize work on the frontend at the moment
-    # Xest.ShadowClock.now(socket.clock))
-    assign(socket, now: socket.clock)
+    # to improve : web page local clock, driven by javascript
+    assign(socket, now: clock().utc_now(:kraken))
   end
 end

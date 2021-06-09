@@ -1,13 +1,21 @@
-defmodule Xest.DateTime.Behaviour do
-  # This is mandatory to use in Algebraic types
-  @callback new :: DateTime.t()
-
-  # This is the most useful effectful function
-  @callback utc_now :: DateTime.t()
-end
-
 defmodule Xest.DateTime do
-  @behaviour Xest.DateTime.Behaviour
+  @moduledoc """
+    This module stands for Timestamps (in the unix sense)
+    directly encoded as elixir's DateTime struct
+  """
+
+  defmodule Behaviour do
+    # This is mandatory to use in Algebraic types
+    @callback new :: DateTime.t()
+
+    # This is the most useful effectful function
+    @callback utc_now :: DateTime.t()
+  end
+
+  @behaviour Behaviour
+
+  # this is a type alias to DateTime.t()
+  @type t() :: DateTime.t()
 
   @impl true
   def new() do
@@ -20,5 +28,6 @@ defmodule Xest.DateTime do
     date_time().utc_now()
   end
 
-  defp date_time(), do: Application.get_env(:xest, :date_time_module, DateTime)
+  # TODO : put that as module tag, to lockit on compilation...
+  defp date_time(), do: Application.get_env(:xest, :datetime_module, DateTime)
 end

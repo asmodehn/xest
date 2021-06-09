@@ -7,28 +7,18 @@ defmodule XestKraken.Exchange do
 
   @behaviour XestKraken.Exchange.Behaviour
 
-  @default_minimum_request_period ~T[00:00:01]
-
   @public_client Adapter.Client.new(nil, nil)
 
   # these are the minimal amount of state necessary
   # to estimate current real world kraken exchange status
   # , :shadow_clock]
-  @enforce_keys [:minimal_request_period]
-  defstruct status: nil,
-            # a public client by default
-            client: @public_client,
-            shadow_clock: nil,
-            servertime: nil,
-            minimal_request_period: @default_minimum_request_period
+  @enforce_keys []
+  # a public client by default
+  defstruct client: @public_client
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
-          status: Exchange.Status.t() | nil,
-          client: XestKraken.Krakex.Client.t() | nil,
-          shadow_clock: Xest.ShadowClock.t() | nil,
-          servertime: Xest.Exchange.ServerTime.t() | nil,
-          minimal_request_period: Time.t() | nil
+          client: XestKraken.Krakex.Client.t() | nil
         }
 
   defmodule Behaviour do
@@ -54,7 +44,7 @@ defmodule XestKraken.Exchange do
 
   use Agent
 
-  def start_link(opts, minimal_request_period \\ @default_minimum_request_period) do
+  def start_link(opts) do
     {client, opts} = Keyword.pop(opts, :client, @public_client)
 
     # REMINDER : we dont want to call external systems on startup.
@@ -66,8 +56,6 @@ defmodule XestKraken.Exchange do
     # - app can tune the minimal_request_period
     # - mocks should manually modify the initial struct if needed
     exchange_struct = %XestKraken.Exchange{
-      #      shadow_clock: clock,
-      minimal_request_period: minimal_request_period,
       client: client
     }
 
@@ -93,11 +81,11 @@ defmodule XestKraken.Exchange do
     Adapter.system_status()
   end
 
-  # TODO : reverse flow: have client subscribe to servertime topic
+  #  # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
   def servertime() do
-    # cached read-through on adapter
-    # No need to keep a cache here
+    # direct access to adapter, maybe not needed...
+    # For a simulated/proxy local clock, use XestKraken.clock
     Adapter.servertime()
   end
 end

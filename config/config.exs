@@ -33,6 +33,7 @@ config :phoenix, :json_library, Jason
 
 config :xest,
   kraken_exchange: XestKraken.Exchange,
+  kraken_clock: XestKraken.Clock,
   binance_exchange: XestBinance.Exchange
 
 config :xest,

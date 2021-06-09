@@ -20,7 +20,7 @@ defmodule XestKraken.Adapter do
   end
 
   @spec servertime(Client.t()) :: Exchange.ServerTime.t()
-  @decorate cacheable(cache: Cache, key: :servertime, opts: [ttl: :timer.minutes(5)])
+  # no cache here to not interfere with the local clock proxy agent
   def servertime(%Client{} = client \\ Client.new()) do
     {:ok, servertime} = implementation().servertime(client)
     Exchange.ServerTime.new(servertime)

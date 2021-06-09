@@ -1,4 +1,4 @@
-defmodule Xest.Kraken.Test do
+defmodule Xest.Exchange.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 

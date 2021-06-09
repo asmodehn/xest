@@ -43,15 +43,6 @@ defmodule XestKraken.Exchange.Test do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  test "initial value OK", %{exg_pid: exg_pid} do
-    exg_pid
-    |> Exchange.state()
-    |> assert_fields(%{
-      status: nil
-      #      shadow_clock: %Xest.ShadowClock{}
-    })
-  end
-
   test "retrieve status", %{exg_pid: _exg_pid} do
     Adapter.Mock
     |> expect(:system_status, fn _ ->
@@ -94,7 +85,8 @@ defmodule XestKraken.Exchange.Test do
 
   test "after retrieving servertime, state is still usable", %{exg_pid: _exg_pid} do
     Adapter.Mock
-    # Not needed more than once because of the cache
+    # We do not want to cache this, to prevent interference with our internal clock proxy
+    |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
     |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
 
     Exchange.servertime()

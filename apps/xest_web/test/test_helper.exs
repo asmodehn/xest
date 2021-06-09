@@ -5,5 +5,8 @@ Hammox.defmock(XestBinance.AccountBehaviourMock, for: XestBinance.Ports.AccountB
 
 Application.put_env(:xest_web, :binance_account, XestBinance.AccountBehaviourMock)
 
+Hammox.defmock(Xest.Clock.Mock, for: Xest.Clock.Behaviour)
+Application.put_env(:xest_web, :clock, Xest.Clock.Mock)
+
 Hammox.defmock(Xest.Exchange.Mock, for: Xest.Exchange.Behaviour)
 Application.put_env(:xest_web, :exchange, Xest.Exchange.Mock)

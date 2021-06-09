@@ -2,6 +2,7 @@ defmodule Xest.APIServer.Test do
   use ExUnit.Case, async: true
   use FlowAssertions
 
+  alias Xest.DateTime
   alias Xest.APIServer
 
   # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
@@ -21,7 +22,7 @@ defmodule Xest.APIServer.Test do
     def start_link(opts) do
       # setup clock at birthdate
       # TODO : clock in opts to pass this from caller (test...)
-      DateTimeMock
+      DateTime.Mock
       |> expect(:utc_now, fn -> @birthdate end)
 
       APIServer.start_link(
@@ -51,6 +52,9 @@ defmodule Xest.APIServer.Test do
 
   describe "Given time to cache" do
     setup do
+      # setting up datetime mock
+      Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
+
       # starts server test process
       server_pid =
         start_supervised!({
@@ -69,7 +73,7 @@ defmodule Xest.APIServer.Test do
       end)
 
       # because we need ot play with time here...
-      DateTimeMock
+      DateTime.Mock
       |> allow(self(), server_pid)
 
       %{server_pid: server_pid}
@@ -77,7 +81,7 @@ defmodule Xest.APIServer.Test do
 
     test "call cache the result for a while",
          %{server_pid: server_pid} do
-      DateTimeMock
+      DateTime.Mock
       # fetch clock
       |> expect(:utc_now, fn -> @valid_clock_time end)
       # put clock
@@ -86,7 +90,7 @@ defmodule Xest.APIServer.Test do
       state_as_response = APIServer.call(server_pid, {:some_request, "some_param"})
       assert state_as_response == {42}
 
-      DateTimeMock
+      DateTime.Mock
       # fetch clock
       |> expect(:utc_now, fn -> @valid_clock_time end)
 
@@ -95,7 +99,7 @@ defmodule Xest.APIServer.Test do
     end
 
     test "cache invalidates after lifetime", %{server_pid: server_pid} do
-      DateTimeMock
+      DateTime.Mock
       # fetch clock
       |> expect(:utc_now, fn -> @valid_clock_time end)
       # put clock
@@ -110,7 +114,7 @@ defmodule Xest.APIServer.Test do
         {:reply, {val + 9}, state}
       end)
 
-      DateTimeMock
+      DateTime.Mock
       # fetch clock
       |> expect(:utc_now, fn -> @invalid_clock_time end)
       # put clock
