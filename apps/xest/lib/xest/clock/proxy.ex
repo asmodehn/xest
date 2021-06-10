@@ -1,4 +1,4 @@
-defmodule XestKraken.Clock.State do
+defmodule Xest.Clock.Proxy do
   @type clock() :: (() -> DateTime.t())
   @type skew() :: Timex.Duration.t()
 

@@ -4,6 +4,7 @@ defmodule XestWeb.BinanceLiveTest do
   import Phoenix.LiveViewTest
 
   alias Xest.Exchange
+  alias Xest.Clock
   alias XestBinance.AccountBehaviourMock
 
   import Hammox
@@ -13,21 +14,12 @@ defmodule XestWeb.BinanceLiveTest do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  setup do
-    # Setting up shadow clock to be used in mock
-    clock =
-      Xest.ShadowClock.new(
-        fn -> @time_stop end,
-        fn -> @time_stop end
-      )
-
-    %{clock: clock}
-  end
-
-  test "disconnected and connected render", %{conn: conn, clock: _clock} do
+  test "disconnected and connected render", %{conn: conn} do
     Exchange.Mock
-    |> expect(:servertime, fn :binance -> %Exchange.ServerTime{servertime: @time_stop} end)
     |> expect(:status, fn :binance -> %Exchange.Status{status: :online, description: "test"} end)
+
+    Clock.Mock
+    |> expect(:utc_now, fn :binance -> @time_stop end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->
@@ -52,12 +44,13 @@ defmodule XestWeb.BinanceLiveTest do
   end
 
   test "sending a message to the liveview process displays it in flash view", %{
-    conn: conn,
-    clock: _clock
+    conn: conn
   } do
     Exchange.Mock
-    |> expect(:servertime, fn :binance -> %Exchange.ServerTime{servertime: @time_stop} end)
     |> expect(:status, fn :binance -> %Exchange.Status{status: :online, description: "test"} end)
+
+    Clock.Mock
+    |> expect(:utc_now, fn :binance -> @time_stop end)
 
     AccountBehaviourMock
     |> expect(:account, fn _ ->

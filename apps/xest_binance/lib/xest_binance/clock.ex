@@ -1,4 +1,4 @@
-defmodule XestKraken.Clock do
+defmodule XestBinance.Clock do
   alias Xest.Clock.Proxy
   use Agent
 
@@ -22,7 +22,7 @@ defmodule XestKraken.Clock do
         opts,
         :remote,
         # defaults to retrieving unixtime from the adapter's servertime response
-        fn -> XestKraken.Adapter.servertime().unixtime end
+        fn -> XestBinance.Adapter.servertime().servertime() end
       )
 
     {ttl, opts} = Keyword.pop(opts, :ttl, @default_ttl)

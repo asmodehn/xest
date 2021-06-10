@@ -26,7 +26,7 @@ defmodule XestBinance.Adapter do
   end
 
   @spec servertime(Client.t()) :: Exchange.ServerTime.t()
-  @decorate cacheable(cache: Cache, key: :servertime, opts: [ttl: :timer.minutes(5)])
+  # no caching here to avoid timing issues on local proxy clock
   def servertime(%Client{} = cl \\ client()) do
     {:ok, servertime} = implementation().servertime(cl)
     Exchange.ServerTime.new(%{servertime: servertime})

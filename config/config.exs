@@ -34,7 +34,8 @@ config :phoenix, :json_library, Jason
 config :xest,
   kraken_exchange: XestKraken.Exchange,
   kraken_clock: XestKraken.Clock,
-  binance_exchange: XestBinance.Exchange
+  binance_exchange: XestBinance.Exchange,
+  binance_clock: XestBinance.Clock
 
 config :xest,
   # TODO : deprecate and remove this

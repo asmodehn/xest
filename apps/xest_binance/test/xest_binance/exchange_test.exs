@@ -101,7 +101,8 @@ defmodule XestBinance.Exchange.Test do
 
   test "after retrieving servertime, state is still usable", %{exg_pid: _exg_pid} do
     Adapter.Mock
-    # Not needed more than once because of the cache
+    |> expect(:servertime, fn _ -> {:ok, @time_stop} end)
+    # Needed twice because we do not cache this to notimpact proxy clock
     |> expect(:servertime, fn _ -> {:ok, @time_stop} end)
 
     Exchange.servertime()

@@ -25,11 +25,8 @@ defmodule XestWeb.BinanceLive do
         # second time websocket info
         true ->
           # setup a self tick with a second period
-          #          :timer.send_interval(1000, self(), :tick)
-
+          :timer.send_interval(1000, self(), :tick)
           # refresh status every 5 seconds
-          # slowed down until shadowclock re-implemented
-          :timer.send_interval(5000, self(), :tick)
           :timer.send_interval(5000, self(), :status_refresh)
           # refresh account every 10 seconds
           :timer.send_interval(10_000, self(), :account_refresh)
@@ -92,21 +89,8 @@ defmodule XestWeb.BinanceLive do
 
   defp put_date(socket) do
     # Abusing socket here to store the clock...
-    socket =
-      Map.put_new_lazy(
-        socket,
-        :clock,
-        fn ->
-          # fixed clock for now, until TODO shadowclock is reimplemented...
-          exchange().servertime(:binance).servertime
-        end
-      )
-
-    # compute now
-    # We keep clock and now in the assign,
-    #    because we want to minimize work on the frontend at the moment
-    # Xest.ShadowClock.now(socket.clock))
-    assign(socket, now: socket.clock)
+    # to improve : web page local clock, driven by javascript
+    assign(socket, now: clock().utc_now(:binance))
   end
 
   defp binance_account() do
@@ -116,5 +100,10 @@ defmodule XestWeb.BinanceLive do
   defp exchange() do
     # indirection to allow mock during tests
     Application.get_env(:xest_web, :exchange, Xest.Exchange)
+  end
+
+  defp clock() do
+    # indirection to allow mock during tests
+    Application.get_env(:xest_web, :clock, Xest.Clock)
   end
 end

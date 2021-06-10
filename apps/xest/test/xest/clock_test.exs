@@ -11,7 +11,7 @@ defmodule Xest.Clock.Test do
   import Hammox
 
   describe "For xest_kraken:" do
-    test "status works" do
+    test "clock works" do
       XestKraken.Clock.Mock
       |> expect(:utc_now, fn nil ->
         ~U[2020-02-02 02:02:02.202Z]
@@ -22,18 +22,15 @@ defmodule Xest.Clock.Test do
     end
   end
 
-  # TODO
-  #  describe "For xest_binance:" do
-  #    test "status works" do
-  #      XestBinance.Exchange.Mock
-  #      |> expect(:status, fn ->
-  #        %XestBinance.Exchange.Status{}
-  #      end)
-  #
-  #      assert Exchange.status(:binance) == %Xest.Exchange.Status{
-  #               description: "maintenance",
-  #               status: :maintenance
-  #             }
-  #    end
-  #  end
+  describe "For xest_binance:" do
+    test "clock works" do
+      XestBinance.Clock.Mock
+      |> expect(:utc_now, fn nil ->
+        ~U[2020-02-02 02:02:02.202Z]
+      end)
+
+      assert Clock.utc_now(:binance) ==
+               ~U[2020-02-02 02:02:02.202Z]
+    end
+  end
 end

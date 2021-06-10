@@ -4,9 +4,12 @@ defmodule Xest.Clock do
     @callback utc_now(atom()) :: DateTime.t()
   end
 
-  #  def utc_now(:binance) do
-  #    binance().utc_now()
-  #  end
+  def utc_now(:binance) do
+    binance().utc_now(
+      # finding the process (or nil if mocked)
+      Process.whereis(binance())
+    )
+  end
 
   def utc_now(:kraken) do
     kraken().utc_now(
@@ -19,8 +22,7 @@ defmodule Xest.Clock do
     Application.get_env(:xest, :kraken_clock)
   end
 
-  # TODO
-  #  defp binance() do
-  #    Application.get_env(:xest, :binance_clock)
-  #  end
+  defp binance() do
+    Application.get_env(:xest, :binance_clock)
+  end
 end

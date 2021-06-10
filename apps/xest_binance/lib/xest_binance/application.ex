@@ -29,6 +29,9 @@ defmodule XestBinance.Application do
       # Cache for Adapter to avoid useless spamming of the exchange from this IP.
       {XestBinance.Adapter.Cache, []},
 
+      # Starting Clock Agent
+      {XestBinance.Clock, name: XestBinance.Clock},
+
       # Starting main Binance Server
       {XestBinance.Server, name: XestBinance.Server, endpoint: config.binance.endpoint},
 
