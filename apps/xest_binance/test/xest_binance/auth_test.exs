@@ -7,8 +7,8 @@ defmodule XestBinance.Authenticated.Test do
 
   # Importing and protecting our behavior implementation cf. https://github.com/msz/hammox
   use Hammox.Protect,
-    module: XestBinance.Authenticated,
-    behaviour: XestBinance.Ports.AuthenticatedBehaviour
+    module: XestBinance.Auth,
+    behaviour: XestBinance.Auth.Behaviour
 
   # DESIGN : here we focus on testing the integration with a real HTTP server, implementing expectations from Docs
   # rather than from cassettes, as is done for the client.
@@ -25,11 +25,11 @@ defmodule XestBinance.Authenticated.Test do
       # starts server test process
       server_pid =
         start_supervised!({
-          XestBinance.Authenticated,
+          XestBinance.Auth,
           # setup bypass to use as local webserver for binance endpoint
           # Fake Key
           # Fake Secret
-          name: XestBinance.Authenticated.Test.Process,
+          name: XestBinance.Auth.Test.Process,
           endpoint: "http://localhost:#{bypass.port}/",
           apikey: "",
           secret: ""
@@ -70,7 +70,7 @@ defmodule XestBinance.Authenticated.Test do
         """)
       end)
 
-      assert XestBinance.Authenticated.account(server_pid) ==
+      assert XestBinance.Auth.account(server_pid) ==
                {:ok,
                 %Binance.Account{
                   balances: [

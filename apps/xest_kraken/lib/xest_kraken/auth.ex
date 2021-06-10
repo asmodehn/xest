@@ -32,9 +32,7 @@ defmodule XestKraken.Auth do
 
   defstruct some_periodic_ping: "TODO",
             # will be defined on init (dynamically upon starting)
-            # TODO : this doesnt need to be exposed, dependency switch can be done dynamically via config...
-            kraken_client_adapter: nil,
-            kraken_client_adapter_state: nil
+            kraken_client: nil
 
   @doc """
   Starts reliable binance client.
@@ -51,8 +49,7 @@ defmodule XestKraken.Auth do
       __MODULE__,
       # passing next_ping_wait_time in case it is specified as option from supervisor
       %__MODULE__{
-        kraken_client_adapter: XestKraken.Adapter,
-        kraken_client_adapter_state: XestKraken.Adapter.client(apikey, secret, endpoint)
+        kraken_client: XestKraken.Adapter.client(apikey, secret, endpoint)
       },
       opts
     )
@@ -94,11 +91,10 @@ defmodule XestKraken.Auth do
         {:balance},
         _from,
         %{
-          kraken_client_adapter: kraken_client_adapter,
-          kraken_client_adapter_state: kraken_client_adapter_state
+          kraken_client: kraken_client
         } = state
       ) do
-    resp = kraken_client_adapter.balance(kraken_client_adapter_state)
+    resp = XestKraken.Adapter.balance(kraken_client)
     # TODO reschedule ping after request
     {:reply, resp, state}
   end

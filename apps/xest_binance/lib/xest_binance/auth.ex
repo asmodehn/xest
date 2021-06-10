@@ -1,16 +1,38 @@
-defmodule XestBinance.Authenticated do
+defmodule XestBinance.Auth do
   @moduledoc """
     The private part of the client (specific to an account, should not be cached)
 
   """
   use GenServer
 
-  @behaviour XestBinance.Ports.AuthenticatedBehaviour
+  defmodule Behaviour do
+    @moduledoc """
+      this implements a conversion from Binance model into our Xest model.
+      It serves to specify the types that must be exposed by a GenServer,
+      where a better type can provide useful semantics.
+      But it remains tied to the Binance model in its overall structure.
+    """
+
+    # TODO
+    @type account :: Map.t()
+    @type reason :: String.t()
+
+    @type mockable_pid :: nil | pid()
+
+    # | {:error, reason}
+    @callback account(mockable_pid()) :: {:ok, %Binance.Account{}}
+
+    @callback account!(mockable_pid()) :: %Binance.Account{}
+
+    # TODO : by leveraging __using__ we could implement default function
+    #                                   and their unsafe counterparts maybe ?
+  end
+
+  @behaviour Behaviour
 
   defstruct some_periodic_ping: "TODO",
             # will be defined on init (dynamically upon starting)
-            binance_client_adapter: nil,
-            binance_client_adapter_state: nil
+            binance_client: nil
 
   @doc """
   Starts reliable binance client.
@@ -27,8 +49,7 @@ defmodule XestBinance.Authenticated do
       __MODULE__,
       # passing next_ping_wait_time in case it is specified as option from supervisor
       %__MODULE__{
-        binance_client_adapter: XestBinance.Adapter,
-        binance_client_adapter_state: XestBinance.Adapter.client(apikey, secret, endpoint)
+        binance_client: XestBinance.Adapter.client(apikey, secret, endpoint)
       },
       opts
     )
@@ -70,11 +91,10 @@ defmodule XestBinance.Authenticated do
         {:account},
         _from,
         %{
-          binance_client_adapter: binance_client_adapter,
-          binance_client_adapter_state: binance_client_adapter_state
+          binance_client: binance_client
         } = state
       ) do
-    resp = binance_client_adapter.account(binance_client_adapter_state)
+    resp = XestBinance.Adapter.account(binance_client)
     # TODO reschedule ping after request
     {:reply, resp, state}
   end

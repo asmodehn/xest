@@ -36,8 +36,8 @@ defmodule XestBinance.Application do
       {XestBinance.Server, name: XestBinance.Server, endpoint: config.xest_binance.endpoint},
 
       # Starting authenticated Binance Server for user account
-      {XestBinance.Authenticated,
-       name: XestBinance.Authenticated,
+      {XestBinance.Auth,
+       name: XestBinance.Auth,
        apikey: config.xest_binance.apikey,
        secret: config.xest_binance.secret,
        endpoint: config.xest_binance.endpoint},

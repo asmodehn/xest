@@ -3,7 +3,7 @@ defmodule XestBinance.Account.Test do
   use FlowAssertions
 
   alias XestBinance.Account
-  alias XestBinance.AuthenticatedBehaviourMock
+  alias XestBinance.Auth
 
   import Hammox
 
@@ -25,7 +25,7 @@ defmodule XestBinance.Account.Test do
     # setting up server mock to tes the chain
     # Account -> Agent messaging -> BinanceAuthenticated
     # without relying on a specific server implementation
-    AuthenticatedBehaviourMock
+    Auth.Mock
     |> allow(self(), acc_pid)
 
     %{server_pid: server_pid, acc_pid: acc_pid}
@@ -44,7 +44,7 @@ defmodule XestBinance.Account.Test do
   end
 
   test "retrieve default client account generates default xest account model", %{acc_pid: acc_pid} do
-    AuthenticatedBehaviourMock
+    Auth.Mock
     |> expect(:account, fn _ ->
       {:ok, %Binance.Account{}}
     end)
