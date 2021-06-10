@@ -7,6 +7,8 @@ defmodule XestKraken.Application do
 
   @impl true
   def start(_type, _args) do
+    config = Vapor.load!(XestKraken.Config)
+
     children = [
       # Starts the adapter cache
       {XestKraken.Adapter.Cache, []},
@@ -15,7 +17,14 @@ defmodule XestKraken.Application do
       {XestKraken.Clock, name: XestKraken.Clock},
 
       # Starting main Exchange Agent managing retrieved state
-      {XestKraken.Exchange, name: XestKraken.Exchange}
+      {XestKraken.Exchange, name: XestKraken.Exchange},
+
+      # Starting authenticated Binance Server for user account
+      {XestKraken.Auth,
+       name: XestKraken.Auth,
+       apikey: config.xest_kraken.apikey,
+       secret: config.xest_kraken.secret,
+       endpoint: config.xest_kraken.endpoint}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

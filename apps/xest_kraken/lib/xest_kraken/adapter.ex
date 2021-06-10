@@ -9,6 +9,12 @@ defmodule XestKraken.Adapter do
   alias XestKraken.Exchange
   alias XestKraken.Adapter.Client
 
+  @default_endpoint "https://api.kraken.com"
+
+  defdelegate client(apikey \\ nil, secret \\ nil, endpoint \\ @default_endpoint),
+    to: Client,
+    as: :new
+
   alias XestKraken.Adapter.Cache
   use Nebulex.Caching
 
@@ -24,6 +30,11 @@ defmodule XestKraken.Adapter do
   def servertime(%Client{} = client \\ Client.new()) do
     {:ok, servertime} = implementation().servertime(client)
     Exchange.ServerTime.new(servertime)
+  end
+
+  def balance(%Client{} = cl) do
+    implementation().balance(cl)
+    # TODO : wrap into common xest type...
   end
 
   defp implementation() do

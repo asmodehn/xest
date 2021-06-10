@@ -7,13 +7,17 @@ defmodule XestKraken.Clock.Test do
 
   setup do
     # saving Xest.DateTime implementation
-    previous = Application.get_env(:xest, :datetime_module)
+    previous_datetime = Application.get_env(:xest, :datetime_module)
     # Setup Xest.DateTime Mock for these tests
     Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
 
+    previous_adapter = Application.get_env(:xest_kraken, :adapter)
+    Application.put_env(:xest_kraken, :adapter, XestKraken.Adapter.Mock)
+
     on_exit(fn ->
       # restoring config
-      Application.put_env(:xest, :datetime_module, previous)
+      Application.put_env(:xest, :datetime_module, previous_datetime)
+      Application.put_env(:xest_kraken, :adapter, previous_adapter)
     end)
   end
 

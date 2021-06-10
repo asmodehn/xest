@@ -15,6 +15,15 @@ defmodule XestKraken.Exchange.Test do
   @time_stop ~U[2021-02-18 08:53:32.313Z]
 
   setup do
+    # setup adapter mock
+    previous_adapter = Application.get_env(:xest_kraken, :adapter)
+    Application.put_env(:xest_kraken, :adapter, XestKraken.Adapter.Mock)
+
+    on_exit(fn ->
+      # restoring config
+      Application.put_env(:xest_kraken, :adapter, previous_adapter)
+    end)
+
     exg_pid =
       start_supervised!({
         Exchange,
