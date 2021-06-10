@@ -62,11 +62,10 @@ defmodule XestKraken.MixProject do
       # => When using Caching Annotations
       {:decorator, "~> 1.3"},
       # => When using the Telemetry events (Nebulex stats)
-      {:telemetry, "~> 0.4"}
+      {:telemetry, "~> 0.4"},
 
-      # TODO
-      # Runtime configuration
-      #      {:vapor, "~> 0.10"}
+      #       Runtime configuration
+      {:vapor, "~> 0.10"}
     ]
   end
 

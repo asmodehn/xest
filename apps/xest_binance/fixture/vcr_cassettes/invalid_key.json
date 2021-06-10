@@ -1,0 +1,44 @@
+[
+  {
+    "request": {
+      "body": "",
+      "headers": {
+        "X-MBX-APIKEY": "Bad Key"
+      },
+      "method": "get",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.binance.com/api/v3/account?recvWindow=5000&timestamp=1623335794227&signature=***"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"code\":-2014,\"msg\":\"API-key format invalid.\"}",
+      "headers": {
+        "Content-Type": "application/json;charset=UTF-8",
+        "Content-Length": "46",
+        "Connection": "keep-alive",
+        "Date": "Thu, 10 Jun 2021 14:36:34 GMT",
+        "Server": "nginx",
+        "x-mbx-uuid": "ace6652a-d03a-4831-b0b3-0621d7e0c6c0",
+        "x-mbx-used-weight": "11",
+        "x-mbx-used-weight-1m": "11",
+        "Strict-Transport-Security": "max-age=31536000; includeSubdomains",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Xss-Protection": "1; mode=block",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'self'",
+        "X-Content-Security-Policy": "default-src 'self'",
+        "X-WebKit-CSP": "default-src 'self'",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "X-Cache": "Error from cloudfront",
+        "Via": "1.1 00280e18dbb2b8d7b3cfa8b0e75bdcdc.cloudfront.net (CloudFront)",
+        "X-Amz-Cf-Pop": "LHR61-C1",
+        "X-Amz-Cf-Id": "ksdroYt3ara_wW2lnRUdZ93Cx6OPTW17YzJT0YamyJpM4X30ZCxM-A=="
+      },
+      "status_code": 401,
+      "type": "ok"
+    }
+  }
+]

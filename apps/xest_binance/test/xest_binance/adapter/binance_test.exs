@@ -57,8 +57,13 @@ defmodule XestBinance.Binance.Test do
     end
 
     test "APIkey invalid error returned", %{client_state: client_state} do
-      {:error, reason} = XestBinance.Adapter.Binance.account(client_state)
-      assert reason == %{"code" => -2014, "msg" => "API-key format invalid."}
+      use_cassette "invalid_key" do
+        ExVCR.Config.filter_sensitive_data("signature=[a-zA-Z0-9]*", "signature=***")
+
+        {:error, reason} = XestBinance.Adapter.Binance.account(client_state)
+
+        assert reason == %{"code" => -2014, "msg" => "API-key format invalid."}
+      end
     end
   end
 
@@ -71,9 +76,9 @@ defmodule XestBinance.Binance.Test do
 
       client_state =
         XestBinance.Adapter.Client.new(
-          config.binance.apikey,
-          config.binance.secret,
-          config.binance.endpoint
+          config.xest_binance.apikey,
+          config.xest_binance.secret,
+          config.xest_binance.endpoint
         )
 
       %{client_state: client_state}
@@ -97,6 +102,19 @@ defmodule XestBinance.Binance.Test do
           taker_commission: _taker_commission,
           update_time: _update_time
         } = account
+      end
+    end
+
+    test "account BAD", %{client_state: client_state} do
+      use_cassette "account_bad" do
+        ExVCR.Config.filter_sensitive_data("signature=[a-zA-Z0-9]*", "signature=***")
+
+        {:error, reason} = XestBinance.Adapter.Binance.account(client_state)
+
+        assert reason == %{
+                 "code" => -2015,
+                 "msg" => "Invalid API-key, IP, or permissions for action."
+               }
       end
     end
   end

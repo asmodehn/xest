@@ -1,0 +1,37 @@
+[
+  {
+    "request": {
+      "body": "nonce=1623334166672246825",
+      "headers": {
+        "Api-Key": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeFgHiJkLmNoPqRsTuVwXyZ12",
+        "Api-Sign": "***",
+        "accept": "application/json",
+        "content-type": "application/x-www-form-urlencoded"
+      },
+      "method": "post",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.kraken.com/0/private/Balance"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"error\":[\"EAPI:Invalid key\"]}",
+      "headers": {
+        "Date": "Thu, 10 Jun 2021 14:09:27 GMT",
+        "Content-Type": "application/json; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+        "Connection": "keep-alive",
+        "vary": "Accept-Encoding",
+        "strict-transport-security": "max-age=15768000",
+        "CF-Cache-Status": "DYNAMIC",
+        "cf-request-id": "0a97dab98d0000b7cf65acd000000001",
+        "Expect-CT": "max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"",
+        "Set-Cookie": "__cf_bm=caa5b69e332cf9ff1eb25c176daf76000971ea26-1623334167-1800-AeGHoGp8WJ86ByF6uTTKgIFvqdbXo5EwMGKoZJSBy3l1GEeNcrIMQsufRAP4O/0CCW+qymkmWfHrJKyl/fJxSiE=; path=/; expires=Thu, 10-Jun-21 14:39:27 GMT; domain=.kraken.com; HttpOnly; Secure; SameSite=None",
+        "Server": "cloudflare",
+        "CF-RAY": "65d32d6f4bbab7cf-CDG"
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]

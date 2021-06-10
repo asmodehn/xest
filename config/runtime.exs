@@ -4,11 +4,21 @@ require Hammox
 if config_env() == :test do
   # We want to prevent using actual apikey for tests
   # -> use preregistered cassettes instead
-  config :binance,
-    config_file: Path.expand("../test/integration_config.toml", Path.expand(__DIR__))
+  config :xest_binance,
+    config_file: Path.expand("../test/integration_binance.toml", Path.expand(__DIR__))
+
+  config :xest_kraken,
+    config_file: Path.expand("../test/integration_kraken.toml", Path.expand(__DIR__))
+
+  #    # TMP for recording
+  #  config :xest_kraken,
+  #    config_file: System.user_home!() <> "/.config/xest/kraken.toml"
 else
-  config :binance,
+  config :xest_binance,
     config_file: System.user_home!() <> "/.config/xest/binance.toml"
+
+  config :xest_kraken,
+    config_file: System.user_home!() <> "/.config/xest/kraken.toml"
 end
 
 # TODO : mix task to create config

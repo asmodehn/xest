@@ -20,7 +20,9 @@ defmodule XestKraken.Adapter.Client do
 
         {_, nil} ->
           Krakex.API.public_client()
-          #        {key, secret} -> Kraken.API.private_client()  # TODO : fix
+
+        {apikey, secret} ->
+          Krakex.Client.new(apikey, secret)
       end
 
     if endpoint != nil do

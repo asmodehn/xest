@@ -34,9 +34,11 @@ defmodule XestKraken.Adapter.Krakex do
     end
   end
 
-  #
-  #  @impl true
-  #  def account(%Kraken{} = kraken) do
-  #    Kraken.get_account(kraken)
-  #  end
+  @impl true
+  def balance(%Client{impl: client}) do
+    case Krakex.balance(client) do
+      {:ok, response} -> {:ok, response}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 end
