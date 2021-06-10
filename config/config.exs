@@ -38,9 +38,10 @@ config :xest,
   binance_clock: XestBinance.Clock
 
 config :xest,
-  # TODO : deprecate and remove this
+  # TODO : deprecate and remove this (should be intrenal to the connector)
   # setup adapter for binance genserver for authenticated requests
-  binance_authenticated: XestBinance.Authenticated
+  binance_auth: XestBinance.Auth,
+  kraken_auth: XestKraken.Auth
 
 config :xest_binance, adapter: XestBinance.Adapter.Binance
 

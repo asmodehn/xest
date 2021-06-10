@@ -19,17 +19,22 @@ defmodule XestWeb.KrakenLive do
           |> assign(now: DateTime.from_unix!(0))
           # assigning now for rendering without assigning the (shadow) clock
           |> assign(status_msg: "N/A")
+          # initial balance model
+          |> assign(account_balances: %{})
 
         # second time websocket info
         true ->
           :timer.send_interval(1000, self(), :tick)
           # refresh status every 5 seconds
           :timer.send_interval(5000, self(), :status_refresh)
+          # refresh account every 10 seconds
+          :timer.send_interval(10_000, self(), :account_refresh)
 
           socket =
             socket
             # putting actual server date
             |> put_date()
+            |> assign(account_balances: retrieve_balance())
 
           # also call right now to return updated socket.
           handle_info(:status_refresh, socket) |> elem(1)
@@ -54,6 +59,15 @@ defmodule XestWeb.KrakenLive do
     {:noreply, assign(socket, status_msg: descr)}
   end
 
+  #### OLD design, TODO:  integrate with Xest
+  @impl true
+  def handle_info(:account_refresh, socket) do
+    {:noreply,
+     assign(socket,
+       account_balances: retrieve_balance()
+     )}
+  end
+
   @impl true
   def handle_info(:tick, socket) do
     {:noreply, put_date(socket)}
@@ -68,5 +82,17 @@ defmodule XestWeb.KrakenLive do
     # Abusing socket here to store the clock...
     # to improve : web page local clock, driven by javascript
     assign(socket, now: clock().utc_now(:kraken))
+  end
+
+  defp retrieve_balance() do
+    kraken_auth().balance!(
+      # finding the process via its module name (unique for now)...
+      Process.whereis(kraken_auth())
+    )
+  end
+
+  defp kraken_auth() do
+    # OLD DESIGN, replace with a xest account...
+    Application.get_env(:xest, :kraken_auth)
   end
 end

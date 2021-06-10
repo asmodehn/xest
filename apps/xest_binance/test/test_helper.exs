@@ -7,7 +7,7 @@ Hammox.defmock(XestBinance.Auth.Mock,
 
 Hammox.stub_with(XestBinance.Auth.Mock, XestBinance.Auth.Stub)
 
-Application.put_env(:xest, :binance_authenticated, XestBinance.Auth.Mock)
+Application.put_env(:xest, :binance_auth, XestBinance.Auth.Mock)
 
 # Adapter mock to use interface in tests
 Hammox.defmock(XestBinance.Adapter.Mock, for: XestBinance.Adapter.Behaviour)

@@ -18,6 +18,17 @@ defmodule XestWeb.KrakenLiveTest do
     Exchange.Mock
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
+    XestKraken.Auth.Mock
+    |> expect(:balance!, fn _ ->
+      %{
+        "ZEUR" => "100.0000",
+        "XETH" => "0.1000000000",
+        "XXBT" => "0.0100000000"
+      }
+    end)
+
+    # TODO : Account to Mock it (keeping auth design internal to the connector)
+
     conn = get(conn, "/kraken")
 
     html = html_response(conn, 200)
@@ -39,6 +50,17 @@ defmodule XestWeb.KrakenLiveTest do
 
     Exchange.Mock
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
+
+    XestKraken.Auth.Mock
+    |> expect(:balance!, fn _ ->
+      %{
+        "ZEUR" => "100.0000",
+        "XETH" => "0.1000000000",
+        "XXBT" => "0.0100000000"
+      }
+    end)
+
+    # TODO : Account to Mock it (keeping auth design internal to the connector)
 
     {:ok, view, _html} = live(conn, "/kraken")
 

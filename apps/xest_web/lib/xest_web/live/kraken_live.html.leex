@@ -3,3 +3,14 @@
   <p>Status: <%= @status_msg %></p>
   <p>Server Clock: <%= Calendar.strftime(@now, "%H:%M:%S") %></p>
 </div>
+
+<div class="container">
+
+  <ul>
+  <%= for {coin, amount} <- Map.to_list(@account_balances) do %>
+    <li> <%= coin %> <%= amount %>
+    <%# TODO : better model to make template language cleaner %>
+      </li>
+  <% end %>
+</ul>
+</div>

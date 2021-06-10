@@ -5,6 +5,10 @@ Hammox.defmock(XestBinance.AccountBehaviourMock, for: XestBinance.Ports.AccountB
 
 Application.put_env(:xest_web, :binance_account, XestBinance.AccountBehaviourMock)
 
+# TODO : deprecate: this is an old design, we should point to the xest account.
+Hammox.defmock(XestKraken.Auth.Mock, for: XestKraken.Auth.Behaviour)
+Application.put_env(:xest, :kraken_auth, XestKraken.Auth.Mock)
+
 Hammox.defmock(Xest.Clock.Mock, for: Xest.Clock.Behaviour)
 Application.put_env(:xest_web, :clock, Xest.Clock.Mock)
 

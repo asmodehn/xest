@@ -18,7 +18,7 @@ defmodule XestBinance.Account do
   use Agent
 
   def start_link(opts) do
-    {authsrv, opts} = Keyword.pop(opts, :authenticated, binance_authenticated())
+    {authsrv, opts} = Keyword.pop(opts, :auth, binance_auth())
     # REMINDER : we dont want to call external systems on startup.
     # Other processes need to align before this can safely happen in various environments.
 
@@ -34,8 +34,8 @@ defmodule XestBinance.Account do
     )
   end
 
-  defp binance_authenticated do
-    Application.get_env(:xest, :binance_authenticated)
+  defp binance_auth do
+    Application.get_env(:xest, :binance_auth)
   end
 
   def model(agent) do
@@ -58,7 +58,7 @@ defmodule XestBinance.Account do
       case state.model do
         # when default initial model (no valid account)
         model when model == nil ->
-          {:ok, acc} = binance_authenticated().account(state.authsrv)
+          {:ok, acc} = binance_auth().account(state.authsrv)
 
           # doing some translation here, like an ACL...
           xest_acc = ACL.to_xest(acc)

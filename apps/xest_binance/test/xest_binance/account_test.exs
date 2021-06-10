@@ -19,7 +19,7 @@ defmodule XestBinance.Account.Test do
       start_supervised!({
         Account,
         # passing nil as we rely on a mock here.
-        name: String.to_atom("#{__MODULE__}.Process"), authenticated: server_pid
+        name: String.to_atom("#{__MODULE__}.Process"), auth: server_pid
       })
 
     # setting up server mock to tes the chain
