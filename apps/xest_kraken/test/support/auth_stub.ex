@@ -8,7 +8,7 @@ defmodule XestKraken.Auth.Stub do
   @behaviour XestKraken.Auth.Behaviour
 
   @impl true
-  def balance(_pid), do: {:ok, %{}}
+  def balance(_pid), do: {:ok, %XestKraken.Account.Balance{}}
 
   @impl true
   def balance!(pid \\ __MODULE__) do

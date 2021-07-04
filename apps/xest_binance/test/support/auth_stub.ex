@@ -7,10 +7,8 @@ defmodule XestBinance.Auth.Stub do
 
   @behaviour XestBinance.Auth.Behaviour
 
-  alias XestBinance.Models.Account
-
   @impl true
-  def account(_pid), do: {:ok, %Account{}}
+  def account(_pid), do: {:ok, %Binance.Account{}}
 
   @impl true
   def account!(pid \\ __MODULE__) do
