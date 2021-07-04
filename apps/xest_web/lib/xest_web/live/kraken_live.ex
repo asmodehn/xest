@@ -20,7 +20,7 @@ defmodule XestWeb.KrakenLive do
           # assigning now for rendering without assigning the (shadow) clock
           |> assign(status_msg: "N/A")
           # initial balance model
-          |> assign(account_balances: %{})
+          |> assign(account_balances: Xest.Account.Balance.new().balances)
 
         # second time websocket info
         true ->
@@ -34,7 +34,7 @@ defmodule XestWeb.KrakenLive do
             socket
             # putting actual server date
             |> put_date()
-            |> assign(account_balances: retrieve_balance())
+            |> assign(account_balances: filter_null_balances(retrieve_account()))
 
           # also call right now to return updated socket.
           handle_info(:status_refresh, socket) |> elem(1)
@@ -43,28 +43,17 @@ defmodule XestWeb.KrakenLive do
     {:ok, socket}
   end
 
-  defp exchange() do
-    # indirection to allow mock during tests
-    Application.get_env(:xest_web, :exchange, Xest.Exchange)
-  end
-
-  defp clock() do
-    # indirection to allow mock during tests
-    Application.get_env(:xest_web, :clock, Xest.Clock)
-  end
-
   @impl true
   def handle_info(:status_refresh, socket) do
     %Xest.Exchange.Status{description: descr} = exchange().status(:kraken)
     {:noreply, assign(socket, status_msg: descr)}
   end
 
-  #### OLD design, TODO:  integrate with Xest
   @impl true
   def handle_info(:account_refresh, socket) do
     {:noreply,
      assign(socket,
-       account_balances: retrieve_balance()
+       account_balances: filter_null_balances(retrieve_account())
      )}
   end
 
@@ -78,21 +67,38 @@ defmodule XestWeb.KrakenLive do
     {:noreply, socket |> put_flash(:info, msg)}
   end
 
+  defp retrieve_account() do
+    xest_account().balance(:kraken)
+  end
+
+  defp filter_null_balances(account) do
+    account.balances
+    # TODO : this filter should probably be done at a lower level
+    #  and enforced properly with types(careful with floats and precision)...
+    |> Enum.filter(fn b ->
+      {free, ""} = Float.parse(b.free)
+      {locked, ""} = Float.parse(b.locked)
+      Float.round(free, 8) != 0 or Float.round(locked, 8) != 0
+    end)
+  end
+
   defp put_date(socket) do
     # Abusing socket here to store the clock...
     # to improve : web page local clock, driven by javascript
     assign(socket, now: clock().utc_now(:kraken))
   end
 
-  defp retrieve_balance() do
-    kraken_auth().balance!(
-      # finding the process via its module name (unique for now)...
-      Process.whereis(kraken_auth())
-    )
+  defp xest_account() do
+    Application.get_env(:xest_web, :account, Xest.Account)
   end
 
-  defp kraken_auth() do
-    # OLD DESIGN, replace with a xest account...
-    Application.get_env(:xest, :kraken_auth)
+  defp exchange() do
+    # indirection to allow mock during tests
+    Application.get_env(:xest_web, :exchange, Xest.Exchange)
+  end
+
+  defp clock() do
+    # indirection to allow mock during tests
+    Application.get_env(:xest_web, :clock, Xest.Clock)
   end
 end

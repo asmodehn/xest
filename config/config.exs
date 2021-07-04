@@ -34,8 +34,10 @@ config :phoenix, :json_library, Jason
 config :xest,
   kraken_exchange: XestKraken.Exchange,
   kraken_clock: XestKraken.Clock,
+  kraken_account: XestKraken.Account,
   binance_exchange: XestBinance.Exchange,
-  binance_clock: XestBinance.Clock
+  binance_clock: XestBinance.Clock,
+  binance_account: XestBinance.Account
 
 config :xest,
   # TODO : deprecate and remove this (should be intrenal to the connector)
@@ -78,9 +80,9 @@ config :xest_kraken, XestKraken.Adapter.Cache,
 config :xest_kraken,
   exchange: XestKraken.Exchange
 
+# TODO : deprecate these, use from :xest app namespace instead.
 config :xest_web,
-  binance_exchange: XestBinance.Exchange,
-  binance_account: XestBinance.Account
+  binance_exchange: XestBinance.Exchange
 
 # For clarity, but this may not need to be explicited here...
 # config :xest_web,

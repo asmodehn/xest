@@ -20,6 +20,11 @@ Hammox.defmock(XestKraken.Clock.Mock, for: XestKraken.Clock.Behaviour)
 Application.put_env(:xest, :kraken_clock, XestKraken.Clock.Mock)
 
 # Mocking connector using provided behavior
+Hammox.defmock(XestKraken.Account.Mock, for: XestKraken.Account.Behaviour)
+
+Application.put_env(:xest, :kraken_account, XestKraken.Account.Mock)
+
+# Mocking connector using provided behavior
 Hammox.defmock(XestBinance.Exchange.Mock, for: XestBinance.Exchange.Behaviour)
 
 Application.put_env(:xest, :binance_exchange, XestBinance.Exchange.Mock)
@@ -28,3 +33,8 @@ Application.put_env(:xest, :binance_exchange, XestBinance.Exchange.Mock)
 Hammox.defmock(XestBinance.Clock.Mock, for: XestBinance.Clock.Behaviour)
 
 Application.put_env(:xest, :binance_clock, XestBinance.Clock.Mock)
+
+# Mocking connector using provided behavior
+Hammox.defmock(XestBinance.Account.Mock, for: XestBinance.Account.Behaviour)
+
+Application.put_env(:xest, :binance_account, XestBinance.Account.Mock)

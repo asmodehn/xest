@@ -5,7 +5,7 @@ defmodule XestWeb.BinanceLiveTest do
 
   alias Xest.Exchange
   alias Xest.Clock
-  alias XestBinance.AccountBehaviourMock
+  alias Xest.Account
 
   import Hammox
 
@@ -21,10 +21,10 @@ defmodule XestWeb.BinanceLiveTest do
     Clock.Mock
     |> expect(:utc_now, fn :binance -> @time_stop end)
 
-    AccountBehaviourMock
-    |> expect(:account, fn _ ->
-      %Binance.Account{
-        balances: [%{"asset" => "BTC", "free" => "1.23", "locked" => "4.56"}]
+    Account.Mock
+    |> expect(:balance, fn :binance ->
+      %Account.Balance{
+        balances: [%Account.AssetBalance{asset: "BTC", free: "1.23", locked: "4.56"}]
       }
     end)
 
@@ -52,10 +52,10 @@ defmodule XestWeb.BinanceLiveTest do
     Clock.Mock
     |> expect(:utc_now, fn :binance -> @time_stop end)
 
-    AccountBehaviourMock
-    |> expect(:account, fn _ ->
-      %Binance.Account{
-        balances: [%{"asset" => "BTC", "free" => "1.23", "locked" => "4.56"}]
+    Account.Mock
+    |> expect(:balance, fn :binance ->
+      %Account.Balance{
+        balances: [%Account.AssetBalance{asset: "BTC", free: "1.23", locked: "4.56"}]
       }
     end)
 

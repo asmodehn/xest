@@ -152,6 +152,8 @@ defmodule XestBinance.Clock.Test do
       %{clock_pid: clock_pid}
     end
 
+    # TODO : this test breaks sometimes ? race condition ?
+    #  ** (exit) exited in: GenServer.call(#PID<0.650.0>, {:get_and_update, #Function<2.31306925/1 in XestBinance.Clock.utc_now/1>}, 5000)
     test "utc_now returns the local clock after retrieval with skew added", %{
       clock_pid: clock_pid
     } do

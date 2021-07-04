@@ -56,10 +56,21 @@ defmodule XestBinance.Auth.Test do
 
       assert XestKraken.Auth.balance(auth) ==
                {:ok,
-                %{
-                  "XETH" => "0.1000000000",
-                  "XXBT" => "0.0100000000",
-                  "ZEUR" => "100.0000"
+                %XestKraken.Account.Balance{
+                  balances: [
+                    %XestKraken.Account.AssetBalance{
+                      asset: "XETH",
+                      amount: "0.1000000000"
+                    },
+                    %XestKraken.Account.AssetBalance{
+                      asset: "XXBT",
+                      amount: "0.0100000000"
+                    },
+                    %XestKraken.Account.AssetBalance{
+                      asset: "ZEUR",
+                      amount: "100.0000"
+                    }
+                  ]
                 }}
     end
   end

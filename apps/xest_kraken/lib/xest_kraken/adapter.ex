@@ -34,7 +34,7 @@ defmodule XestKraken.Adapter do
 
   def balance(%Client{} = cl) do
     implementation().balance(cl)
-    # TODO : wrap into common xest type...
+    # TODO : wrap into some connector specific type...
   end
 
   defp implementation() do

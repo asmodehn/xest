@@ -16,15 +16,18 @@ defmodule XestKraken.Application do
       # Starting Clock Agent
       {XestKraken.Clock, name: XestKraken.Clock},
 
-      # Starting main Exchange Agent managing retrieved state
-      {XestKraken.Exchange, name: XestKraken.Exchange},
-
       # Starting authenticated Binance Server for user account
       {XestKraken.Auth,
        name: XestKraken.Auth,
        apikey: config.xest_kraken.apikey,
        secret: config.xest_kraken.secret,
-       endpoint: config.xest_kraken.endpoint}
+       endpoint: config.xest_kraken.endpoint},
+
+      # Starting main Exchange Agent managing retrieved state
+      {XestKraken.Exchange, name: XestKraken.Exchange},
+
+      # Starting main Account Agent managing retrieved state
+      {XestKraken.Account, name: XestKraken.Account}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

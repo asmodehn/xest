@@ -20,7 +20,7 @@ defmodule XestWeb.BinanceLive do
           |> assign(now: DateTime.from_unix!(0))
           |> assign(status_msg: "N/A")
           # initial balance model
-          |> assign(account_balances: [%{}])
+          |> assign(account_balances: Xest.Account.Balance.new().balances)
 
         # second time websocket info
         true ->
@@ -71,18 +71,16 @@ defmodule XestWeb.BinanceLive do
   end
 
   defp retrieve_account() do
-    binance_account().account(
-      # finding the process via its module name...
-      Process.whereis(binance_account())
-    )
+    xest_account().balance(:binance)
   end
 
   defp filter_null_balances(account) do
     account.balances
     # TODO : this filter should probably be done at a lower level
+    #  and enforced properly with types(careful with floats and precision)...
     |> Enum.filter(fn b ->
-      {free, ""} = Float.parse(b["free"])
-      {locked, ""} = Float.parse(b["locked"])
+      {free, ""} = Float.parse(b.free)
+      {locked, ""} = Float.parse(b.locked)
       Float.round(free, 8) != 0 or Float.round(locked, 8) != 0
     end)
   end
@@ -93,8 +91,8 @@ defmodule XestWeb.BinanceLive do
     assign(socket, now: clock().utc_now(:binance))
   end
 
-  defp binance_account() do
-    Application.get_env(:xest_web, :binance_account)
+  defp xest_account() do
+    Application.get_env(:xest_web, :account, Xest.Account)
   end
 
   defp exchange() do

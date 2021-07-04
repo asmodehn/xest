@@ -20,9 +20,9 @@ defmodule XestKraken.Auth do
     @type mockable_pid :: nil | pid()
 
     # | {:error, reason}
-    @callback balance(mockable_pid()) :: {:ok, map()}
+    @callback balance(mockable_pid()) :: {:ok, XestKraken.Account.Balance.t()}
 
-    @callback balance!(mockable_pid()) :: map()
+    @callback balance!(mockable_pid()) :: XestKraken.Account.Balance.t()
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
@@ -80,10 +80,19 @@ defmodule XestKraken.Auth do
   def balance(pid \\ __MODULE__) do
     {:ok, balancemap} = GenServer.call(pid, {:balance})
 
+    balances =
+      XestKraken.Account.Balance.new(%{
+        balances:
+          balancemap
+          |> Enum.map(fn {k, v} -> XestKraken.Account.AssetBalance.new(%{asset: k, amount: v}) end)
+      })
+
+    # TODO : maybe move this type wrapping to a lower level (adapter)...
+
     # a way to broadcast "low-level" events (we don't need to store them)
     #    Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), "binance:system_status", response)
 
-    {:ok, balancemap}
+    {:ok, balances}
   end
 
   @impl true

@@ -5,6 +5,7 @@ defmodule XestWeb.KrakenLiveTest do
 
   alias Xest.Exchange
   alias Xest.Clock
+  alias Xest.Account
 
   import Hammox
 
@@ -18,12 +19,23 @@ defmodule XestWeb.KrakenLiveTest do
     Exchange.Mock
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
-    XestKraken.Auth.Mock
-    |> expect(:balance!, fn _ ->
-      %{
-        "ZEUR" => "100.0000",
-        "XETH" => "0.1000000000",
-        "XXBT" => "0.0100000000"
+    Account.Mock
+    |> expect(:balance, fn :kraken ->
+      %Xest.Account.Balance{
+        balances: [
+          %Xest.Account.AssetBalance{
+            asset: "ZEUR",
+            free: "100.0000"
+          },
+          %Account.AssetBalance{
+            asset: "XETH",
+            free: "0.1000000000"
+          },
+          %Account.AssetBalance{
+            asset: "XXBT",
+            free: "0.0100000000"
+          }
+        ]
       }
     end)
 
@@ -40,6 +52,8 @@ defmodule XestWeb.KrakenLiveTest do
     # after websocket connection, message changed
     assert html =~ "Status: test"
     assert html =~ "02:02:02"
+
+    # TODO : test balance
   end
 
   test "sending a message to the liveview process displays it in flash view", %{
@@ -51,16 +65,25 @@ defmodule XestWeb.KrakenLiveTest do
     Exchange.Mock
     |> expect(:status, fn :kraken -> %Exchange.Status{description: "test"} end)
 
-    XestKraken.Auth.Mock
-    |> expect(:balance!, fn _ ->
-      %{
-        "ZEUR" => "100.0000",
-        "XETH" => "0.1000000000",
-        "XXBT" => "0.0100000000"
+    Account.Mock
+    |> expect(:balance, fn :kraken ->
+      %Xest.Account.Balance{
+        balances: [
+          %Xest.Account.AssetBalance{
+            asset: "ZEUR",
+            free: "100.0000"
+          },
+          %Account.AssetBalance{
+            asset: "XETH",
+            free: "0.1000000000"
+          },
+          %Account.AssetBalance{
+            asset: "XXBT",
+            free: "0.0100000000"
+          }
+        ]
       }
     end)
-
-    # TODO : Account to Mock it (keeping auth design internal to the connector)
 
     {:ok, view, _html} = live(conn, "/kraken")
 

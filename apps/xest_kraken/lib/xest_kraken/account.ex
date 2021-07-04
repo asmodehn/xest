@@ -1,4 +1,4 @@
-defmodule XestBinance.Account do
+defmodule XestKraken.Account do
   @moduledoc """
     The private part of the client (specific to an account, should not be cached)
 
@@ -6,12 +6,13 @@ defmodule XestBinance.Account do
 
   defmodule Behaviour do
     @moduledoc """
-      this implements a conversion from Binance model into our Xest model.
+      this implements a conversion from Kraken model into our Xest model.
       It serves to specify the types that must be exposed by a GenServer,
       where a better type can provide useful semantics.
-      But it remains tied to the Binance model in its overall structure.
+      But it remains tied to the Kraken model in its overall structure.
     """
 
+    @type balance :: list(map())
     @type reason :: String.t()
 
     @type mockable_pid :: nil | pid() | atom()
@@ -35,13 +36,13 @@ defmodule XestBinance.Account do
   use Agent
 
   def start_link(opts) do
-    {authsrv, opts} = Keyword.pop(opts, :auth, binance_auth())
+    {authsrv, opts} = Keyword.pop(opts, :auth, kraken_auth())
     # REMINDER : we dont want to call external systems on startup.
     # Other processes need to align before this can safely happen in various environments.
 
     # starting the agent by passing the struct as initial value
     # - mocks should manually modify the initial struct if needed
-    account_struct = %XestBinance.Account{
+    account_struct = %XestKraken.Account{
       authsrv: authsrv
     }
 
@@ -51,8 +52,8 @@ defmodule XestBinance.Account do
     )
   end
 
-  defp binance_auth do
-    Application.get_env(:xest, :binance_auth)
+  defp kraken_auth do
+    Application.get_env(:xest, :kraken_auth, XestKraken.Auth)
   end
 
   @impl true
@@ -60,24 +61,24 @@ defmodule XestBinance.Account do
     # TODO : have some refresh to avoid too big delta over time...
     Agent.get_and_update(agent, fn state ->
       case state.balance do
-        # when default initial balance (no valid account)
-        balance when balance == nil ->
-          {:ok, acc} = binance_auth().account(state.authsrv)
+        # when default initial model (no valid account)
+        bal when bal == nil ->
+          {:ok, balance} = kraken_auth().balance(state.authsrv)
 
           # doing some translation here, like an ACL...
-          xest_balance = Xest.Account.Balance.ACL.new(acc)
+          xest_balance =
+            balance
+            |> Map.update!(:balances, fn bl ->
+              bl |> Enum.map(&Xest.Account.AssetBalance.ACL.new/1)
+            end)
+            |> Xest.Account.Balance.ACL.new()
 
-          {xest_balance,
-           state
-           |> Map.put(
-             :balance,
-             xest_balance
-           )}
+          {xest_balance, state |> Map.put(:balance, xest_balance)}
 
         # TODO : check update time to eventually force refresh...
 
-        balance ->
-          {balance, state}
+        model ->
+          {model, state}
           # TODO : add a case to check for timeout to request again the status
       end
     end)

@@ -7,7 +7,14 @@ defmodule Xest.Account.AssetBalance do
 
   defdata do
     asset :: String.t()
-    free :: float()
-    locked :: float()
+    # TODO : find proper numeric representation for these
+    free :: String.t() \\ "0.0"
+    locked :: String.t() \\ "0.0"
   end
+end
+
+# Protocol for each connector to provide an exchange status with the correct format
+defprotocol Xest.Account.AssetBalance.ACL do
+  @spec new(t) :: Xest.Account.AssetBalance.t()
+  def new(asset)
 end

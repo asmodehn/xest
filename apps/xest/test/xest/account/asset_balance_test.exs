@@ -6,14 +6,14 @@ defmodule Xest.Account.AssetBalance.Test do
   test "new asset balance has sensible defaults" do
     assert AssetBalance.new() == %AssetBalance{
              asset: "",
-             free: 0.0,
-             locked: 0.0
+             free: "0.0",
+             locked: "0.0"
            }
 
     assert AssetBalance.new("DOGE") == %AssetBalance{
              asset: "DOGE",
-             free: 0.0,
-             locked: 0.0
+             free: "0.0",
+             locked: "0.0"
            }
   end
 end
