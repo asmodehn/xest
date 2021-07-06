@@ -15,6 +15,10 @@ defmodule XestWeb.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      # see https://hexdocs.pm/dialyxir/readme.html for options
+      dialyzer: [
+        plt_add_deps: :apps_direct
+      ],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
