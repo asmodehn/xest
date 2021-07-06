@@ -25,20 +25,20 @@ defmodule XestWeb.BinanceLive do
         # second time websocket info
         true ->
           # setup a self tick with a second period
-          :timer.send_interval(1000, self(), :tick)
-          # refresh status every 5 seconds
-          :timer.send_interval(5000, self(), :status_refresh)
-          # refresh account every 10 seconds
-          :timer.send_interval(10_000, self(), :account_refresh)
+          with {:ok, _} <- :timer.send_interval(1000, self(), :tick),
+               # refresh status every 5 seconds
+               {:ok, _} <- :timer.send_interval(5000, self(), :status_refresh),
+               # refresh account every 10 seconds
+               {:ok, _} <- :timer.send_interval(10_000, self(), :account_refresh) do
+            socket =
+              socket
+              # putting actual server date
+              |> put_date()
+              |> assign(account_balances: filter_null_balances(retrieve_account()))
 
-          socket =
-            socket
-            # putting actual server date
-            |> put_date()
-            |> assign(account_balances: filter_null_balances(retrieve_account()))
-
-          # also call right now to return updated socket.
-          handle_info(:status_refresh, socket) |> elem(1)
+            # also call right now to return updated socket.
+            handle_info(:status_refresh, socket) |> elem(1)
+          end
       end
 
     {:ok, socket}
