@@ -1,5 +1,6 @@
 defmodule Xest.TransientMap.Test do
-  use ExUnit.Case, async: true
+  # since we depend here on a global mock being setup...
+  use ExUnit.Case, async: false
   use FlowAssertions
 
   alias Xest.DateTime
@@ -16,7 +17,7 @@ defmodule Xest.TransientMap.Test do
 
   setup do
     # setting up datetime mock
-    Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
+    Application.put_env(:xest, :datetime_module, DateTime.Mock)
   end
 
   describe "Given an empty transient map (with a clock)" do
