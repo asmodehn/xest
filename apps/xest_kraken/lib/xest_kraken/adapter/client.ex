@@ -8,10 +8,11 @@ defmodule XestKraken.Adapter.Client do
 
   @typedoc "A client delagate to the adapter client implementation"
   @type t() :: %__MODULE__{
-          impl: Krakex.Client.t()
+          impl: %Krakex.Client{}
         }
 
-  @spec new(String.t(), String.t(), String.t()) :: %__MODULE__{}
+  @spec new(apikey :: String.t() | nil, secret :: String.t() | nil, endpoint :: String.t() | nil) ::
+          %__MODULE__{}
   def new(apikey \\ nil, secret \\ nil, endpoint \\ nil) do
     adapter_client =
       case {apikey, secret} do

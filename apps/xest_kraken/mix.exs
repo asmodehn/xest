@@ -60,6 +60,9 @@ defmodule XestKraken.MixProject do
       # Recording API Responses in tests
       {:exvcr, "~> 0.11", only: [:dev, :test]},
 
+      # For integration tests with an actual HTTP server
+      {:bypass, "~> 2.1", only: [:dev, :test]},
+
       # Cache
       {:nebulex, "~> 2.1"},
       #    {:shards, "~> 1.0"},      #=> When using :shards as backend on high workloads

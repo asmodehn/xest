@@ -18,7 +18,7 @@ defmodule XestKraken.Exchange do
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
-          client: XestKraken.Krakex.Client.t() | nil
+          client: XestKraken.Adapter.Client.t() | nil
         }
 
   defmodule Behaviour do
@@ -29,7 +29,7 @@ defmodule XestKraken.Exchange do
     @type status :: XestKraken.Exchange.Status.t()
     @type reason :: String.t()
 
-    @type servertime :: Xest.ShadowClock.t()
+    @type servertime :: XestKraken.Exchange.ServerTime.t()
     @type mockable_pid :: nil | pid()
 
     # | {:error, reason}

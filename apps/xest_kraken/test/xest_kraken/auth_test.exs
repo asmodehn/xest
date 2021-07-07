@@ -1,4 +1,4 @@
-defmodule XestBinance.Auth.Test do
+defmodule XestKraken.Auth.Test do
   use ExUnit.Case, async: false
   # integration tests in general don't support async
   # And should not run in parallel, because of the global mutable state known as "real world"
