@@ -13,11 +13,10 @@ defmodule XestBinance.Exchange.Status do
 
   use ExConstructor
 
-  @spec new(map(), Keyword.t()) :: %__MODULE__{}
-  def new(just_map, opts \\ []) do
+  def new(map_or_kwlist, opts \\ []) do
     super(
-      just_map
-      |> Map.put_new(:message, just_map.msg)
+      map_or_kwlist
+      |> Map.put_new(:message, map_or_kwlist.msg)
       |> Map.drop([:msg]),
       opts
     )

@@ -22,11 +22,6 @@ defmodule XestKraken.Exchange.Status do
         }
 
   use ExConstructor
-
-  @spec new(map(), Keyword.t()) :: %__MODULE__{}
-  def new(just_map, opts \\ []) do
-    super(just_map, opts)
-  end
 end
 
 # providing implementation for Xest ACL
