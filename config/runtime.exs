@@ -7,12 +7,6 @@ if config_env() == :test do
   config :xest_binance,
     config_file: Path.expand("../test/integration_binance.toml", Path.expand(__DIR__))
 
-  #  config :xest_kraken,
-  #    config_file: Path.expand("../test/config.toml", Path.expand(__DIR__))
-
-  config :xest_kraken,
-    config_file: System.user_home!() <> "/.config/xest/kraken.toml"
-
   # TODO : a better way ?  maybe via mix test options ?
   #    # TMP for recording
   #  config :xest_kraken,

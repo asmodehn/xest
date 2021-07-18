@@ -5,7 +5,11 @@ defmodule XestKraken.Config do
 
   config :xest_kraken,
          file(
-           Application.get_env(:xest_kraken, :config_file),
+           Application.get_env(
+             :xest_kraken,
+             :config_file,
+             Path.expand("../../default.toml", Path.expand(__DIR__))
+           ),
            [
              {:apikey, "apikey", required: false},
              {:secret, "secret", required: false},
