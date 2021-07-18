@@ -7,6 +7,15 @@ defmodule Xest.Umbrella.MixProject do
       version: "0.1.0",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      # see https://hexdocs.pm/dialyxir/readme.html for options
+      dialyzer: [
+        flags: [
+          "-Wunmatched_returns",
+          :error_handling,
+          :race_conditions,
+          :underspecs
+        ]
+      ],
       aliases: aliases(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [

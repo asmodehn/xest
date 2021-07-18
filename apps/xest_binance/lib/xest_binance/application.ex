@@ -3,9 +3,9 @@ defmodule XestBinance.Config do
   # Ref : https://github.com/keathley/vapor#readme
   dotenv()
 
-  config :binance,
+  config :xest_binance,
          file(
-           Application.get_env(:binance, :config_file),
+           Application.get_env(:xest_binance, :config_file),
            [
              {:apikey, "apikey", required: false},
              {:secret, "secret", required: false},
@@ -26,19 +26,25 @@ defmodule XestBinance.Application do
     config = Vapor.load!(XestBinance.Config)
 
     children = [
+      # Cache for Adapter to avoid useless spamming of the exchange from this IP.
+      {XestBinance.Adapter.Cache, []},
+
+      # Starting Clock Agent
+      {XestBinance.Clock, name: XestBinance.Clock},
+
       # Starting main Binance Server
-      {XestBinance.Server, name: XestBinance.Server, endpoint: config.binance.endpoint},
+      {XestBinance.Server, name: XestBinance.Server, endpoint: config.xest_binance.endpoint},
 
       # Starting authenticated Binance Server for user account
-
-      {XestBinance.Authenticated,
-       name: XestBinance.Authenticated,
-       apikey: config.binance.apikey,
-       secret: config.binance.secret,
-       endpoint: config.binance.endpoint},
+      {XestBinance.Auth,
+       name: XestBinance.Auth,
+       apikey: config.xest_binance.apikey,
+       secret: config.xest_binance.secret,
+       endpoint: config.xest_binance.endpoint},
 
       # Starting main Exchange Agent managing retrieved state
       {XestBinance.Exchange, name: XestBinance.Exchange},
+
       # Starting main Account Agent managing retrieved state
       {XestBinance.Account, name: XestBinance.Account}
     ]

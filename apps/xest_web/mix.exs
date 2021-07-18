@@ -9,12 +9,16 @@ defmodule XestWeb.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.7",
+      elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      # see https://hexdocs.pm/dialyxir/readme.html for options
+      dialyzer: [
+        plt_add_deps: :apps_direct
+      ],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -49,7 +53,7 @@ defmodule XestWeb.MixProject do
       # Tooling
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.10", only: :test},
+      {:excoveralls, "~> 0.10", only: [:dev, :test]},
 
       # Phoenix
       {:phoenix, "~> 1.5.7"},

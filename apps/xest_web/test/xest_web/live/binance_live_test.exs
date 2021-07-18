@@ -3,8 +3,9 @@ defmodule XestWeb.BinanceLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias XestBinance.ExchangeBehaviourMock
-  alias XestBinance.AccountBehaviourMock
+  alias Xest.Exchange
+  alias Xest.Clock
+  alias Xest.Account
 
   import Hammox
 
@@ -13,26 +14,17 @@ defmodule XestWeb.BinanceLiveTest do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  setup do
-    # Setting up shadow clock to be used in mock
-    clock =
-      Xest.ShadowClock.new(
-        fn -> @time_stop end,
-        fn -> @time_stop end
-      )
+  test "disconnected and connected render", %{conn: conn} do
+    Exchange.Mock
+    |> expect(:status, fn :binance -> %Exchange.Status{status: :online, description: "test"} end)
 
-    %{clock: clock}
-  end
+    Clock.Mock
+    |> expect(:utc_now, fn :binance -> @time_stop end)
 
-  test "disconnected and connected render", %{conn: conn, clock: clock} do
-    ExchangeBehaviourMock
-    |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
-
-    AccountBehaviourMock
-    |> expect(:account, fn _ ->
-      %Binance.Account{
-        balances: [%{"asset" => "BTC", "free" => "1.23", "locked" => "4.56"}]
+    Account.Mock
+    |> expect(:balance, fn :binance ->
+      %Account.Balance{
+        balances: [%Account.AssetBalance{asset: "BTC", free: "1.23", locked: "4.56"}]
       }
     end)
 
@@ -52,17 +44,18 @@ defmodule XestWeb.BinanceLiveTest do
   end
 
   test "sending a message to the liveview process displays it in flash view", %{
-    conn: conn,
-    clock: clock
+    conn: conn
   } do
-    ExchangeBehaviourMock
-    |> expect(:servertime, fn _ -> clock end)
-    |> expect(:status, fn _ -> %Xest.ExchangeStatus{message: "test"} end)
+    Exchange.Mock
+    |> expect(:status, fn :binance -> %Exchange.Status{status: :online, description: "test"} end)
 
-    AccountBehaviourMock
-    |> expect(:account, fn _ ->
-      %Binance.Account{
-        balances: [%{"asset" => "BTC", "free" => "1.23", "locked" => "4.56"}]
+    Clock.Mock
+    |> expect(:utc_now, fn :binance -> @time_stop end)
+
+    Account.Mock
+    |> expect(:balance, fn :binance ->
+      %Account.Balance{
+        balances: [%Account.AssetBalance{asset: "BTC", free: "1.23", locked: "4.56"}]
       }
     end)
 

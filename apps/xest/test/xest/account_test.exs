@@ -5,43 +5,42 @@ defmodule Xest.Account.Test do
 
   # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
   import Hammox
+  # Importing and protecting our behavior implementation cf. https://github.com/msz/hammox
+  use Hammox.Protect, module: Xest.Account, behaviour: Xest.Account.Behaviour
 
-  test "new account has sensible defaults" do
-    assert Account.new() == %Account{
-             balances: [],
-             maker_commission: 0,
-             taker_commission: 0,
-             buyer_commission: 0,
-             seller_commission: 0,
-             can_trade: false,
-             can_withdrawal: false,
-             can_deposit: false,
-             update_time: ~U[1970-01-01 00:00:00Z],
-             account_type: "",
-             permissions: []
-           }
+  # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
+  import Hammox
 
-    DateTimeMock
-    |> expect(:utc_now, fn -> ~U[1970-01-01 01:01:01Z] end)
+  # TODO : pointless tests (enforced by behaviors) -> remove them ?
+  describe "For xest_kraken:" do
+    test "balance works" do
+      XestKraken.Account.Mock
+      |> expect(:balance, fn _ ->
+        %Account.Balance{balances: []}
+      end)
 
-    assert Account.new([Account.AssetBalance.new("DOGE", 1.23, 4.56)]) == %Account{
-             balances: [
-               %Account.AssetBalance{
-                 asset: "DOGE",
-                 free: 1.23,
-                 locked: 4.56
-               }
-             ],
-             maker_commission: 0,
-             taker_commission: 0,
-             buyer_commission: 0,
-             seller_commission: 0,
-             can_trade: false,
-             can_withdrawal: false,
-             can_deposit: false,
-             update_time: ~U[1970-01-01 00:00:00Z],
-             account_type: "",
-             permissions: []
-           }
+      balance = Account.balance(:kraken)
+
+      assert balance == %Xest.Account.Balance{
+               balances: []
+             }
+    end
+  end
+
+  # TODO : pointless tests (enforced by behaviors) -> remove them ?
+  describe "For xest_binance:" do
+    test "balance works" do
+      XestBinance.Account.Mock
+      |> expect(:balance, fn _ ->
+        # TODO : we shouldn't be depending on binance implementation here...
+        %Account.Balance{balances: []}
+      end)
+
+      balance = Account.balance(:binance)
+
+      assert balance == %Xest.Account.Balance{
+               balances: []
+             }
+    end
   end
 end

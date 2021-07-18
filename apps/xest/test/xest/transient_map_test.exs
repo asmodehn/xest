@@ -1,7 +1,9 @@
 defmodule Xest.TransientMap.Test do
-  use ExUnit.Case, async: true
+  # since we depend here on a global mock being setup...
+  use ExUnit.Case, async: false
   use FlowAssertions
 
+  alias Xest.DateTime
   alias Xest.TransientMap
 
   # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
@@ -13,12 +15,17 @@ defmodule Xest.TransientMap.Test do
   @invalid_clock_time ~U[1970-01-02 12:44:56Z]
   @child_valid_clock_time ~U[1970-01-02 12:47:56Z]
 
+  setup do
+    # setting up datetime mock
+    Application.put_env(:xest, :datetime_module, DateTime.Mock)
+  end
+
   describe "Given an empty transient map (with a clock)" do
     setup :empty_transient_map
 
     test "When next clock time is valid, Then we can store a key/value and retrieve the value with the key",
          %{tmap: tmap} do
-      DateTimeMock
+      DateTime.Mock
       |> expect(:utc_now, fn -> @valid_clock_time end)
       |> expect(:utc_now, fn -> @valid_clock_time end)
 
@@ -28,7 +35,7 @@ defmodule Xest.TransientMap.Test do
 
     test "When next clock time is invalid on put, Then we can still store a key/value and retrieve the value with the key",
          %{tmap: tmap} do
-      DateTimeMock
+      DateTime.Mock
       |> expect(:utc_now, fn -> @invalid_clock_time end)
       |> expect(:utc_now, fn -> @child_valid_clock_time end)
 
@@ -42,7 +49,7 @@ defmodule Xest.TransientMap.Test do
 
     test "When next clock time is valid, Then we can retrieve existing value with the key",
          %{tmap: tmap} do
-      DateTimeMock
+      DateTime.Mock
       |> expect(:utc_now, fn -> @valid_clock_time end)
 
       assert TransientMap.fetch(tmap, :existing) == {:ok, "value"}
@@ -50,7 +57,7 @@ defmodule Xest.TransientMap.Test do
 
     test "When next clock time is invalid, Then we cannot retrieve the value",
          %{tmap: tmap} do
-      DateTimeMock
+      DateTime.Mock
       |> expect(:utc_now, fn -> @invalid_clock_time end)
 
       assert TransientMap.fetch(tmap, :existing) == :error
@@ -59,7 +66,7 @@ defmodule Xest.TransientMap.Test do
 
     test "When next clock time is valid, Then we can store a key/value and retrieve the value with the key",
          %{tmap: tmap} do
-      DateTimeMock
+      DateTime.Mock
       |> expect(:utc_now, fn -> @valid_clock_time end)
       |> expect(:utc_now, fn -> @valid_clock_time end)
       |> expect(:utc_now, fn -> @valid_clock_time end)
@@ -73,7 +80,7 @@ defmodule Xest.TransientMap.Test do
 
     test "When next clock time is invalid on put, Then we can still store a key/value and retrieve hte value with the key",
          %{tmap: tmap} do
-      DateTimeMock
+      DateTime.Mock
       |> expect(:utc_now, fn -> @invalid_clock_time end)
       |> expect(:utc_now, fn -> @child_valid_clock_time end)
 
@@ -85,7 +92,7 @@ defmodule Xest.TransientMap.Test do
   end
 
   defp empty_transient_map(_) do
-    DateTimeMock
+    DateTime.Mock
     |> expect(:utc_now, fn -> @birthdate end)
 
     tmap = TransientMap.new(@lifetime)
@@ -98,7 +105,7 @@ defmodule Xest.TransientMap.Test do
 
     # adding a key value pair in valid time
 
-    DateTimeMock
+    DateTime.Mock
     |> expect(:utc_now, fn -> @valid_clock_time end)
 
     tmap = TransientMap.put(tmap, :existing, "value")

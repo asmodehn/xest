@@ -10,7 +10,9 @@ defmodule XestWeb.ClockLive do
   end
 
   def mount(_params, _session, socket) do
-    if connected?(socket), do: :timer.send_interval(1000, self(), :tick)
+    if connected?(socket) do
+      {:ok, _} = :timer.send_interval(1000, self(), :tick)
+    end
 
     {:ok, put_date(socket)}
   end

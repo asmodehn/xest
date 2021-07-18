@@ -2,37 +2,54 @@ defmodule XestBinance.Exchange do
   @moduledoc """
   An Agent attempting to maintain a consistent view (as state) of the exchange
   It holds the knowledge of this system regarding binance.
-
-  TODO: this is currently a separated process.
-  Ultimately it should be the process the user starts.
-  There is only logic here and this should be purely functional.
-  There is no reason to keep state around when we can rebuild when needed,
-   from past responses stored in server.
   """
-  alias XestBinance.Models
+  alias XestBinance.Adapter
 
-  alias XestBinance.ACL
+  defmodule Behaviour do
+    @moduledoc """
+    Behaviour of Exchange, allowing tests and other projects to mock XestBinance.Exchange.
+    """
 
-  @behaviour XestBinance.Ports.ExchangeBehaviour
+    @type status :: XestBinance.Exchange.Status.t()
+    @type reason :: String.t()
 
-  # TODO : move that to the binance client genserver...
+    @type servertime :: Xest.ShadowClock.t()
+    @type mockable_pid :: nil | pid()
+
+    # | {:error, reason}
+    @callback status() :: status
+
+    # | {:error, reason}
+    @callback servertime() :: servertime
+
+    # TODO : by leveraging __using__ we could implement default function
+    #
+  end
+
+  @behaviour Behaviour
+
   @default_minimum_request_period ~T[00:00:01]
 
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   @enforce_keys [:minimal_request_period, :shadow_clock]
-  defstruct model: nil,
+  defstruct status: nil,
             # pointing to the binance client pid
             client: nil,
             # TODO : maybe in model instead ?
             shadow_clock: nil,
-            minimal_request_period: @default_minimum_request_period
+            servertime: nil,
+            minimal_request_period: @default_minimum_request_period,
+            # TODO
+            ping_timer: nil
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
-          model: Models.Exchange.t() | nil,
+          status: Exchange.Status.t() | nil,
           # TODO: Xest.Ports.BinanceClientBehaviour.t() | nil,
           client: any(),
+          # TODO : refine
+          servertime: any(),
           shadow_clock: Xest.ShadowClock.t() | nil,
           minimal_request_period: Time.t() | nil
         }
@@ -40,11 +57,17 @@ defmodule XestBinance.Exchange do
   use Agent
 
   def start_link(opts, minimal_request_period \\ @default_minimum_request_period) do
-    {client, opts} = Keyword.pop(opts, :client, binance_server())
+    {client, opts} = Keyword.pop(opts, :client, XestBinance.Adapter.client())
     # REMINDER : we dont want to call external systems on startup.
     # Other processes need to align before this can safely happen in various environments.
     {clock, opts} =
-      Keyword.pop(opts, :clock, Xest.ShadowClock.new(fn -> binance_server().time!(client) end))
+      Keyword.pop(
+        opts,
+        :clock,
+        Xest.ShadowClock.new(fn ->
+          XestBinance.Adapter.servertime(client).servertime
+        end)
+      )
 
     # starting the agent by passing the struct as initial value
     # - app can tune the minimal_request_period
@@ -61,54 +84,27 @@ defmodule XestBinance.Exchange do
     )
   end
 
-  defp binance_server do
-    Application.get_env(:xest, :binance_server)
-  end
-
-  def model(agent) do
-    Agent.get(agent, fn state -> state.model end)
-  end
-
-  # TODO : these 2 should be the same...
   @doc """
   Access the state of the exchange agent.
   This encodes our knowledge of binance exchange
   """
-  def state(exchange) do
-    Agent.get(exchange, &Function.identity/1)
+  def state(agent) do
+    Agent.get(agent, &Function.identity/1)
   end
 
-  # lazy accessor
+  # TODO : reverse flow: have client subscribe to status topic
   @impl true
-  def status(agent) do
-    Agent.get_and_update(agent, fn state ->
-      case state.model do
-        model when is_nil(model) ->
-          # TODO this should probably be in the API / some ACL...
-          {:ok, %Binance.SystemStatus{} = status} = binance_server().system_status(state.client)
-
-          xest_status = ACL.to_xest(status)
-
-          {xest_status,
-           state
-           |> Map.put(
-             :model,
-             %Models.Exchange{status: xest_status}
-           )}
-
-        model ->
-          {model.status, state}
-          # TODO : add a case to check for timeout to request again the status
-      end
-    end)
+  def status() do
+    # cached read-through on adapter
+    # No need to keep a cache here
+    Adapter.system_status()
   end
 
+  # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def servertime(agent) do
-    # TODO : have some refresh to avoid too big a time skew...
-    Agent.get_and_update(agent, fn state ->
-      {state.shadow_clock,
-       state |> Map.put(:shadow_clock, Xest.ShadowClock.update(state.shadow_clock))}
-    end)
+  def servertime() do
+    # cached read-through on adapter
+    # No need to keep a cache here
+    Adapter.servertime()
   end
 end

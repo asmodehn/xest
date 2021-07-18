@@ -15,6 +15,10 @@ defmodule XestBinance.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      # see https://hexdocs.pm/dialyxir/readme.html for options
+      dialyzer: [
+        plt_add_deps: :apps_direct
+      ],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -62,6 +66,14 @@ defmodule XestBinance.MixProject do
 
       # Time manipulation
       {:timex, "~> 3.0"},
+
+      # Cache
+      {:nebulex, "~> 2.1"},
+      #    {:shards, "~> 1.0"},      #=> When using :shards as backend on high workloads
+      # => When using Caching Annotations
+      {:decorator, "~> 1.3"},
+      # => When using the Telemetry events (Nebulex stats)
+      {:telemetry, "~> 0.4"},
 
       # Runtime configuration
       {:vapor, "~> 0.10"}

@@ -4,21 +4,38 @@ defmodule XestBinance.Account do
 
   """
 
-  alias XestBinance.ACL
+  defmodule Behaviour do
+    @moduledoc """
+      this implements a conversion from Binance model into our Xest model.
+      It serves to specify the types that must be exposed by a GenServer,
+      where a better type can provide useful semantics.
+      But it remains tied to the Binance model in its overall structure.
+    """
 
-  @behaviour XestBinance.Ports.AccountBehaviour
+    @type reason :: String.t()
+
+    @type mockable_pid :: nil | pid() | atom()
+
+    # | {:error, reason}
+    @callback balance(mockable_pid()) :: Xest.Account.Balance.t()
+
+    # TODO : by leveraging __using__ we could implement default function
+    #                                   and their unsafe counterparts maybe ?
+  end
+
+  @behaviour Behaviour
 
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   @enforce_keys [:authsrv]
-  defstruct model: nil,
+  defstruct balance: nil,
             # pointing to the binance client pid
             authsrv: nil
 
   use Agent
 
   def start_link(opts) do
-    {authsrv, opts} = Keyword.pop(opts, :authenticated, binance_authenticated())
+    {authsrv, opts} = Keyword.pop(opts, :auth, binance_auth())
     # REMINDER : we dont want to call external systems on startup.
     # Other processes need to align before this can safely happen in various environments.
 
@@ -34,46 +51,33 @@ defmodule XestBinance.Account do
     )
   end
 
-  defp binance_authenticated do
-    Application.get_env(:xest, :binance_authenticated)
-  end
-
-  def model(agent) do
-    Agent.get(agent, fn state -> state.model end)
-  end
-
-  # TODO : these 2 should be the same...
-  @doc """
-  Access the state of the exchange agent.
-  This encodes our knowledge of binance exchange
-  """
-  def state(account) do
-    Agent.get(account, &Function.identity/1)
+  defp binance_auth do
+    Application.get_env(:xest, :binance_auth)
   end
 
   @impl true
-  def account(agent) do
+  def balance(agent) do
     # TODO : have some refresh to avoid too big delta over time...
     Agent.get_and_update(agent, fn state ->
-      case state.model do
-        # when default initial model (no valid account)
-        model when model == nil ->
-          {:ok, acc} = binance_authenticated().account(state.authsrv)
+      case state.balance do
+        # when default initial balance (no valid account)
+        balance when balance == nil ->
+          {:ok, acc} = binance_auth().account(state.authsrv)
 
           # doing some translation here, like an ACL...
-          xest_acc = ACL.to_xest(acc)
+          xest_balance = Xest.Account.Balance.ACL.new(acc)
 
-          {xest_acc,
+          {xest_balance,
            state
            |> Map.put(
-             :model,
-             xest_acc
+             :balance,
+             xest_balance
            )}
 
         # TODO : check update time to eventually force refresh...
 
-        model ->
-          {model, state}
+        balance ->
+          {balance, state}
           # TODO : add a case to check for timeout to request again the status
       end
     end)

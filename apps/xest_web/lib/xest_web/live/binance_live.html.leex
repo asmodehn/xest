@@ -8,14 +8,14 @@
 
   <ul>
   <%= for b <- @account_balances do %>
-    <li> <%= b["asset"] %>
+    <li> <%= b.asset %>
     <%# TODO : better model to make template language cleaner %>
-      <%= if Map.has_key?(b, "free") do
-        {free, ""} = Float.parse(b["free"])
+      <%= if Map.has_key?(b, :free) do
+        {free, ""} = Float.parse(b.free)
         if Float.round(free, 8) != 0, do: free
        end %>
-      <%= if Map.has_key?(b, "locked") do
-        {locked, ""} = Float.parse(b["locked"])
+      <%= if Map.has_key?(b, :locked) do
+        {locked, ""} = Float.parse(b.locked)
         if Float.round(locked, 8) != 0, do: "(Locked: " <> Float.to_string(locked) <>")"
        end %>
       </li>

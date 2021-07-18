@@ -1,0 +1,3 @@
+apikey = ""
+secret = ""
+endpoint = "https://api.kraken.com"
