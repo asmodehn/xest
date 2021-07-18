@@ -15,20 +15,13 @@ defmodule XestKraken.Exchange.Test do
   @time_stop ~U[2021-02-18 08:53:32.313Z]
 
   setup do
-    # setup adapter mock
-    previous_adapter = Application.get_env(:xest_kraken, :adapter)
-    Application.put_env(:xest_kraken, :adapter, XestKraken.Adapter.Mock)
-
-    on_exit(fn ->
-      # restoring config
-      Application.put_env(:xest_kraken, :adapter, previous_adapter)
-    end)
-
     exg_pid =
       start_supervised!({
         Exchange,
-        # passing nil as we rely on a mock here.
-        name: String.to_atom("#{__MODULE__}.Process")
+        name: String.to_atom("#{__MODULE__}.Process"),
+        client:
+          Adapter.client(nil, nil)
+          |> Adapter.Client.with_adapter(Adapter.Mock.Exchange)
         #        clock:
         #          Xest.ShadowClock.new(
         #            fn -> ServerBehaviourMock.time!(server_pid) end,
@@ -43,7 +36,7 @@ defmodule XestKraken.Exchange.Test do
     # setting up adapter mock to test the chain
     # Exchange -> Agent messaging -> KrakenAdapter
     # without relying on a specific adapter implementation
-    Adapter.Mock
+    Adapter.Mock.Exchange
     |> allow(self(), exg_pid)
 
     %{exg_pid: exg_pid}
@@ -52,39 +45,43 @@ defmodule XestKraken.Exchange.Test do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  test "retrieve status", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "retrieve status", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     |> expect(:system_status, fn _ ->
       {:ok, %{status: "normal", timestamp: @time_stop}}
     end)
 
-    Exchange.status()
+    Exchange.status(exg_pid)
     |> assert_fields(%{
       status: "normal",
       timestamp: @time_stop
     })
   end
 
-  test "after retrieving status, state is still usable", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "after retrieving status, state is still usable", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     |> expect(:system_status, fn _ ->
       {:ok, %{status: "maintenance", timestamp: @time_stop}}
     end)
 
-    Exchange.status()
+    Exchange.status(exg_pid)
+    |> assert_fields(%{
+      status: "maintenance",
+      timestamp: @time_stop
+    })
 
-    Exchange.status()
+    Exchange.status(exg_pid)
     |> assert_fields(%{
       status: "maintenance",
       timestamp: @time_stop
     })
   end
 
-  test "retrieve servertime OK", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "retrieve servertime OK", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
 
-    servertime = Exchange.servertime()
+    servertime = Exchange.servertime(exg_pid)
 
     assert servertime == %XestKraken.Exchange.ServerTime{
              unixtime: @time_stop,
@@ -92,15 +89,15 @@ defmodule XestKraken.Exchange.Test do
            }
   end
 
-  test "after retrieving servertime, state is still usable", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     # We do not want to cache this, to prevent interference with our internal clock proxy
     |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
     |> expect(:servertime, fn _ -> {:ok, %{unixtime: @time_stop, rfc1123: "some date string"}} end)
 
-    Exchange.servertime()
+    Exchange.servertime(exg_pid)
 
-    servertime = Exchange.servertime()
+    servertime = Exchange.servertime(exg_pid)
 
     assert servertime == %XestKraken.Exchange.ServerTime{
              unixtime: @time_stop,

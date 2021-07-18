@@ -28,32 +28,38 @@ defmodule XestKraken.Account do
 
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
-  @enforce_keys [:authsrv]
-  defstruct balance: nil,
-            # pointing to the binance client pid
-            authsrv: nil
+  @enforce_keys [:auth_pid]
+  defstruct auth_mod: nil,
+            # pointing to the kraken client pid
+            auth_pid: nil,
+
+            # storing balance...
+            balance: nil
 
   use Agent
 
   def start_link(opts) do
-    {authsrv, opts} = Keyword.pop(opts, :auth, kraken_auth())
+    # :auth_mod is optional, but should point to module by default, or maybe be overridden
+    {auth_mod, opts} = Keyword.pop(opts, :auth_mod, XestKraken.Auth)
+
+    # :auth_pid should be the auth server pid.
+    # if there is only one (current case), the mod can be used instead.
+    {auth_pid, opts} = Keyword.pop(opts, :auth_pid, auth_mod)
+
     # REMINDER : we dont want to call external systems on startup.
     # Other processes need to align before this can safely happen in various environments.
 
     # starting the agent by passing the struct as initial value
     # - mocks should manually modify the initial struct if needed
     account_struct = %XestKraken.Account{
-      authsrv: authsrv
+      auth_mod: auth_mod,
+      auth_pid: auth_pid
     }
 
     Agent.start_link(
       fn -> account_struct end,
       opts
     )
-  end
-
-  defp kraken_auth do
-    Application.get_env(:xest, :kraken_auth, XestKraken.Auth)
   end
 
   @impl true
@@ -63,7 +69,7 @@ defmodule XestKraken.Account do
       case state.balance do
         # when default initial model (no valid account)
         bal when bal == nil ->
-          {:ok, balance} = kraken_auth().balance(state.authsrv)
+          {:ok, balance} = state.auth_mod.balance(state.auth_pid)
 
           # doing some translation here, like an ACL...
           xest_balance =

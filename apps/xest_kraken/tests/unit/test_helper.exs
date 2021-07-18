@@ -1,3 +1,9 @@
+# Here we test modular behavior, in parallel (async: true).
+# We make a heavy use of mocks.
+
+# Multi process tests are allowed, if the behaviour is consistent,
+# and they have to run in parallel.
+
 ExUnit.start()
 
 # defining Datetime.Mock module is not defined yet
@@ -14,7 +20,7 @@ Hammox.defmock(XestKraken.Auth.Mock,
 
 Hammox.stub_with(XestKraken.Auth.Mock, XestKraken.Auth.Stub)
 
-Application.put_env(:xest, :kraken_auth, XestKraken.Auth.Mock)
-
 # adapter mock to use adapter interface in tests
-Hammox.defmock(XestKraken.Adapter.Mock, for: XestKraken.Adapter.Behaviour)
+Hammox.defmock(XestKraken.Adapter.Mock.Adapter, for: XestKraken.Adapter.Behaviour)
+Hammox.defmock(XestKraken.Adapter.Mock.Exchange, for: XestKraken.Adapter.Behaviour)
+Hammox.defmock(XestKraken.Adapter.Mock.Clock, for: XestKraken.Adapter.Behaviour)

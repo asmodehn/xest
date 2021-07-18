@@ -21,23 +21,20 @@ defmodule XestKraken.Adapter do
   @spec system_status(Client.t()) :: Exchange.Status.t()
   @decorate cacheable(cache: Cache, key: :system_status, opts: [ttl: :timer.minutes(1)])
   def system_status(%Client{} = client \\ Client.new()) do
-    {:ok, status} = implementation().system_status(client)
+    {:ok, status} = client.adapter.system_status(client)
+    # TODO : handle {:error, :nxdomain}
     Exchange.Status.new(status)
   end
 
   @spec servertime(Client.t()) :: Exchange.ServerTime.t()
   # no cache here to not interfere with the local clock proxy agent
   def servertime(%Client{} = client \\ Client.new()) do
-    {:ok, servertime} = implementation().servertime(client)
+    {:ok, servertime} = client.adapter.servertime(client)
     Exchange.ServerTime.new(servertime)
   end
 
   def balance(%Client{} = cl) do
-    implementation().balance(cl)
+    cl.adapter.balance(cl)
     # TODO : wrap into some connector specific type...
-  end
-
-  defp implementation() do
-    Application.get_env(:xest_kraken, :adapter, XestKraken.Adapter.Krakex)
   end
 end

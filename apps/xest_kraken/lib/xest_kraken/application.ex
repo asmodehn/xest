@@ -16,7 +16,7 @@ defmodule XestKraken.Application do
       # Starting Clock Agent
       {XestKraken.Clock, name: XestKraken.Clock},
 
-      # Starting authenticated Binance Server for user account
+      # Starting authenticated Kraken Server for user account
       {XestKraken.Auth,
        name: XestKraken.Auth,
        apikey: config.xest_kraken.apikey,
@@ -27,7 +27,11 @@ defmodule XestKraken.Application do
       {XestKraken.Exchange, name: XestKraken.Exchange},
 
       # Starting main Account Agent managing retrieved state
-      {XestKraken.Account, name: XestKraken.Account}
+      {
+        XestKraken.Account,
+        # supports only one auth at a time.
+        name: XestKraken.Account, auth_mod: XestKraken.Auth, auth_pid: XestKraken.Auth
+      }
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

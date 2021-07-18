@@ -30,13 +30,13 @@ defmodule XestKraken.Exchange do
     @type reason :: String.t()
 
     @type servertime :: XestKraken.Exchange.ServerTime.t()
-    @type mockable_pid :: nil | pid()
+    @type mockable_pid :: nil | atom() | pid()
 
     # | {:error, reason}
-    @callback status() :: status
+    @callback status(mockable_pid) :: status
 
     # | {:error, reason}
-    @callback servertime() :: servertime
+    @callback servertime(mockable_pid) :: servertime
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
@@ -45,6 +45,9 @@ defmodule XestKraken.Exchange do
   use Agent
 
   def start_link(opts) do
+    name = Keyword.get(opts, :name, __MODULE__)
+    opts = Keyword.put_new(opts, :name, name)
+
     {client, opts} = Keyword.pop(opts, :client, @public_client)
 
     # REMINDER : we dont want to call external systems on startup.
@@ -69,23 +72,27 @@ defmodule XestKraken.Exchange do
   Access the state of the exchange agent.
   This encodes our knowledge of kraken exchange
   """
-  def state(agent) do
+  def state(agent \\ __MODULE__) do
     Agent.get(agent, &Function.identity/1)
   end
 
   # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def status() do
+  def status(agent \\ __MODULE__) do
     # cached read-through on adapter
     # No need to keep a cache here
-    Adapter.system_status()
+    Agent.get(agent, fn state ->
+      Adapter.system_status(state.client)
+    end)
   end
 
   #  # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def servertime() do
+  def servertime(agent \\ __MODULE__) do
     # direct access to adapter, maybe not needed...
     # For a simulated/proxy local clock, use XestKraken.clock
-    Adapter.servertime()
+    Agent.get(agent, fn state ->
+      Adapter.servertime(state.client)
+    end)
   end
 end

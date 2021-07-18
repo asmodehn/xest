@@ -11,18 +11,18 @@ defmodule XestKraken.Adapter.Test do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  setup do
-    previous_adapter = Application.get_env(:xest_kraken, :adapter)
-    Application.put_env(:xest_kraken, :adapter, XestKraken.Adapter.Mock)
+  setup :with_client
 
-    on_exit(fn ->
-      # restoring config
-      Application.put_env(:xest_kraken, :adapter, previous_adapter)
-    end)
+  defp with_client(_) do
+    cl =
+      Adapter.client(nil, nil)
+      |> Adapter.Client.with_adapter(Adapter.Mock.Adapter)
+
+    %{client: cl}
   end
 
-  test "system_status" do
-    Adapter.Mock
+  test "system_status", %{client: client} do
+    Adapter.Mock.Adapter
     |> expect(
       :system_status,
       fn _ ->
@@ -34,14 +34,14 @@ defmodule XestKraken.Adapter.Test do
       end
     )
 
-    assert Adapter.system_status() == %XestKraken.Exchange.Status{
+    assert Adapter.system_status(client) == %XestKraken.Exchange.Status{
              status: "online",
              timestamp: ~U[2021-05-31T08:50:01Z]
            }
   end
 
-  test "servertime" do
-    Adapter.Mock
+  test "servertime", %{client: client} do
+    Adapter.Mock.Adapter
     |> expect(
       :servertime,
       fn _ ->
@@ -53,7 +53,7 @@ defmodule XestKraken.Adapter.Test do
       end
     )
 
-    assert Adapter.servertime() == %XestKraken.Exchange.ServerTime{
+    assert Adapter.servertime(client) == %XestKraken.Exchange.ServerTime{
              unixtime: ~U[2021-05-31T08:50:01Z],
              rfc1123: "some string for this date..."
            }

@@ -15,4 +15,17 @@ defmodule XestKraken do
   def hello do
     :world
   end
+
+  def exchange() do
+    XestKraken.Exchange
+  end
+
+  def clock() do
+    XestKraken.Clock
+  end
+
+  # only one account supported currently
+  def account() do
+    XestKraken.Account
+  end
 end

@@ -1,14 +1,17 @@
 defmodule XestKraken.Adapter.Client do
   @moduledoc """
       A client model implementation, usable with all implemented adaptors.
+      Adaptor implementation stored as part of the client data.
       Currently only krakex -> hardcoded here.
   """
   @enforce_keys [:impl]
-  defstruct impl: nil
+  defstruct impl: nil,
+            adapter: XestKraken.Adapter.Krakex
 
-  @typedoc "A client delagate to the adapter client implementation"
+  @typedoc "A client delegate to the adapter client implementation"
   @type t() :: %__MODULE__{
-          impl: %Krakex.Client{}
+          impl: %Krakex.Client{},
+          adapter: atom()
         }
 
   @spec new(apikey :: String.t() | nil, secret :: String.t() | nil, endpoint :: String.t() | nil) ::
@@ -31,5 +34,10 @@ defmodule XestKraken.Adapter.Client do
     else
       %__MODULE__{impl: adapter_client}
     end
+  end
+
+  # useful when we want to pass override the adapter implementation along with the client connexion details
+  def with_adapter(%__MODULE__{} = client, adapter \\ XestKraken.Adapter.Krakex) do
+    %{client | adapter: adapter}
   end
 end

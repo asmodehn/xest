@@ -32,7 +32,8 @@ defmodule XestKraken.Auth do
 
   defstruct some_periodic_ping: "TODO",
             # will be defined on init (dynamically upon starting)
-            kraken_client: nil
+            kraken_client: nil,
+            adapter: nil
 
   @doc """
   Starts reliable binance client.
@@ -45,11 +46,14 @@ defmodule XestKraken.Auth do
     {apikey, opts} = Keyword.pop(opts, :apikey)
     {secret, opts} = Keyword.pop(opts, :secret)
 
+    {adapter, opts} = Keyword.pop(opts, :adapter, XestKraken.Adapter)
+
     GenServer.start_link(
       __MODULE__,
       # passing next_ping_wait_time in case it is specified as option from supervisor
       %__MODULE__{
-        kraken_client: XestKraken.Adapter.client(apikey, secret, endpoint)
+        kraken_client: adapter.client(apikey, secret, endpoint),
+        adapter: adapter
       },
       opts
     )
@@ -100,10 +104,11 @@ defmodule XestKraken.Auth do
         {:balance},
         _from,
         %{
-          kraken_client: kraken_client
+          kraken_client: kraken_client,
+          adapter: adapter
         } = state
       ) do
-    resp = XestKraken.Adapter.balance(kraken_client)
+    resp = adapter.balance(kraken_client)
     # TODO reschedule ping after request
     {:reply, resp, state}
   end

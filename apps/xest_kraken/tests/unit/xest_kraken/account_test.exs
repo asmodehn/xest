@@ -16,7 +16,10 @@ defmodule XestKraken.Account.Test do
         Account,
         # passing nil as we rely on a mock here.
         # we will use a mock for Auth genserver
-        name: String.to_atom("#{__MODULE__}.Process"), auth: nil
+        # we use a mock: no pid.
+        name: String.to_atom("#{__MODULE__}.Process"),
+        auth_mod: XestKraken.Auth.Mock,
+        auth_pid: nil
       })
 
     # setting up server mock to test the chain

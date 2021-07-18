@@ -2,6 +2,7 @@ defmodule XestKraken.Clock.Test do
   use ExUnit.Case, async: true
 
   alias XestKraken.Clock
+  alias XestKraken.Adapter
 
   import Hammox
 
@@ -11,23 +12,23 @@ defmodule XestKraken.Clock.Test do
     # Setup Xest.DateTime Mock for these tests
     Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
 
-    previous_adapter = Application.get_env(:xest_kraken, :adapter)
-    Application.put_env(:xest_kraken, :adapter, XestKraken.Adapter.Mock)
-
     on_exit(fn ->
       # restoring config
       Application.put_env(:xest, :datetime_module, previous_datetime)
-      Application.put_env(:xest_kraken, :adapter, previous_adapter)
     end)
   end
 
   describe "Given the clock has no ttl," do
     setup do
+      # setting up client to pass adapter mock
+      client = Adapter.client() |> Adapter.Client.with_adapter(Adapter.Mock.Clock)
+
       clock_pid =
         start_supervised!({
           Clock,
-          # passing nil as we rely on a mock here.
-          ttl: nil, name: String.to_atom("#{__MODULE__}.Process")
+          ttl: nil,
+          name: String.to_atom("#{__MODULE__}.Process"),
+          remote: fn -> Adapter.servertime(client).unixtime end
         })
 
       # setting up DateTime mock allowance for the clock process
@@ -52,7 +53,6 @@ defmodule XestKraken.Clock.Test do
       clock_pid =
         start_supervised!({
           Clock,
-          # passing nil as we rely on a mock here.
           remote: nil, ttl: :timer.minutes(5), name: String.to_atom("#{__MODULE__}.Process")
         })
 
@@ -92,7 +92,7 @@ defmodule XestKraken.Clock.Test do
       clock_pid =
         start_supervised!({
           Clock,
-          # passing nil as we rely on a mock here.
+          # We rely on a local mock clock here.
           remote: &Xest.DateTime.Mock.utc_now/0,
           ttl: :timer.minutes(5),
           name: String.to_atom("#{__MODULE__}.Process")
@@ -133,11 +133,13 @@ defmodule XestKraken.Clock.Test do
 
   describe "Given the remote clock is set to an adapter mock, with ttl," do
     setup do
+      # setting up client to pass adapter mock
+      client = Adapter.client() |> Adapter.Client.with_adapter(Adapter.Mock.Clock)
+
       clock_pid =
         start_supervised!({
           Clock,
-          # passing nil as we rely on a mock here.
-          remote: fn -> XestKraken.Adapter.servertime().unixtime end,
+          remote: fn -> Adapter.servertime(client).unixtime end,
           ttl: :timer.minutes(5),
           name: String.to_atom("#{__MODULE__}.Process")
         })
@@ -146,7 +148,7 @@ defmodule XestKraken.Clock.Test do
       Xest.DateTime.Mock
       |> allow(self(), clock_pid)
 
-      XestKraken.Adapter.Mock
+      Adapter.Mock.Clock
       |> allow(self(), clock_pid)
 
       %{clock_pid: clock_pid}
@@ -159,7 +161,7 @@ defmodule XestKraken.Clock.Test do
       # local now() to check for expiration
       |> expect(:utc_now, fn -> ~U[2020-02-02 02:02:02.202Z] end)
 
-      XestKraken.Adapter.Mock
+      Adapter.Mock.Clock
       # retrieve()
       |> expect(:servertime, fn _ ->
         {:ok, %{unixtime: ~U[2020-02-02 02:01:03.202Z], rfc1123: "unused here"}}

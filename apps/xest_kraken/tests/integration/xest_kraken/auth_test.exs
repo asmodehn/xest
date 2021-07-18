@@ -1,4 +1,4 @@
-defmodule XestKraken.Auth.Test do
+defmodule XestKraken.Auth.Test.Integration do
   use ExUnit.Case, async: false
   # integration tests in general don't support async
   # And should not run in parallel, because of the global mutable state known as "real world"
@@ -15,7 +15,6 @@ defmodule XestKraken.Auth.Test do
   # This allows us to test rare behaviors, like errors, from specification/documentation.
 
   describe "By default" do
-    @describetag :integration
     # Note : there is two kind of integrations
     #  - with machine environment (configuration)
     #  - with timers / with communicating processes
