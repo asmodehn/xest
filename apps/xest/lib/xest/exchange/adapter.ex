@@ -8,7 +8,7 @@ defmodule Xest.Exchange.Adapter do
   end
 
   def retrieve(:kraken, :status) do
-    connector_response = kraken().status()
+    connector_response = kraken().status(Process.whereis(kraken()))
 
     Xest.Exchange.Status.ACL.new(connector_response)
   end
@@ -26,7 +26,7 @@ defmodule Xest.Exchange.Adapter do
   end
 
   def retrieve(:kraken, :servertime) do
-    response = kraken().servertime()
+    response = kraken().servertime(Process.whereis(kraken()))
 
     Xest.Exchange.ServerTime.ACL.new(response)
   end

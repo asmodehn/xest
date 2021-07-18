@@ -10,7 +10,7 @@ defmodule Xest.Exchange.Adapter.Test do
 
   test "retrieve status" do
     XestKraken.Exchange.Mock
-    |> expect(:status, fn ->
+    |> expect(:status, fn _ ->
       %XestKraken.Exchange.Status{status: "online", timestamp: @time_stop}
     end)
 

@@ -13,7 +13,8 @@ defmodule Xest.Exchange.Test do
   describe "For xest_kraken:" do
     test "status works" do
       XestKraken.Exchange.Mock
-      |> expect(:status, fn ->
+      # nil as pid since we use a mock here
+      |> expect(:status, fn nil ->
         %XestKraken.Exchange.Status{}
       end)
 
