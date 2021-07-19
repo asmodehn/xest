@@ -15,7 +15,6 @@ defmodule XestBinance.Authenticated.Test do
   # This allows us to test rare behaviors, like errors, from specification/documentation.
 
   describe "By default" do
-    @describetag :integration
     # Note : there is two kind of integrations
     #  - with machine environment (configuration)
     #  - with timers / with communicating processes

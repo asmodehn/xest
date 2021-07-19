@@ -19,6 +19,7 @@ defmodule XestBinance.MixProject do
       dialyzer: [
         plt_add_deps: :apps_direct
       ],
+      test_paths: ["tests/unit", "tests/integration"],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -45,8 +46,8 @@ defmodule XestBinance.MixProject do
 
   # Specifies which paths to compile per environment.
   # to be able to interactively use test/support
-  defp elixirc_paths(:dev), do: ["lib", "test/support"]
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "tests/unit/support"]
+  defp elixirc_paths(:test), do: ["lib", "tests/unit/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help deps" to learn about dependencies.
@@ -86,7 +87,7 @@ defmodule XestBinance.MixProject do
   defp aliases do
     [
       setup: ["deps.get"],
-      test: ["test --exclude integration"]
+      test: ["test"]
     ]
   end
 end

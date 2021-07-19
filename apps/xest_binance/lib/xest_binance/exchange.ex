@@ -17,10 +17,10 @@ defmodule XestBinance.Exchange do
     @type mockable_pid :: nil | pid()
 
     # | {:error, reason}
-    @callback status() :: status
+    @callback status(mockable_pid) :: status
 
     # | {:error, reason}
-    @callback servertime() :: servertime
+    @callback servertime(mockable_pid) :: servertime
 
     # TODO : by leveraging __using__ we could implement default function
     #
@@ -94,17 +94,22 @@ defmodule XestBinance.Exchange do
 
   # TODO : reverse flow: have client subscribe to status topic
   @impl true
-  def status() do
+  def status(agent \\ __MODULE__) do
     # cached read-through on adapter
     # No need to keep a cache here
-    Adapter.system_status()
+
+    Agent.get(agent, fn state ->
+      Adapter.system_status(state.client)
+    end)
   end
 
   # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def servertime() do
+  def servertime(agent \\ __MODULE__) do
     # cached read-through on adapter
     # No need to keep a cache here
-    Adapter.servertime()
+    Agent.get(agent, fn state ->
+      Adapter.servertime(state.client)
+    end)
   end
 end

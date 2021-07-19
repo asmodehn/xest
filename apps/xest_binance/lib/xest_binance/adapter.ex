@@ -21,29 +21,25 @@ defmodule XestBinance.Adapter do
   @spec system_status(Client.t()) :: Exchange.Status.t()
   @decorate cacheable(cache: Cache, key: :system_status, opts: [ttl: :timer.minutes(1)])
   def system_status(%Client{} = cl \\ client()) do
-    {:ok, status} = implementation().system_status(cl)
+    {:ok, status} = cl.adapter.system_status(cl)
     Exchange.Status.new(status)
   end
 
   @spec servertime(Client.t()) :: Exchange.ServerTime.t()
   # no caching here to avoid timing issues on local proxy clock
   def servertime(%Client{} = cl \\ client()) do
-    {:ok, servertime} = implementation().servertime(cl)
+    {:ok, servertime} = cl.adapter.servertime(cl)
     Exchange.ServerTime.new(%{servertime: servertime})
   end
 
   # maybe useless ?? we could use the status for this...
   def ping(%Client{} = cl \\ client()) do
-    {:ok, resp} = implementation().ping(cl)
+    {:ok, resp} = cl.adapter.ping(cl)
     resp
   end
 
   def account(%Client{} = cl) do
-    implementation().account(cl)
+    cl.adapter.account(cl)
     # TODO : wrap into common xest type...
-  end
-
-  defp implementation() do
-    Application.get_env(:xest_binance, :adapter, XestBinance.Adapter.Binance)
   end
 end
