@@ -10,6 +10,13 @@ In your wallet, it privately:
   - retrieves currencies (WIP)
   - visually display your assets (WIP)
 
+
+# Learning
+
+```
+mix docs
+```
+
 # Running
 
 ```
