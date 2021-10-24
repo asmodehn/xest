@@ -17,11 +17,6 @@ In your wallet, it privately:
 mix docs
 ```
 
-# Running
-
-```
-mix phx.server
-```
 
 # Testing
 
@@ -50,12 +45,19 @@ For code analysis you can use
 mix credo
 ```
 
+# Running
+
+```
+mix phx.server
+```
+
 # Dev
 This is an Elixir Umbrella project, trying to remain monorepo as long as possible.
 
-Currently there are only two apps here:
+Currently there are 4 apps here:
   - Xest: the library containing domain models and various utilities for client apps
   - XestBinance: the client app connecting to binance
+  - XestKraken: the client app connecting to kraken
   - XestWeb: the Web interface with live views
 
 For interactive testing you can use iex:
