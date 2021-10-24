@@ -18,7 +18,7 @@ defmodule XestBinance.Adapter.Client do
           adapter: atom()
         }
 
-  @spec new(String.t(), String.t(), String.t()) :: %__MODULE__{}
+  @spec new(String.t() | nil, String.t() | nil, String.t() | nil) :: %__MODULE__{}
   def new(apikey \\ nil, secret \\ nil, endpoint \\ @default_endpoint) do
     %__MODULE__{impl: %Binance{endpoint: endpoint, api_key: apikey, secret_key: secret}}
   end
