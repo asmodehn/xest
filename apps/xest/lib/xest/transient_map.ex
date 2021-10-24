@@ -15,7 +15,7 @@ defmodule Xest.TransientMap do
   @type t :: %__MODULE__{
           birthdate: DateTime.t(),
           lifetime: Time.t(),
-          store: Map.t()
+          store: map()
         }
 
   def new(lifetime \\ ~T[00:05:00], birthdate \\ Xest.DateTime.utc_now()) do

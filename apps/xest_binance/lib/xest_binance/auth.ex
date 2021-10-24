@@ -14,7 +14,7 @@ defmodule XestBinance.Auth do
     """
 
     # TODO
-    @type account :: Map.t()
+    @type account :: map()
     @type reason :: String.t()
 
     @type mockable_pid :: nil | pid()
