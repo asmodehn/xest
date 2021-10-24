@@ -30,7 +30,9 @@ defmodule XestKraken.MixProject do
         "vcr.delete": :test,
         "vcr.check": :test,
         "vcr.show": :test
-      ]
+      ],
+      # The main page in the docs
+      docs: [main: "XestKraken", extras: ["README.md"]]
     ]
   end
 
@@ -73,7 +75,10 @@ defmodule XestKraken.MixProject do
       {:telemetry, "~> 0.4"},
 
       #       Runtime configuration
-      {:vapor, "~> 0.10"}
+      {:vapor, "~> 0.10"},
+
+      # Docs
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
   end
 

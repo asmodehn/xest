@@ -70,7 +70,10 @@ defmodule XestWeb.MixProject do
       {:plug_cowboy, "~> 2.0"},
 
       # security checks
-      {:sobelow, "~> 0.8", only: :dev}
+      {:sobelow, "~> 0.8", only: :dev},
+
+      # Docs
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
   end
 

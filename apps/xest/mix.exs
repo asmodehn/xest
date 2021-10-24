@@ -25,9 +25,11 @@ defmodule Xest.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ]
+      ],
       # if you want to use espec,
       # test_coverage: [tool: ExCoveralls, test_task: "espec"]
+      # The main page in the docs
+      docs: [main: "Xest", extras: ["README.md"]]
     ]
   end
 
@@ -72,7 +74,10 @@ defmodule Xest.MixProject do
       # Test libs
       #      {:assert_value, ">= 0.0.0", only: [:dev, :test]}, # TODO : recording instead ?
       {:flow_assertions, "~> 0.6", only: [:dev, :test]},
-      {:hammox, "~> 0.4", only: [:test, :dev]}
+      {:hammox, "~> 0.4", only: [:test, :dev]},
+
+      # Docs
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
   end
 

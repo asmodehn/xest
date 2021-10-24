@@ -30,9 +30,11 @@ defmodule XestBinance.MixProject do
         "vcr.delete": :test,
         "vcr.check": :test,
         "vcr.show": :test
-      ]
+      ],
       # if you want to use espec,
       # test_coverage: [tool: ExCoveralls, test_task: "espec"]
+      # The main page in the docs
+      docs: [main: "XestBinance", extras: ["README.md"]]
     ]
   end
 
@@ -77,7 +79,10 @@ defmodule XestBinance.MixProject do
       {:telemetry, "~> 0.4"},
 
       # Runtime configuration
-      {:vapor, "~> 0.10"}
+      {:vapor, "~> 0.10"},
+
+      # Docs
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
   end
 

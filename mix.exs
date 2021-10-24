@@ -24,9 +24,19 @@ defmodule Xest.Umbrella.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ]
+      ],
       # if you want to use espec,
       # test_coverage: [tool: ExCoveralls, test_task: "espec"]
+      # The main page in the docs
+      docs: [
+        main: "api-reference",
+        extras: [
+          "README.md",
+          "guides/Introduction.md",
+          "guides/UserStartup.md",
+          "guides/DeveloperStartup.md"
+        ]
+      ]
     ]
   end
 
@@ -47,6 +57,8 @@ defmodule Xest.Umbrella.MixProject do
       {:committee, "~> 1.0.0", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:hammox, "~> 0.4", only: [:test, :dev]},
+
+      # Docs
       {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
   end
