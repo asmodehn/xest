@@ -1,3 +1,9 @@
+# Here we test modular behavior, in parallel (async: true).
+# We make a heavy use of mocks.
+
+# Multi process tests are allowed, if the behaviour is consistent,
+# and they have to run in parallel.
+
 ExUnit.start()
 
 # defining Datetime.Mock module is not defined yet

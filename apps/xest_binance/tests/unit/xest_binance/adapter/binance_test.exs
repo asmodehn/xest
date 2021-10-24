@@ -1,4 +1,4 @@
-defmodule XestBinance.Binance.Test do
+defmodule XestBinance.Adapter.Binance.Test do
   use ExUnit.Case, async: true
 
   # Importing and protecting our behavior implementation cf. https://github.com/msz/hammox
@@ -15,6 +15,8 @@ defmodule XestBinance.Binance.Test do
   setup_all do
     HTTPoison.start()
   end
+
+  # TODO: also test integration here (server down, etc.)
 
   test "system status OK" do
     use_cassette "systemstatus_ok" do
