@@ -54,11 +54,11 @@ defmodule XestKraken.MixProject do
   defp deps do
     [
       {:xest, in_umbrella: true},
-      {:exconstructor, "~> 1.1.0"},
+      {:exconstructor, "~> 1.2.3"},
 
       # Kraken client !
-      #            {:krakex, "~> 0.6.0"},
-      {:krakex, git: "git://github.com/asmodehn/krakex.git", branch: "master"},
+      {:krakex, "~> 0.7.0"},
+      # {:krakex, git: "git://github.com/asmodehn/krakex.git", branch: "master"},
 
       # Recording API Responses in tests
       {:exvcr, "~> 0.11", only: [:dev, :test]},

@@ -58,7 +58,7 @@ defmodule XestBinance.MixProject do
       {:xest, in_umbrella: true},
 
       # Binance client !
-      #      {:binance, "~> 0.9.0"},
+      #  {:binance, "~> 1.0.1"},
       {:binance, git: "git://github.com/asmodehn/binance.ex.git", branch: "expose_endpoint"},
 
       # Recording API Responses in tests
