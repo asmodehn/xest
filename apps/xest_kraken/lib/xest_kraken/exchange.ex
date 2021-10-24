@@ -56,7 +56,6 @@ defmodule XestKraken.Exchange do
     #      Keyword.pop(opts, :clock, Xest.ShadowClock.new(fn -> kraken_adapter().time!(client) end))
 
     # starting the agent by passing the struct as initial value
-    # - app can tune the minimal_request_period
     # - mocks should manually modify the initial struct if needed
     exchange_struct = %XestKraken.Exchange{
       client: client

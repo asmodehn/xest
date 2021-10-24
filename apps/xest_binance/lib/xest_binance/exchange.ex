@@ -33,23 +33,17 @@ defmodule XestBinance.Exchange do
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   @enforce_keys [:minimal_request_period, :shadow_clock]
-  defstruct status: nil,
-            # pointing to the binance client pid
-            client: nil,
+  # pointing to the binance client pid
+  defstruct client: nil,
             # TODO : maybe in model instead ?
             shadow_clock: nil,
-            servertime: nil,
             minimal_request_period: @default_minimum_request_period,
             # TODO
             ping_timer: nil
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
-          status: Exchange.Status.t() | nil,
-          # TODO: Xest.Ports.BinanceClientBehaviour.t() | nil,
-          client: any(),
-          # TODO : refine
-          servertime: any(),
+          client: XestBinance.Adapter.Client.t(),
           shadow_clock: Xest.ShadowClock.t() | nil,
           minimal_request_period: Time.t() | nil
         }

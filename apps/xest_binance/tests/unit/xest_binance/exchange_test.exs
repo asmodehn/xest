@@ -48,13 +48,10 @@ defmodule XestBinance.Exchange.Test do
     exg_pid
     |> Exchange.state()
     |> assert_fields(%{
-      status: nil,
       client: %XestBinance.Adapter.Client{
         adapter: XestBinance.Adapter.Mock.Exchange,
         impl: %Binance{api_key: nil, endpoint: "https://api.binance.com", secret_key: nil}
-      },
-      servertime: nil
-      #      shadow_clock: %Xest.ShadowClock{}
+      }
     })
   end
 

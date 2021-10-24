@@ -45,6 +45,17 @@ defmodule XestKraken.Exchange.Test do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
+  test "initial value OK", %{exg_pid: exg_pid} do
+    exg_pid
+    |> Exchange.state()
+    |> assert_fields(%{
+      client: %XestKraken.Adapter.Client{
+        adapter: XestKraken.Adapter.Mock.Exchange,
+        impl: %Krakex.Client{key: nil, endpoint: "https://api.kraken.com", secret: nil}
+      }
+    })
+  end
+
   test "retrieve status", %{exg_pid: exg_pid} do
     Adapter.Mock.Exchange
     |> expect(:system_status, fn _ ->
