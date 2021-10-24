@@ -12,8 +12,8 @@ jobs:
     name: Build and Test on OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: ['23.3']
-        elixir: ['1.11.2']
+        otp: ['23.3', '24.1']
+        elixir: ['1.11.4', '1.12.3']
     steps:
     - uses: actions/checkout@v2
     - uses: erlef/setup-beam@v1
