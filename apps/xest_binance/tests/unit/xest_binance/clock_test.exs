@@ -2,6 +2,7 @@ defmodule XestBinance.Clock.Test do
   use ExUnit.Case, async: true
 
   alias XestBinance.Clock
+  alias XestBinance.Adapter
 
   import Hammox
 
@@ -11,23 +12,24 @@ defmodule XestBinance.Clock.Test do
     # Setup Xest.DateTime Mock for these tests
     Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
 
-    previous_adapter = Application.get_env(:xest_binance, :adapter)
-    Application.put_env(:xest_binance, :adapter, XestBinance.Adapter.Mock)
-
     on_exit(fn ->
       # restoring config
       Application.put_env(:xest, :datetime_module, previous_datetime)
-      Application.put_env(:xest_binance, :adapter, previous_adapter)
     end)
   end
 
   describe "Given the clock has no ttl," do
     setup do
+      # setting up client to pass adapter mock
+      client = Adapter.client() |> Adapter.Client.with_adapter(Adapter.Mock.Clock)
+
       clock_pid =
         start_supervised!({
           Clock,
           # passing nil as we rely on a mock here.
-          ttl: nil, name: String.to_atom("#{__MODULE__}.Process")
+          ttl: nil,
+          name: String.to_atom("#{__MODULE__}.Process"),
+          remote: fn -> Adapter.servertime(client).servertime() end
         })
 
       # setting up DateTime mock allowance for the clock process
@@ -133,11 +135,14 @@ defmodule XestBinance.Clock.Test do
 
   describe "Given the remote clock is set to an adapter mock, with ttl," do
     setup do
+      # setting up client to pass adapter mock
+      client = Adapter.client() |> Adapter.Client.with_adapter(Adapter.Mock.Clock)
+
       clock_pid =
         start_supervised!({
           Clock,
           # passing nil as we rely on a mock here.
-          remote: fn -> XestBinance.Adapter.servertime().servertime end,
+          remote: fn -> Adapter.servertime(client).servertime end,
           ttl: :timer.minutes(5),
           name: String.to_atom("#{__MODULE__}.Process")
         })
@@ -146,7 +151,7 @@ defmodule XestBinance.Clock.Test do
       Xest.DateTime.Mock
       |> allow(self(), clock_pid)
 
-      XestBinance.Adapter.Mock
+      Adapter.Mock.Clock
       |> allow(self(), clock_pid)
 
       %{clock_pid: clock_pid}
@@ -161,7 +166,7 @@ defmodule XestBinance.Clock.Test do
       # local now() to check for expiration
       |> expect(:utc_now, fn -> ~U[2020-02-02 02:02:02.202Z] end)
 
-      XestBinance.Adapter.Mock
+      Adapter.Mock.Clock
       # retrieve()
       |> expect(:servertime, fn _ ->
         {:ok, ~U[2020-02-02 02:01:03.202Z]}

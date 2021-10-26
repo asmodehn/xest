@@ -17,10 +17,10 @@ defmodule XestBinance.Exchange do
     @type mockable_pid :: nil | pid()
 
     # | {:error, reason}
-    @callback status() :: status
+    @callback status(mockable_pid) :: status
 
     # | {:error, reason}
-    @callback servertime() :: servertime
+    @callback servertime(mockable_pid) :: servertime
 
     # TODO : by leveraging __using__ we could implement default function
     #
@@ -33,23 +33,17 @@ defmodule XestBinance.Exchange do
   # these are the minimal amount of state necessary
   # to estimate current real world binance exchange status
   @enforce_keys [:minimal_request_period, :shadow_clock]
-  defstruct status: nil,
-            # pointing to the binance client pid
-            client: nil,
+  # pointing to the binance client pid
+  defstruct client: nil,
             # TODO : maybe in model instead ?
             shadow_clock: nil,
-            servertime: nil,
             minimal_request_period: @default_minimum_request_period,
             # TODO
             ping_timer: nil
 
   @typedoc "A exchange data structure, used as a local proxy for the actual exchange"
   @type t() :: %__MODULE__{
-          status: Exchange.Status.t() | nil,
-          # TODO: Xest.Ports.BinanceClientBehaviour.t() | nil,
-          client: any(),
-          # TODO : refine
-          servertime: any(),
+          client: XestBinance.Adapter.Client.t(),
           shadow_clock: Xest.ShadowClock.t() | nil,
           minimal_request_period: Time.t() | nil
         }
@@ -94,17 +88,22 @@ defmodule XestBinance.Exchange do
 
   # TODO : reverse flow: have client subscribe to status topic
   @impl true
-  def status() do
+  def status(agent \\ __MODULE__) do
     # cached read-through on adapter
     # No need to keep a cache here
-    Adapter.system_status()
+
+    Agent.get(agent, fn state ->
+      Adapter.system_status(state.client)
+    end)
   end
 
   # TODO : reverse flow: have client subscribe to servertime topic
   @impl true
-  def servertime() do
+  def servertime(agent \\ __MODULE__) do
     # cached read-through on adapter
     # No need to keep a cache here
-    Adapter.servertime()
+    Agent.get(agent, fn state ->
+      Adapter.servertime(state.client)
+    end)
   end
 end

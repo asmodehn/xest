@@ -8,8 +8,7 @@
 
   <ul>
   <%= for b <- @account_balances do %>
-    <li> <%= b.asset %>
-    <%# TODO : better model to make template language cleaner %>
+    <li> <%= b.asset %><%# TODO : better model to make template language cleaner %>
       <%= if Map.has_key?(b, :free) do
         {free, ""} = Float.parse(b.free)
         if Float.round(free, 8) != 0, do: free

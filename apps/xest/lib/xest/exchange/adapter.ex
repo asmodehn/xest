@@ -14,13 +14,13 @@ defmodule Xest.Exchange.Adapter do
   end
 
   def retrieve(:binance, :status) do
-    connector_response = binance().status()
+    connector_response = binance().status(Process.whereis(binance()))
 
     Xest.Exchange.Status.ACL.new(connector_response)
   end
 
   def retrieve(:binance, :servertime) do
-    response = binance().servertime()
+    response = binance().servertime(Process.whereis(binance()))
 
     Xest.Exchange.ServerTime.ACL.new(response)
   end

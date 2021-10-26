@@ -1,3 +1,9 @@
+# Here we test modular behavior, in parallel (async: true).
+# We make a heavy use of mocks.
+
+# Multi process tests are allowed, if the behaviour is consistent,
+# and they have to run in parallel.
+
 ExUnit.start()
 
 # defining Datetime.Mock module is not defined yet
@@ -14,7 +20,7 @@ Hammox.defmock(XestBinance.Auth.Mock,
 
 Hammox.stub_with(XestBinance.Auth.Mock, XestBinance.Auth.Stub)
 
-Application.put_env(:xest, :binance_auth, XestBinance.Auth.Mock)
-
 # Adapter mock to use interface in tests
-Hammox.defmock(XestBinance.Adapter.Mock, for: XestBinance.Adapter.Behaviour)
+Hammox.defmock(XestBinance.Adapter.Mock.Adapter, for: XestBinance.Adapter.Behaviour)
+Hammox.defmock(XestBinance.Adapter.Mock.Exchange, for: XestBinance.Adapter.Behaviour)
+Hammox.defmock(XestBinance.Adapter.Mock.Clock, for: XestBinance.Adapter.Behaviour)

@@ -1,19 +1,3 @@
-defmodule XestBinance.Config do
-  use Vapor.Planner
-  # Ref : https://github.com/keathley/vapor#readme
-  dotenv()
-
-  config :xest_binance,
-         file(
-           Application.get_env(:xest_binance, :config_file),
-           [
-             {:apikey, "apikey", required: false},
-             {:secret, "secret", required: false},
-             {:endpoint, "endpoint"}
-           ]
-         )
-end
-
 defmodule XestBinance.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
@@ -46,7 +30,11 @@ defmodule XestBinance.Application do
       {XestBinance.Exchange, name: XestBinance.Exchange},
 
       # Starting main Account Agent managing retrieved state
-      {XestBinance.Account, name: XestBinance.Account}
+      {
+        XestBinance.Account,
+        # supports only one auth at a time.
+        name: XestBinance.Account, auth_mod: XestBinance.Auth, auth_pid: XestBinance.Auth
+      }
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

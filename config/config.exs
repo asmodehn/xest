@@ -39,13 +39,6 @@ config :xest,
   binance_clock: XestBinance.Clock,
   binance_account: XestBinance.Account
 
-config :xest,
-  # TODO : deprecate and remove this (should be internal to the connector)
-  # setup adapter for binance genserver for authenticated requests
-  binance_auth: XestBinance.Auth
-
-config :xest_binance, adapter: XestBinance.Adapter.Binance
-
 config :xest_binance, XestBinance.Adapter.Cache,
   # When using :shards as backend
   # backend: :shards,

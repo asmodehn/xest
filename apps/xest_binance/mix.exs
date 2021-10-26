@@ -19,6 +19,7 @@ defmodule XestBinance.MixProject do
       dialyzer: [
         plt_add_deps: :apps_direct
       ],
+      test_paths: ["tests/unit", "tests/integration"],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -29,9 +30,11 @@ defmodule XestBinance.MixProject do
         "vcr.delete": :test,
         "vcr.check": :test,
         "vcr.show": :test
-      ]
+      ],
       # if you want to use espec,
       # test_coverage: [tool: ExCoveralls, test_task: "espec"]
+      # The main page in the docs
+      docs: [main: "XestBinance", extras: ["README.md"]]
     ]
   end
 
@@ -45,8 +48,8 @@ defmodule XestBinance.MixProject do
 
   # Specifies which paths to compile per environment.
   # to be able to interactively use test/support
-  defp elixirc_paths(:dev), do: ["lib", "test/support"]
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "tests/unit/support"]
+  defp elixirc_paths(:test), do: ["lib", "tests/unit/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help deps" to learn about dependencies.
@@ -55,7 +58,7 @@ defmodule XestBinance.MixProject do
       {:xest, in_umbrella: true},
 
       # Binance client !
-      #      {:binance, "~> 0.9.0"},
+      #  {:binance, "~> 1.0.1"},
       {:binance, git: "git://github.com/asmodehn/binance.ex.git", branch: "expose_endpoint"},
 
       # Recording API Responses in tests
@@ -76,7 +79,10 @@ defmodule XestBinance.MixProject do
       {:telemetry, "~> 0.4"},
 
       # Runtime configuration
-      {:vapor, "~> 0.10"}
+      {:vapor, "~> 0.10"},
+
+      # Docs
+      {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
   end
 
@@ -86,7 +92,7 @@ defmodule XestBinance.MixProject do
   defp aliases do
     [
       setup: ["deps.get"],
-      test: ["test --exclude integration"]
+      test: ["test"]
     ]
   end
 end

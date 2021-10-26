@@ -13,22 +13,14 @@ defmodule XestBinance.Exchange.Test do
   @time_stop ~U[2021-02-18 08:53:32.313Z]
 
   setup do
-    # saving config
-    adapter = Application.get_env(:xest_binance, :adapter)
-    # using Adapter.Mock in these tests
-    Application.put_env(:xest_binance, :adapter, XestBinance.Adapter.Mock)
-
-    on_exit(fn ->
-      # restoring config
-      Application.put_env(:xest_binance, :adapter, adapter)
-    end)
-
     exg_pid =
       start_supervised!({
         Exchange,
         # passing nil as we rely on a mock here.
         name: String.to_atom("#{__MODULE__}.Process"),
-        client: nil,
+        client:
+          Adapter.client(nil, nil)
+          |> Adapter.Client.with_adapter(Adapter.Mock.Exchange),
         clock:
           Xest.ShadowClock.new(
             fn -> Adapter.servertime().servertime end,
@@ -43,7 +35,7 @@ defmodule XestBinance.Exchange.Test do
     # setting up adapter mock to test the chain
     # Exchange interface -> messaging in agent -> Adapter
     # without relying on a specific adapter implementation
-    Adapter.Mock
+    Adapter.Mock.Exchange
     |> allow(self(), exg_pid)
 
     %{exg_pid: exg_pid}
@@ -56,58 +48,62 @@ defmodule XestBinance.Exchange.Test do
     exg_pid
     |> Exchange.state()
     |> assert_fields(%{
-      status: nil,
-      client: nil,
-      servertime: nil
-      #      shadow_clock: %Xest.ShadowClock{}
+      client: %XestBinance.Adapter.Client{
+        adapter: XestBinance.Adapter.Mock.Exchange,
+        impl: %Binance{api_key: nil, endpoint: "https://api.binance.com", secret_key: nil}
+      }
     })
   end
 
-  test "retrieve status", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "retrieve status", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     |> expect(:system_status, fn _ ->
       {:ok, %Binance.SystemStatus{msg: "normal", status: 0}}
     end)
 
-    Exchange.status()
+    Exchange.status(exg_pid)
     |> assert_fields(%{
       message: "normal",
       status: 0
     })
   end
 
-  test "after retrieving status, state is still usable", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "after retrieving status, state is still usable", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     |> expect(:system_status, fn _ ->
       {:ok, %Binance.SystemStatus{msg: "normal", status: 0}}
     end)
 
-    Exchange.status()
+    Exchange.status(exg_pid)
+    |> assert_fields(%{
+      message: "normal",
+      status: 0
+    })
 
-    Exchange.status()
+    Exchange.status(exg_pid)
     |> assert_fields(%{
       message: "normal",
       status: 0
     })
   end
 
-  test "retrieve servertime OK", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "retrieve servertime OK", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     |> expect(:servertime, fn _ -> {:ok, @time_stop} end)
 
-    servertime = Exchange.servertime()
+    servertime = Exchange.servertime(exg_pid)
     assert servertime == %XestBinance.Exchange.ServerTime{servertime: @time_stop}
   end
 
-  test "after retrieving servertime, state is still usable", %{exg_pid: _exg_pid} do
-    Adapter.Mock
+  test "after retrieving servertime, state is still usable", %{exg_pid: exg_pid} do
+    Adapter.Mock.Exchange
     |> expect(:servertime, fn _ -> {:ok, @time_stop} end)
     # Needed twice because we do not cache this to notimpact proxy clock
     |> expect(:servertime, fn _ -> {:ok, @time_stop} end)
 
-    Exchange.servertime()
+    Exchange.servertime(exg_pid)
 
-    servertime = Exchange.servertime()
+    servertime = Exchange.servertime(exg_pid)
     assert servertime == %XestBinance.Exchange.ServerTime{servertime: @time_stop}
   end
 end

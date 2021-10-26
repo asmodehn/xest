@@ -1,10 +1,14 @@
 defmodule XestKraken.Adapter.Krakex.Test do
   use ExUnit.Case, async: true
 
-  use ExVCR.Mock, adapter: ExVCR.Adapter.Hackney
-
   # Importing and protecting our behavior implementation cf. https://github.com/msz/hammox
+  import Hammox
+
   use Hammox.Protect, module: XestKraken.Adapter, behaviour: XestKraken.Adapter.Behaviour
+
+  setup :verify_on_exit!
+
+  use ExVCR.Mock, adapter: ExVCR.Adapter.Hackney
 
   setup_all do
     HTTPoison.start()
@@ -58,7 +62,6 @@ defmodule XestKraken.Adapter.Krakex.Test do
   end
 
   describe "with configured api_key, secret and endpoint" do
-    @describetag :integration
     setup do
       # getting config as application would do
       # WARNING this will retrieve your actual account

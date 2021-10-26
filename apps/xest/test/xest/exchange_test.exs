@@ -28,7 +28,7 @@ defmodule Xest.Exchange.Test do
   describe "For xest_binance:" do
     test "status works" do
       XestBinance.Exchange.Mock
-      |> expect(:status, fn ->
+      |> expect(:status, fn nil ->
         %XestBinance.Exchange.Status{}
       end)
 

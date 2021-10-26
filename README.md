@@ -10,28 +10,31 @@ In your wallet, it privately:
   - retrieves currencies (WIP)
   - visually display your assets (WIP)
 
-# Running
+
+# Learning
 
 ```
-mix phx.server
+mix docs
 ```
+
+TODO: describe the setup, on a dev machine, of apikey & secret for authentication.
+
 
 # Testing
 
-For functional async tests:
+To run the test suite (async):
 ```
 mix test
-```
-
-For sequential integration tests:
-```
-mix test --include integration
 ```
 
 For a TDD setup, you can use
 ```
 mix test.watch
 ```
+
+Note the tests run locally only with cassettes (recorded network request/responses).
+The cassettes must be kept up to date by a developer, but this
+requires a specific setup with an authentication token, and therefore cannot be automated.
 
 For coverage you can use
 ```
@@ -43,12 +46,19 @@ For code analysis you can use
 mix credo
 ```
 
+# Running
+
+```
+mix phx.server
+```
+
 # Dev
 This is an Elixir Umbrella project, trying to remain monorepo as long as possible.
 
-Currently there are only two apps here:
+Currently there are 4 apps here:
   - Xest: the library containing domain models and various utilities for client apps
   - XestBinance: the client app connecting to binance
+  - XestKraken: the client app connecting to kraken
   - XestWeb: the Web interface with live views
 
 For interactive testing you can use iex:
@@ -67,6 +77,9 @@ Generated xest_web app
 iex(1)> Xest.Binance.system_status()
 %{"msg" => "normal", "status" => 0}
 ```
+
+TODO : describe the process to test against and update cassettes
+
 
 # Design
 
