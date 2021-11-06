@@ -15,4 +15,13 @@ defmodule XestKraken.Auth.Stub do
     {:ok, response} = balance(pid)
     response
   end
+
+  @impl true
+  def trades(_pid), do: {:ok, %XestKraken.Account.Trades{}}
+
+  @impl true
+  def trades!(pid \\ __MODULE__) do
+    {:ok, response} = balance(pid)
+    response
+  end
 end

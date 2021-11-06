@@ -10,7 +10,7 @@ defmodule XestKraken.Auth do
       this implements a conversion from Kraken model into our Xest model.
       It serves to specify the types that must be exposed by a GenServer,
       where a better type can provide useful semantics.
-      But it remains tied to the Binance model in its overall structure.
+      But it remains tied to the Kraken model in its overall structure.
     """
 
     # TODO
@@ -24,6 +24,9 @@ defmodule XestKraken.Auth do
 
     @callback balance!(mockable_pid()) :: XestKraken.Account.Balance.t()
 
+    @callback trades(mockable_pid()) :: {:ok, list()}
+    @callback trades!(mockable_pid()) :: list()
+
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
   end
@@ -36,7 +39,7 @@ defmodule XestKraken.Auth do
             adapter: nil
 
   @doc """
-  Starts reliable binance client.
+  Starts reliable kraken client.
   """
   def start_link(opts) do
     name = Keyword.get(opts, :name, __MODULE__)
@@ -100,6 +103,33 @@ defmodule XestKraken.Auth do
   end
 
   @impl true
+  def trades!(pid \\ __MODULE__) do
+    {:ok, response} = trades(pid)
+    response
+  end
+
+  @impl true
+  def trades(pid \\ __MODULE__) do
+    # TODO : proper paging implementation (count stuff)
+    {:ok, %{"count" => _count, "trades" => tradesmap}} = GenServer.call(pid, {:trades})
+
+    tradesmap =
+      XestKraken.Account.Trades.new(%{
+        trades:
+          tradesmap
+          |> Enum.map(fn {k, v} -> {k, IO.inspect(v) |> XestKraken.Account.Trade.new()} end)
+          |> Enum.into(%{})
+      })
+
+    # TODO : maybe move this type wrapping to a lower level (adapter)...
+
+    # a way to broadcast "low-level" events (we don't need to store them)
+    #    Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), "binance:system_status", response)
+
+    {:ok, tradesmap}
+  end
+
+  @impl true
   def handle_call(
         {:balance},
         _from,
@@ -109,6 +139,20 @@ defmodule XestKraken.Auth do
         } = state
       ) do
     resp = adapter.balance(kraken_client)
+    # TODO reschedule ping after request
+    {:reply, resp, state}
+  end
+
+  @impl true
+  def handle_call(
+        {:trades},
+        _from,
+        %{
+          kraken_client: kraken_client,
+          adapter: adapter
+        } = state
+      ) do
+    resp = adapter.trades(kraken_client)
     # TODO reschedule ping after request
     {:reply, resp, state}
   end

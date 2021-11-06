@@ -20,4 +20,6 @@ defmodule XestKraken.Adapter.Behaviour do
   @callback servertime(Client.t()) :: {:ok, %{unixtime: DateTime.t(), rfc1123: String.t()}}
 
   @callback balance(Client.t()) :: {:ok, %{}} | {:error, reason}
+
+  @callback trades(Client.t(), integer()) :: {:ok, %{}} | {:error, reason}
 end

@@ -37,4 +37,9 @@ defmodule XestKraken.Adapter do
     cl.adapter.balance(cl)
     # TODO : wrap into some connector specific type...
   end
+
+  def trades(%Client{} = cl, offset \\ 0) do
+    cl.adapter.trades(cl, offset)
+    # TODO : wrap into some connector specific type...
+  end
 end

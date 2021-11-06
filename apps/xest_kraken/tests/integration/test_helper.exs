@@ -15,11 +15,12 @@
 # Overriding user's configuration for integration tests
 # To prevent accidental authenticated calls to the server
 # TODO : command line to prevent override,
-# and use actual config, on demand (userful for recording cassettes)
+#  and use actual config, on demand (userful for recording cassettes)
 Application.put_env(
   :xest_kraken,
   :config_file,
   Path.expand("./config.toml", Path.expand(__DIR__))
 )
 
+ExUnit.configure(exclude: [:integration])
 ExUnit.start()

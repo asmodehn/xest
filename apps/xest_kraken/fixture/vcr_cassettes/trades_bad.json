@@ -1,0 +1,38 @@
+[
+  {
+    "request": {
+      "body": "nonce=1636220896217819091&ofs=0",
+      "headers": {
+        "Api-Key": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeFgHiJkLmNoPqRsTuVwXyZ12",
+        "Api-Sign": "***",
+        "accept": "application/json",
+        "content-type": "application/x-www-form-urlencoded"
+      },
+      "method": "post",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.kraken.com/0/private/TradesHistory"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"error\":[\"EAPI:Invalid key\"]}",
+      "headers": {
+        "Date": "Sat, 06 Nov 2021 17:48:16 GMT",
+        "Content-Type": "application/json; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+        "Connection": "keep-alive",
+        "strict-transport-security": "max-age=15768000",
+        "expires": "-1",
+        "cache-control": "no-cache, private, max-age=0",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "CF-Cache-Status": "DYNAMIC",
+        "Expect-CT": "max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"",
+        "Set-Cookie": "__cf_bm=a27a6a920a27f17704d7eb7b9595f654866cbc29-1636220896-0-AQ+IaXx2Fddyv+Dzxo/jScn0DGt1NYXQWPpoCCdqxdf5dJTayOEFo38dLBVRhYMBOSDgUUgYopkETu9E/xgWg48=; path=/; expires=Sat, 06-Nov-21 18:18:16 GMT; domain=.kraken.com; HttpOnly; Secure; SameSite=None",
+        "Server": "cloudflare",
+        "CF-RAY": "6aa026daac860893-CDG"
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]

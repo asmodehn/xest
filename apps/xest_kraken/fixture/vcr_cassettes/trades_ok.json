@@ -1,0 +1,36 @@
+[
+  {
+    "request": {
+      "body": "nonce=1636219251868587468&ofs=0",
+      "headers": {
+        "Api-Key": "***",
+        "Api-Sign": "***",
+        "accept": "application/json",
+        "content-type": "application/x-www-form-urlencoded"
+      },
+      "method": "post",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.kraken.com/0/private/TradesHistory"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"error\":[],\"result\":{\"trades\":{\"TCHZBK-A4PQE-BU67OY\":{\"ordertxid\":\"OJ63SQ-H7DIP-SZVPS7\",\"postxid\":\"TKQ3SE-Y7SF5-ZFI7LT\",\"pair\":\"DOTEUR\",\"time\":1634144450.2543,\"type\":\"sell\",\"ordertype\":\"limit\",\"price\":\"30.00000\",\"cost\":\"900.00000\",\"fee\":\"1.200\",\"vol\":\"23.40000000\",\"margin\":\"0.00000\",\"misc\":\"\"}},\"count\":2}}",
+      "headers": {
+        "Date": "Sat, 06 Nov 2021 17:20:52 GMT",
+        "Content-Type": "application/json; charset=utf-8",
+        "Transfer-Encoding": "chunked",
+        "Connection": "keep-alive",
+        "strict-transport-security": "max-age=15768000",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "CF-Cache-Status": "DYNAMIC",
+        "Expect-CT": "max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"",
+        "Set-Cookie": "__cf_bm=93b3aac7cf3ee8864e447d9dab456d242e866494-1636219252-0-AbBOTKNYjKGUDDdBxT8oOTegMMonSbMTI9s4eBb9rxSIaYfJflgh0oD9iYtkIqHr/RriyNlCd0kP+BGK2Vh0zls=; path=/; expires=Sat, 06-Nov-21 17:50:52 GMT; domain=.kraken.com; HttpOnly; Secure; SameSite=None",
+        "Server": "cloudflare",
+        "CF-RAY": "6a9ffeb55d7c3b55-CDG"
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]
