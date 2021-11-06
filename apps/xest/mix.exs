@@ -68,7 +68,9 @@ defmodule Xest.MixProject do
       {:timex, "~> 3.0"},
 
       # Functional patterns
-      {:witchcraft, "~> 1.0"},
+      #      {:witchcraft, "~> 1.0"},
+      {:witchcraft,
+       git: "git://github.com/asmodehn/witchcraft.git", branch: "fix_then_1_12", override: true},
       {:algae, "~> 1.3"},
 
       # Test libs
