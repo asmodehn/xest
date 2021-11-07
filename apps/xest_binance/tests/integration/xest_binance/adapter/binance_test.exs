@@ -32,6 +32,7 @@ defmodule XestBinance.Binance.Test.Integration do
       %{client_state: client_state}
     end
 
+    @tag private: true
     test "account OK", %{client_state: client_state} do
       use_cassette "account_ok" do
         ExVCR.Config.filter_request_headers("X-MBX-APIKEY")
@@ -53,11 +54,69 @@ defmodule XestBinance.Binance.Test.Integration do
       end
     end
 
+    @tag private: true
     test "account BAD", %{client_state: client_state} do
       use_cassette "account_bad" do
         ExVCR.Config.filter_sensitive_data("signature=[a-zA-Z0-9]*", "signature=***")
 
         {:error, reason} = XestBinance.Adapter.Binance.account(client_state)
+
+        assert reason == %{
+                 "code" => -2015,
+                 "msg" => "Invalid API-key, IP, or permissions for action."
+               }
+      end
+    end
+
+    @tag private: true
+    test "trades OK", %{client_state: client_state} do
+      use_cassette "trades_ok" do
+        ExVCR.Config.filter_request_headers("X-MBX-APIKEY")
+        ExVCR.Config.filter_sensitive_data("signature=[a-zA-Z0-9]*", "signature=***")
+        {:ok, trades} = XestBinance.Adapter.Binance.trades(client_state, "ETHEUR")
+
+        # match trades list structs...
+        [
+          %Binance.Trade{
+            commission: _commission_1,
+            commissionAsset: _commission_asset_1,
+            id: _id_1,
+            isBestMatch: _is_best_match_1,
+            isBuyer: _is_buyer_1,
+            isMaker: _is_maker_1,
+            orderId: _order_id_1,
+            orderListId: _order_list_id_1,
+            price: _price_1,
+            qty: _qty_1,
+            quoteQty: _quote_qty_1,
+            symbol: "ETHEUR",
+            time: _time_1
+          },
+          %Binance.Trade{
+            commission: _commission_2,
+            commissionAsset: _commission_asset_2,
+            id: _id_2,
+            isBestMatch: _is_best_match_2,
+            isBuyer: _is_buyer_2,
+            isMaker: _is_maker_2,
+            orderId: _order_id_2,
+            orderListId: _order_list_id_2,
+            price: _price_2,
+            qty: _qty_2,
+            quoteQty: _quote_qty_2,
+            symbol: "ETHEUR",
+            time: _time_2
+          }
+        ] = trades
+      end
+    end
+
+    @tag private: true
+    test "trades BAD", %{client_state: client_state} do
+      use_cassette "trades_bad" do
+        ExVCR.Config.filter_sensitive_data("signature=[a-zA-Z0-9]*", "signature=***")
+
+        {:error, reason} = XestBinance.Adapter.Binance.trades(client_state, "ETHEUR")
 
         assert reason == %{
                  "code" => -2015,

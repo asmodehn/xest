@@ -29,6 +29,13 @@ defmodule XestBinance.Adapter.Binance do
   end
 
   @impl true
+  def trades(%XestBinance.Adapter.Client{impl: binance}, symbol) when is_binary(symbol) do
+    IO.inspect(binance)
+    # , offset, nil)
+    Binance.get_trades(binance, symbol)
+  end
+
+  @impl true
   def account(%XestBinance.Adapter.Client{impl: binance}) do
     Binance.get_account(binance)
   end

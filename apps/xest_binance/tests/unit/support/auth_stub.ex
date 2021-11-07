@@ -15,4 +15,13 @@ defmodule XestBinance.Auth.Stub do
     {:ok, response} = account(pid)
     response
   end
+
+  @impl true
+  def trades(_pid, _symbol), do: {:ok, []}
+
+  @impl true
+  def trades!(pid \\ __MODULE__, _symbol) do
+    {:ok, response} = account(pid)
+    response
+  end
 end

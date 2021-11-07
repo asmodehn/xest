@@ -42,4 +42,8 @@ defmodule XestBinance.Adapter do
     cl.adapter.account(cl)
     # TODO : wrap into common xest type...
   end
+
+  def trades(%Client{} = cl \\ client(), symbol) when is_binary(symbol) do
+    cl.adapter.trades(cl, symbol)
+  end
 end

@@ -1,0 +1,47 @@
+[
+  {
+    "request": {
+      "body": "",
+      "headers": {
+        "X-MBX-APIKEY": "***"
+      },
+      "method": "get",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.binance.com/api/v3/myTrades?recvWindow=5000&symbol=ETHEUR&timestamp=1636308548389&signature=***"
+    },
+    "response": {
+      "binary": false,
+      "body": "[{\"symbol\":\"ETHEUR\",\"id\":256728,\"orderId\":14960773,\"orderListId\":-1,\"price\":\"300.91000000\",\"qty\":\"0.04000000\",\"quoteQty\":\"15.80005000\",\"commission\":\"0.00060022\",\"commissionAsset\":\"BNB\",\"time\":1597950947442,\"isBuyer\":true,\"isMaker\":true,\"isBestMatch\":true},{\"symbol\":\"ETHEUR\",\"id\":255935,\"orderId\":14978865,\"orderListId\":-1,\"price\":\"340.33000000\",\"qty\":\"0.04500000\",\"quoteQty\":\"13.55600000\",\"commission\":\"0.00060007\",\"commissionAsset\":\"BNB\",\"time\":1597955357693,\"isBuyer\":true,\"isMaker\":true,\"isBestMatch\":true}]",
+      "headers": {
+        "Content-Type": "application/json;charset=UTF-8",
+        "Content-Length": "18416",
+        "Connection": "keep-alive",
+        "Date": "Sun, 07 Nov 2021 18:09:08 GMT",
+        "Server": "nginx",
+        "Vary": "Accept-Encoding",
+        "x-mbx-uuid": "4dc62ee6-9f40-4cc8-83bb-2f294c0bba5a",
+        "x-mbx-used-weight": "10",
+        "x-mbx-used-weight-1m": "10",
+        "Strict-Transport-Security": "max-age=31536000; includeSubdomains",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Xss-Protection": "1; mode=block",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'self'",
+        "X-Content-Security-Policy": "default-src 'self'",
+        "X-WebKit-CSP": "default-src 'self'",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+        "X-Cache": "Miss from cloudfront",
+        "Via": "1.1 e36c32cacca3348932522b77d9a47dca.cloudfront.net (CloudFront)",
+        "X-Amz-Cf-Pop": "CDG50-P2",
+        "X-Amz-Cf-Id": "n8PFnXK6WyT7IvuXr40dJbVdi5MXyqWDa_PeOI6Iwlk9pi6zI8ZpHw=="
+      },
+      "status_code": 200,
+      "type": "ok"
+    }
+  }
+]

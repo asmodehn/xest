@@ -24,6 +24,11 @@ defmodule XestBinance.Auth do
 
     @callback account!(mockable_pid()) :: %Binance.Account{}
 
+    # | {:error, reason}
+    @callback trades(mockable_pid(), String.t()) :: {:ok, %Binance.Account{}}
+
+    @callback trades!(mockable_pid(), String.t()) :: %Binance.Account{}
+
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
   end
@@ -87,6 +92,22 @@ defmodule XestBinance.Auth do
   end
 
   @impl true
+  def trades!(pid \\ __MODULE__, symbol) when is_binary(symbol) do
+    {:ok, response} = trades(pid, symbol)
+    response
+  end
+
+  @impl true
+  def trades(pid \\ __MODULE__, symbol) when is_binary(symbol) do
+    {:ok, trades_model} = GenServer.call(pid, {:trades, symbol})
+
+    # a way to broadcast "low-level" events (we don't need to store them)
+    #    Phoenix.PubSub.broadcast_from!(Xest.PubSub, self(), "binance:system_status", response)
+
+    {:ok, trades_model}
+  end
+
+  @impl true
   def handle_call(
         {:account},
         _from,
@@ -95,6 +116,22 @@ defmodule XestBinance.Auth do
         } = state
       ) do
     resp = XestBinance.Adapter.account(binance_client)
+    # TODO reschedule ping after request
+    {:reply, resp, state}
+  end
+
+  @impl true
+  def handle_call(
+        {:trades, symbol},
+        _from,
+        %{
+          binance_client: binance_client
+        } = state
+      ) do
+    resp =
+      XestBinance.Adapter.trades(binance_client, symbol)
+      |> IO.inspect()
+
     # TODO reschedule ping after request
     {:reply, resp, state}
   end
