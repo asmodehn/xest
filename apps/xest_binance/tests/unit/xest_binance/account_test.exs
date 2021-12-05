@@ -41,4 +41,16 @@ defmodule XestBinance.Account.Test do
     assert Account.balance(acc_pid) ==
              %Xest.Account.Balance{}
   end
+
+  test "retrieve default client trades generates default xest trades history model", %{
+    acc_pid: acc_pid
+  } do
+    Auth.Mock
+    |> expect(:trades, fn _, _s ->
+      {:ok, []}
+    end)
+
+    assert Account.trades(acc_pid, "SOMSYM") ==
+             %Xest.Account.TradesHistory{history: %{}}
+  end
 end

@@ -18,6 +18,7 @@ defmodule XestBinance.Account do
 
     # | {:error, reason}
     @callback balance(mockable_pid()) :: Xest.Account.Balance.t()
+    @callback trades(mockable_pid(), String.t()) :: Xest.TradesHistory.t()
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
@@ -31,7 +32,8 @@ defmodule XestBinance.Account do
   defstruct auth_mod: nil,
             # pointing to the kraken client pid
             auth_pid: nil,
-            balance: nil
+            balance: nil,
+            trades: []
 
   use Agent
 
@@ -82,6 +84,29 @@ defmodule XestBinance.Account do
 
         balance ->
           {balance, state}
+          # TODO : add a case to check for timeout to request again the status
+      end
+    end)
+  end
+
+  @impl true
+  def trades(agent, symbol) do
+    # TODO : have some refresh to avoid too big delta over time...
+    Agent.get_and_update(agent, fn state ->
+      case state.trades do
+        # when default initial model (no valid account)
+        tds when tds == [] ->
+          {:ok, trades} = state.auth_mod.trades(state.auth_pid, symbol)
+
+          # doing some translation here
+          xest_trades = Xest.Account.TradesHistory.ACL.new(trades)
+
+          {xest_trades, state |> Map.put(:trades, xest_trades)}
+
+        # TODO : check update time to eventually force refresh...
+
+        model ->
+          {model, state}
           # TODO : add a case to check for timeout to request again the status
       end
     end)

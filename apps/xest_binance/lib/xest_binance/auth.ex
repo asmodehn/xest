@@ -25,9 +25,9 @@ defmodule XestBinance.Auth do
     @callback account!(mockable_pid()) :: %Binance.Account{}
 
     # | {:error, reason}
-    @callback trades(mockable_pid(), String.t()) :: {:ok, %Binance.Account{}}
+    @callback trades(mockable_pid(), String.t()) :: {:ok, [%Binance.Trade{}]}
 
-    @callback trades!(mockable_pid(), String.t()) :: %Binance.Account{}
+    @callback trades!(mockable_pid(), String.t()) :: [%Binance.Trade{}]
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
@@ -128,10 +128,7 @@ defmodule XestBinance.Auth do
           binance_client: binance_client
         } = state
       ) do
-    resp =
-      XestBinance.Adapter.trades(binance_client, symbol)
-      |> IO.inspect()
-
+    resp = XestBinance.Adapter.trades(binance_client, symbol)
     # TODO reschedule ping after request
     {:reply, resp, state}
   end

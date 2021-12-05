@@ -68,6 +68,9 @@ defmodule XestBinance.MixProject do
       # For integration tests with an actual HTTP server
       {:bypass, "~> 2.1", only: [:dev, :test]},
 
+      # To generate data in tests
+      {:stream_data, "~> 0.5", only: [:dev, :test]},
+
       # Time manipulation
       {:timex, "~> 3.0"},
 
