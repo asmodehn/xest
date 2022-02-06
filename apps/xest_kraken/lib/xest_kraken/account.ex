@@ -19,6 +19,7 @@ defmodule XestKraken.Account do
 
     # | {:error, reason}
     @callback balance(mockable_pid()) :: Xest.Account.Balance.t()
+    @callback trades(mockable_pid(), String.t()) :: Xest.Account.TradesHistory.t()
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
@@ -34,7 +35,9 @@ defmodule XestKraken.Account do
             auth_pid: nil,
 
             # storing balance...
-            balance: nil
+            balance: nil,
+            # storing trades...
+            trades: nil
 
   use Agent
 
@@ -80,6 +83,38 @@ defmodule XestKraken.Account do
             |> Xest.Account.Balance.ACL.new()
 
           {xest_balance, state |> Map.put(:balance, xest_balance)}
+
+        # TODO : check update time to eventually force refresh...
+
+        model ->
+          {model, state}
+          # TODO : add a case to check for timeout to request again the status
+      end
+    end)
+  end
+
+  @impl true
+  def trades(agent, _symbol) do
+    # TODO : have some refresh to avoid too big delta over time...
+    Agent.get_and_update(agent, fn state ->
+      case state.trades do
+        # when default initial model (no valid account)
+        tds when tds == nil ->
+          {:ok, trades} = state.auth_mod.trades(state.auth_pid)
+          # TODO : for auth, we probably want to be close to kraken domain model,
+          # but here we should only retrieve the ones for the symbol...
+
+          # doing some translation here, like an ACL...
+          xest_trades =
+            trades
+            #            |> Map.update!(:trades, fn bl ->
+            #              bl |> Enum.map(fn {id, td} ->
+            #                                     {id, Xest.Account.Trade.ACL.new(td)}
+            #                                                                      end  )
+            #            end)
+            |> Xest.Account.TradesHistory.ACL.new()
+
+          {xest_trades, state |> Map.put(:trades, xest_trades)}
 
         # TODO : check update time to eventually force refresh...
 

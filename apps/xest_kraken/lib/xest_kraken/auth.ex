@@ -24,8 +24,8 @@ defmodule XestKraken.Auth do
 
     @callback balance!(mockable_pid()) :: XestKraken.Account.Balance.t()
 
-    @callback trades(mockable_pid()) :: {:ok, list()}
-    @callback trades!(mockable_pid()) :: list()
+    @callback trades(mockable_pid()) :: {:ok, map()}
+    @callback trades!(mockable_pid()) :: map()
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
@@ -117,7 +117,7 @@ defmodule XestKraken.Auth do
       XestKraken.Account.Trades.new(%{
         trades:
           tradesmap
-          |> Enum.map(fn {k, v} -> {k, IO.inspect(v) |> XestKraken.Account.Trade.new()} end)
+          |> Enum.map(fn {k, v} -> {k, v |> XestKraken.Account.Trade.new()} end)
           |> Enum.into(%{})
       })
 

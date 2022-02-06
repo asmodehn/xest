@@ -38,13 +38,13 @@ defmodule XestKraken.Account.Test do
     Auth.Mock
     |> expect(:balance, fn _ ->
       {:ok,
-       %XestKraken.Account.Balance{
+       %Account.Balance{
          balances: [
-           %XestKraken.Account.AssetBalance{
+           %Account.AssetBalance{
              asset: "BTC",
              amount: "42.35"
            },
-           %XestKraken.Account.AssetBalance{
+           %Account.AssetBalance{
              asset: "ETH",
              amount: "51.23"
            }
@@ -66,5 +66,64 @@ defmodule XestKraken.Account.Test do
                locked: "0.0"
              }
            ]
+  end
+
+  test "retrieve trades", %{acc_pid: acc_pid} do
+    symbol = "symbol"
+
+    Auth.Mock
+    |> expect(:trades, fn _ ->
+      {:ok,
+       %Account.Trades{
+         trades: %{
+           "some_id" => %Account.Trade{
+             cost: 0.0,
+             fee: 0.0,
+             margin: 0.0,
+             misc: "",
+             ordertxid: "",
+             ordertype: "",
+             pair: symbol,
+             postxid: "",
+             price: 0.0,
+             time: 0.0,
+             type: "",
+             vol: 0.0
+           },
+           "another_id" => %Account.Trade{
+             cost: 0.0,
+             fee: 0.0,
+             margin: 0.0,
+             misc: "",
+             ordertxid: "",
+             ordertype: "",
+             pair: symbol,
+             postxid: "",
+             price: 0.0,
+             time: 0.0,
+             type: "",
+             vol: 0.0
+           }
+         }
+       }}
+    end)
+
+    %Xest.Account.TradesHistory{history: history} =
+      Account.trades(acc_pid, symbol) |> IO.inspect()
+
+    assert history == %{
+             "some_id" => %Xest.Account.Trade{
+               pair: symbol,
+               price: 0.0,
+               time: 0.0,
+               vol: 0.0
+             },
+             "another_id" => %Xest.Account.Trade{
+               pair: symbol,
+               price: 0.0,
+               time: 0.0,
+               vol: 0.0
+             }
+           }
   end
 end

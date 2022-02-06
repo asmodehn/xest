@@ -1,3 +1,6 @@
+# Since krakex does not have types for the data returned
+# here we define these types and convert from them to the xest representation
+
 defmodule XestKraken.Account.Balance do
   @moduledoc """
   Struct for representing the account current balance.

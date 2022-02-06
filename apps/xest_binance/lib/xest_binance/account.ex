@@ -18,7 +18,7 @@ defmodule XestBinance.Account do
 
     # | {:error, reason}
     @callback balance(mockable_pid()) :: Xest.Account.Balance.t()
-    @callback trades(mockable_pid(), String.t()) :: Xest.TradesHistory.t()
+    @callback trades(mockable_pid(), String.t()) :: Xest.Account.TradesHistory.t()
 
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?

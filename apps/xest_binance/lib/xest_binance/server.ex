@@ -84,7 +84,7 @@ defmodule XestBinance.Server do
   end
 
   defp reschedule_ping(%__MODULE__{next_ping_ref: previous_timer_ref} = state) do
-    Process.cancel_timer(previous_timer_ref)
+    _timer_remaining_ms = Process.cancel_timer(previous_timer_ref)
     reschedule_ping(%__MODULE__{state | next_ping_ref: nil})
   end
 
