@@ -70,7 +70,7 @@ defmodule Xest.MixProject do
       # Functional patterns
       #      {:witchcraft, "~> 1.0"},
       # necessary to work with elixir 1.12. waiting for next release...
-      {:witchcraft, git: "git://github.com/witchcrafters/witchcraft.git", override: true},
+      {:witchcraft, git: "git@github.com:witchcrafters/witchcraft.git", override: true},
       {:algae, "~> 1.3"},
 
       # Test libs
