@@ -24,8 +24,6 @@ xest_web-*.tar
 
 # If NPM crashes, it generates a log, let's ignore it too.
 npm-debug.log
-
-# The directory NPM downloads your dependencies sources to.
 /assets/node_modules/
 
 # Since we are building assets from assets/,

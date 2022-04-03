@@ -59,7 +59,7 @@ defmodule XestBinance.MixProject do
 
       # Binance client !
       #  {:binance, "~> 1.0.1"},
-      {:binance, git: "git://github.com/asmodehn/binance.ex.git", branch: "add_my_trades"},
+      {:binance, git: "git@github.com:asmodehn/binance.ex.git", branch: "add_my_trades"},
       #              {:binance, path: "../../../binance.ex"},
 
       # Recording API Responses in tests
@@ -80,7 +80,7 @@ defmodule XestBinance.MixProject do
       # => When using Caching Annotations
       {:decorator, "~> 1.3"},
       # => When using the Telemetry events (Nebulex stats)
-      {:telemetry, "~> 0.4"},
+      {:telemetry, "~> 1.0"},
 
       # Runtime configuration
       {:vapor, "~> 0.10"},
