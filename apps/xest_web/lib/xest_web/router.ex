@@ -18,7 +18,7 @@ defmodule XestWeb.Router do
     pipe_through :browser
 
     # keep that for overview dashboard
-    live "/", PageLive, :index
+    get "/", PageController, :index
     live "/democlock", ClockLive, :index
     live "/demoimage", ImageLive, :index
     live "/binance", BinanceLive, :index

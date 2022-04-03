@@ -7,9 +7,6 @@ config :xest_web, XestWeb.Endpoint,
   secret_key_base: "H/E5uucRKyj8KYeafvCxK0XCPa0wjBZCp+RWctYMFz+pzNCiSm+fk7Fd/SIAlGj6",
   server: false
 
-# In test we don't send emails.
-config :hello_web, HelloWeb.Mailer, adapter: Swoosh.Adapters.Test
-
 # Print only warnings and errors during test
 config :logger, level: :warn
 

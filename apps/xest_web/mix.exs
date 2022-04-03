@@ -58,7 +58,6 @@ defmodule XestWeb.MixProject do
       {:floki, ">= 0.30.0", only: [:dev, :test]},
       {:phoenix_live_dashboard, "~> 0.6"},
       {:esbuild, "~> 0.3", runtime: Mix.env() == :dev},
-      {:swoosh, "~> 1.3"},
       {:hackney, "~> 1.9"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
