@@ -18,6 +18,25 @@
         {locked, ""} = Float.parse(b.locked)
         if Float.round(locked, 8) != 0, do: "(Locked: " <> Float.to_string(locked) <>")"
        end %>
-      </li>
+    </li>
   <% end %>
+  </ul>
+</div>
+
+<div>
+  <table>
+  <tr>
+    <%= for h <- @account_transactions |> List.first() |> Keyword.keys() do %>
+    <th><%= h %></th>
+    <% end %>
+  </tr>
+  <%= for t <- @account_transactions do %>
+  <tr>
+    <%= for v <- t |> Keyword.values() do %>
+    <td><%= v %></td>
+    <% end %>
+  </tr>
+  <% end %>
+  </table>
+
 </div>

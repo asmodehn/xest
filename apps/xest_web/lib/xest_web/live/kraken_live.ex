@@ -21,6 +21,14 @@ defmodule XestWeb.KrakenLive do
           |> assign(status_msg: "N/A")
           # initial balance model
           |> assign(account_balances: Xest.Account.Balance.new().balances)
+          # initial transactions
+          |> assign(
+            account_transactions:
+              case Xest.Account.TradesHistory.new().history do
+                :%{} -> []
+                m -> m |> Enum.map(fn id, t -> [id: id] + t.to_list() end)
+              end
+          )
 
         # second time websocket info
         true ->
@@ -33,7 +41,10 @@ defmodule XestWeb.KrakenLive do
               socket
               # putting actual server date
               |> put_date()
-              |> assign(account_balances: filter_null_balances(retrieve_account()))
+              |> assign(%{
+                account_balances: filter_null_balances(retrieve_balance()),
+                account_transactions: retrieve_transactions()
+              })
 
             # also call right now to return updated socket.
             handle_info(:status_refresh, socket) |> elem(1)
@@ -52,9 +63,10 @@ defmodule XestWeb.KrakenLive do
   @impl true
   def handle_info(:account_refresh, socket) do
     {:noreply,
-     assign(socket,
-       account_balances: filter_null_balances(retrieve_account())
-     )}
+     assign(socket, %{
+       account_balances: filter_null_balances(retrieve_balance()),
+       account_transactions: retrieve_transactions()
+     })}
   end
 
   @impl true
@@ -67,8 +79,14 @@ defmodule XestWeb.KrakenLive do
     {:noreply, socket |> put_flash(:info, msg)}
   end
 
-  defp retrieve_account() do
+  defp retrieve_balance() do
     xest_account().balance(:kraken)
+  end
+
+  defp retrieve_transactions() do
+    xest_account().transactions(:kraken).history
+    |> Enum.map(fn {id, t} -> [id: id] ++ (Map.from_struct(t) |> Map.to_list()) end)
+    |> IO.inspect()
   end
 
   defp filter_null_balances(account) do
