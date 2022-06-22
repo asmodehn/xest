@@ -1,7 +1,7 @@
 defmodule Xest.Account.Trade.Test do
   use ExUnit.Case, async: true
 
-  alias Xest.Account.Trade
+  #  alias Xest.Account.Trade
 
   # TODO
   #  test "new asset balance has sensible defaults" do

@@ -25,9 +25,11 @@ defmodule XestWeb.KrakenLive do
           |> assign(
             account_transactions:
               case Xest.Account.TradesHistory.new().history do
-                :%{} -> []
-                m -> m |> Enum.map(fn id, t -> [id: id] + t.to_list() end)
+                # getting headers only
+                :%{} -> %{"" => Xest.Account.Trade.empty()}
+                m -> m
               end
+              |> Enum.map(fn {id, t} -> [id: id] ++ (Map.from_struct(t) |> Map.to_list()) end)
           )
 
         # second time websocket info
@@ -86,7 +88,6 @@ defmodule XestWeb.KrakenLive do
   defp retrieve_transactions() do
     xest_account().transactions(:kraken).history
     |> Enum.map(fn {id, t} -> [id: id] ++ (Map.from_struct(t) |> Map.to_list()) end)
-    |> IO.inspect()
   end
 
   defp filter_null_balances(account) do

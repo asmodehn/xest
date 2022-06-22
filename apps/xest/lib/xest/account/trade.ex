@@ -19,6 +19,10 @@ defmodule Xest.Account.Trade do
     #    postxid :: String.t()
     #    type :: String.t()
   end
+
+  def empty() do
+    Xest.Account.Trade.new(nil, nil, nil, nil)
+  end
 end
 
 # Protocol for each connector to provide an exchange status with the correct format

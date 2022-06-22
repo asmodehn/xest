@@ -38,6 +38,24 @@ defmodule XestWeb.KrakenLiveTest do
         ]
       }
     end)
+    |> expect(:transactions, fn :kraken ->
+      %Xest.Account.TradesHistory{
+        history: %{
+          "ID-0001" => %Xest.Account.Trade{
+            pair: "SYMBOLA",
+            price: 123.456,
+            time: 123.456,
+            vol: 1.23
+          },
+          "ID-0002" => %Xest.Account.Trade{
+            pair: "SYMBOLB",
+            price: 123.456,
+            time: 123.456,
+            vol: 1.23
+          }
+        }
+      }
+    end)
 
     # TODO : Account to Mock it (keeping auth design internal to the connector)
 
@@ -54,6 +72,8 @@ defmodule XestWeb.KrakenLiveTest do
     assert html =~ "02:02:02"
 
     # TODO : test balance
+
+    # TODO : test trades
   end
 
   test "sending a message to the liveview process displays it in flash view", %{
@@ -84,10 +104,32 @@ defmodule XestWeb.KrakenLiveTest do
         ]
       }
     end)
+    |> expect(:transactions, fn :kraken ->
+      %Xest.Account.TradesHistory{
+        history: %{
+          "ID-0001" => %Xest.Account.Trade{
+            pair: "SYMBOLA",
+            price: 123.456,
+            time: 123.456,
+            vol: 1.23
+          },
+          "ID-0002" => %Xest.Account.Trade{
+            pair: "SYMBOLB",
+            price: 123.456,
+            time: 123.456,
+            vol: 1.23
+          }
+        }
+      }
+    end)
 
     {:ok, view, _html} = live(conn, "/kraken")
 
     send(view.pid, "Test Info Message")
     assert render(view) =~ "Test Info Message"
+
+    # TODO : test balance
+
+    # TODO : test trades
   end
 end
