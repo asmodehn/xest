@@ -1,0 +1,24 @@
+<div class="container">
+  <h1>Hello Binance!</h1>
+  <p>Status: <%= @status_msg %></p>
+  <p>Server Clock: <%= Calendar.strftime(@now, "%H:%M:%S") %></p>
+</div>
+
+
+<div>
+  <table>
+  <tr>
+    <%= for h <- @account_transactions |> List.first([nothing: "at_all"]) |> Keyword.keys() do %>
+    <th><%= h %></th>
+    <% end %>
+  </tr>
+  <%= for t <- @account_transactions do %>
+  <tr>
+    <%= for v <- t |> Keyword.values() do %>
+    <td><%= v %></td>
+    <% end %>
+  </tr>
+  <% end %>
+  </table>
+
+</div>

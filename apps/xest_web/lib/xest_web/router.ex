@@ -22,6 +22,7 @@ defmodule XestWeb.Router do
     live "/democlock", ClockLive, :index
     live "/demoimage", ImageLive, :index
     live "/binance", BinanceLive, :index
+    live "/binance/:symbol", BinanceTradesLive, :index
     live "/kraken", KrakenLive, :index
   end
 

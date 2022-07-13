@@ -39,11 +39,12 @@ defmodule Xest.Account.Adapter do
     connector_response
   end
 
-  def retrieve(:binance, :trades) do
+  def retrieve(:binance, :trades, symbol) do
     connector_response =
       binance().trades(
         # looking for process via its name
-        Process.whereis(binance())
+        Process.whereis(binance()),
+        symbol
       )
 
     connector_response

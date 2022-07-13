@@ -26,7 +26,7 @@
 <div>
   <table>
   <tr>
-    <%= for h <- @account_transactions |> List.first() |> Keyword.keys() do %>
+    <%= for h <- @account_transactions |> List.first([nothing: "at_all"]) |> Keyword.keys() do %>
     <th><%= h %></th>
     <% end %>
   </tr>
