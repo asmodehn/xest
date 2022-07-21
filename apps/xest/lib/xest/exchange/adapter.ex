@@ -30,4 +30,12 @@ defmodule Xest.Exchange.Adapter do
 
     Xest.Exchange.ServerTime.ACL.new(response)
   end
+
+  def retrieve(:binance, :symbols) do
+    binance().symbols(Process.whereis(binance()))
+  end
+
+  def retrieve(:kraken, :symbols) do
+    kraken().symbols(Process.whereis(kraken()))
+  end
 end

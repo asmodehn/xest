@@ -38,4 +38,9 @@ defmodule XestBinance.Adapter.Binance do
   def account(%XestBinance.Adapter.Client{impl: binance}) do
     Binance.get_account(binance)
   end
+
+  @impl true
+  def all_prices(%XestBinance.Adapter.Client{impl: binance}) do
+    Binance.get_all_prices(binance)
+  end
 end

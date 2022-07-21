@@ -22,6 +22,9 @@ defmodule XestBinance.Exchange do
     # | {:error, reason}
     @callback servertime(mockable_pid) :: servertime
 
+    # | {:error, reason}
+    @callback all_prices(mockable_pid) :: [XestBinance.Exchange.SymbolPrice]
+
     # TODO : by leveraging __using__ we could implement default function
     #
   end
@@ -104,6 +107,13 @@ defmodule XestBinance.Exchange do
     # No need to keep a cache here
     Agent.get(agent, fn state ->
       Adapter.servertime(state.client)
+    end)
+  end
+
+  @impl true
+  def all_prices(agent \\ __MODULE__) do
+    Agent.get(agent, fn state ->
+      Adapter.all_prices(state.client)
     end)
   end
 end

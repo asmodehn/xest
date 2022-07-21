@@ -12,4 +12,8 @@ defmodule Xest.Exchange do
   def servertime(connector) do
     Xest.Exchange.Adapter.retrieve(connector, :servertime)
   end
+
+  def symbols(connector) do
+    Xest.Exchange.Adapter.retrieve(connector, :symbols)
+  end
 end

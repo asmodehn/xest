@@ -74,6 +74,9 @@ defmodule XestBinance.MixProject do
       # Time manipulation
       {:timex, "~> 3.0"},
 
+      # maybe cleaner elixir code & behavior integration than algae ?
+      {:typed_struct, "~> 0.3.0", runtime: false},
+
       # Cache
       {:nebulex, "~> 2.1"},
       #    {:shards, "~> 1.0"},      #=> When using :shards as backend on high workloads

@@ -46,4 +46,11 @@ defmodule XestBinance.Adapter do
   def trades(%Client{} = cl \\ client(), symbol) when is_binary(symbol) do
     cl.adapter.trades(cl, symbol)
   end
+
+  def all_prices(%Client{} = cl \\ client()) do
+    with {:ok, symbol_price_list} <- cl.adapter.all_prices(cl) do
+      symbol_price_list
+      |> Enum.map(fn m -> %XestBinance.Exchange.SymbolPrice{symbol: m.symbol, price: m.price} end)
+    end
+  end
 end
