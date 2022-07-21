@@ -16,7 +16,8 @@ config :xest_web, XestWeb.Endpoint,
   secret_key_base: "iclczQNe4plcL7JRB5E5Rf19vkFmEKaOoZtnHRLBlzSSQ+rj2eUlpvtQo+9Jl5Tu",
   watchers: [
     # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
 
 # ## SSL Support

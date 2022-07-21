@@ -66,6 +66,9 @@ defmodule XestWeb.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:xest, in_umbrella: true},
 
+      # Frontend
+      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
+
       # Tooling
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
@@ -88,7 +91,7 @@ defmodule XestWeb.MixProject do
   defp aliases do
     [
       setup: ["deps.get"],
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]
+      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
     ]
   end
 end

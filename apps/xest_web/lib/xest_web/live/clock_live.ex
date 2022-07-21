@@ -3,7 +3,7 @@ defmodule XestWeb.ClockLive do
 
   def render(assigns) do
     ~L"""
-    <div>
+    <div class="text-3xl font-bold underline">
       <h2>It's <%= Calendar.strftime(@date, "%H:%M:%S") %></h2>
     </div>
     """

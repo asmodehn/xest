@@ -1,4 +1,10 @@
-/* This file is for your main application CSS */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* This file is for your main application CSS
+It should probably be removed, after adapting to tailwindcss
+*/
 @import "./phoenix.css";
 
 /* Alerts and form errors used by phx.new */
@@ -118,3 +124,4 @@
   0% { opacity: 1; }
   100% { opacity: 0; }
 }
+
