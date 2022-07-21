@@ -90,6 +90,7 @@ defmodule XestWeb do
       import XestWeb.ErrorHelpers
       import XestWeb.Gettext
       alias XestWeb.Router.Helpers, as: Routes
+      use PetalComponents
     end
   end
 

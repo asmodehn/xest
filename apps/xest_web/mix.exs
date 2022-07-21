@@ -68,6 +68,7 @@ defmodule XestWeb.MixProject do
 
       # Frontend
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
+      {:petal_components, "~> 0.17"},
 
       # Tooling
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
