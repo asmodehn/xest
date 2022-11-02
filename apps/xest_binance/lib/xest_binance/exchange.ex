@@ -116,4 +116,10 @@ defmodule XestBinance.Exchange do
       Adapter.all_prices(state.client)
     end)
   end
+
+  # For some reason this doesnt show up in autocomplete in iex:
+  # iex(3)> XestBinance.Exchange.
+  # Behaviour       ServerTime      Status          SymbolPrice
+  # child_spec/1    start_link/1    start_link/2    state/1
+  # TODO : FIX IT
 end

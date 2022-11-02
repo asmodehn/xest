@@ -16,7 +16,22 @@
         {locked, ""} = Float.parse(b.locked)
         if Float.round(locked, 8) != 0, do: "(Locked: " <> Float.to_string(locked) <>")"
        end %>
-      </li>
+
+      <table>
+        <tr><td> BUY</td>
+          <%= for t <- @account_tradables[b.asset][:buy] |> IO.inspect do %>
+          <td> <%= t %> </td>
+          <% end %>
+        </tr>
+        <tr><td> SELL</td>
+          <%= for t <- @account_tradables[b.asset][:sell] |> IO.inspect do %>
+          <td> <%= t %> </td>
+          <% end %>
+        </tr>
+      </table>
+
+  </li>
+
   <% end %>
   </ul>
 </div>

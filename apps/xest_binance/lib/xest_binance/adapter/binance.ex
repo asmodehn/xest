@@ -6,6 +6,8 @@ defmodule XestBinance.Adapter.Binance do
 
   require Binance
 
+  use Nebulex.Caching
+
   @impl true
   def system_status(%XestBinance.Adapter.Client{impl: binance}) do
     case Binance.get_system_status(binance) do
@@ -40,6 +42,8 @@ defmodule XestBinance.Adapter.Binance do
   end
 
   @impl true
+  # public call only needs the endpoint...
+  @decorate cacheable(cache: XestBinance.Adapter.Cache, key: binance.endpoint)
   def all_prices(%XestBinance.Adapter.Client{impl: binance}) do
     Binance.get_all_prices(binance)
   end

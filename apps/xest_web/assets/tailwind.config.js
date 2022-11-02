@@ -7,15 +7,18 @@ module.exports = {
   content: [
     './js/**/*.js',
     '../lib/*_web.ex',
-    '../lib/*_web/**/*.*ex'
+    '../lib/*_web/**/*.*ex',
+    // deps are at the root, we are in an umbrella app
+    "../../../deps/petal_components/**/*.*ex",
   ],
   theme: {
-    extend: {},
-  },
-  variants: {
     extend: {
-      border: ['focus'],
-    }
+      colors: {
+        //  commented because "not defined" ???
+        // primary: colors.blue,
+        // secondary: colors.pink,
+      },
+    },
   },
   plugins: [
     require('@tailwindcss/forms'),

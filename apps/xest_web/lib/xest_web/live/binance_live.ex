@@ -20,17 +20,9 @@ defmodule XestWeb.BinanceLive do
           |> assign(now: DateTime.from_unix!(0))
           |> assign(status_msg: "N/A")
           # initial balance model
-          |> assign(account_balances: Xest.Account.Balance.new().balances)
-          # initial transactions
-          |> assign(
-            account_transactions:
-              case Xest.Account.TradesHistory.new().history do
-                # getting headers only
-                :%{} -> %{"" => Xest.Account.Trade.empty()}
-                m -> m
-              end
-              |> Enum.map(fn {id, t} -> [id: id] ++ (Map.from_struct(t) |> Map.to_list()) end)
-          )
+          |> assign(account_balances: account_balances())
+          # TODO : organise tradables by currency in balances...
+          |> assign(account_tradables: account_tradables())
 
         # second time websocket info
         true ->
@@ -44,7 +36,9 @@ defmodule XestWeb.BinanceLive do
               socket
               # putting actual server date
               |> put_date()
-              |> assign(%{account_balances: filter_null_balances(retrieve_account())})
+              |> assign(%{account_balances: account_balances(xest_account())})
+              # TODO : organise tradables by currency in balances...
+              |> assign(account_tradables: account_tradables(xest_account()))
 
             # also call right now to return updated socket.
             handle_info(:status_refresh, socket) |> elem(1)
@@ -71,7 +65,7 @@ defmodule XestWeb.BinanceLive do
   def handle_info(:account_refresh, socket) do
     {:noreply,
      assign(socket,
-       account_balances: filter_null_balances(retrieve_account())
+       account_balances: account_balances(xest_account())
      )}
   end
 
@@ -80,12 +74,13 @@ defmodule XestWeb.BinanceLive do
     {:noreply, socket |> put_flash(:info, msg)}
   end
 
-  defp retrieve_account() do
-    xest_account().balance(:binance)
+  def account_balances() do
+    Xest.Account.Balance.new().balances
   end
 
-  defp filter_null_balances(account) do
-    account.balances
+  # TODO : type on account arg
+  def account_balances(account) do
+    account.balance(:binance).balances
     # TODO : this filter should probably be done at a lower level
     #  and enforced properly with types(careful with floats and precision)...
     |> Enum.filter(fn b ->
@@ -99,6 +94,34 @@ defmodule XestWeb.BinanceLive do
     # Abusing socket here to store the clock...
     # to improve : web page local clock, driven by javascript
     assign(socket, now: clock().utc_now(:binance))
+  end
+
+  def account_tradables() do
+    # TODO : get tradables for all accounts, directly from exchange (?)
+
+    Xest.Account.Balance.new().balances
+    # add matching symbols for buy or sell
+    |> Enum.into(%{}, fn b ->
+      {b.asset,
+       [
+         buy: exchange().symbols(:binance, buy: b.asset),
+         sell: exchange().symbols(:binance, sell: b.asset)
+       ]}
+    end)
+  end
+
+  def account_tradables(account) do
+    # get all balances (even the ones at 0.00)
+    account.balance(:binance).balances
+    # add matching symbols for buy or sell
+    |> Enum.into(%{}, fn b ->
+      {b.asset,
+       [
+         buy: exchange().symbols(:binance, buy: b.asset),
+         sell: exchange().symbols(:binance, sell: b.asset)
+       ]}
+    end)
+    |> IO.inspect()
   end
 
   defp xest_account() do

@@ -59,29 +59,29 @@ config :xest_binance, XestBinance.Adapter.Cache,
   # When using :shards as backend
   # backend: :shards,
   # GC interval for pushing new generation: 1 hrs
-  gc_interval: :timer.hours(1),
-  # Max 1 thousand entries in cache
-  max_size: 1_000,
-  # Max 2 MB of memory
-  allocated_memory: 2_000_000,
+  gc_interval: :timer.minutes(5),
+  # Max 10 thousand entries in cache
+  max_size: 10_000,
+  # Max 20 MB of memory
+  allocated_memory: 20_000_000,
   # GC min timeout: 5 sec
   gc_cleanup_min_timeout: :timer.seconds(5),
-  # GC max timeout: 15 min
-  gc_cleanup_max_timeout: :timer.minutes(15)
+  # GC max timeout: 5 min
+  gc_cleanup_max_timeout: :timer.minutes(5)
 
 config :xest_kraken, XestKraken.Adapter.Cache,
   # When using :shards as backend
   # backend: :shards,
   # GC interval for pushing new generation: 1 hrs
-  gc_interval: :timer.hours(1),
-  # Max 1 thousand entries in cache
-  max_size: 1_000,
-  # Max 2 MB of memory
-  allocated_memory: 2_000_000,
+  gc_interval: :timer.minutes(5),
+  # Max 10 thousand entries in cache
+  max_size: 10_000,
+  # Max 20 MB of memory
+  allocated_memory: 20_000_000,
   # GC min timeout: 5 sec
   gc_cleanup_min_timeout: :timer.seconds(5),
-  # GC min timeout: 15 min
-  gc_cleanup_max_timeout: :timer.minutes(15)
+  # GC min timeout: 5 min
+  gc_cleanup_max_timeout: :timer.minutes(5)
 
 config :xest_kraken,
   exchange: XestKraken.Exchange

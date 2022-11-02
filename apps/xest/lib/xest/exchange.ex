@@ -13,7 +13,17 @@ defmodule Xest.Exchange do
     Xest.Exchange.Adapter.retrieve(connector, :servertime)
   end
 
-  def symbols(connector) do
+  def symbols(connector, opts \\ []) do
     Xest.Exchange.Adapter.retrieve(connector, :symbols)
+    |> Enum.filter(fn
+      # options to filter the list of symbols
+      s ->
+        case opts do
+          # TODO : :base and :quote instead ??
+          [buy: b] -> String.ends_with?(s, b)
+          [sell: b] -> String.starts_with?(s, b)
+          [] -> true
+        end
+    end)
   end
 end

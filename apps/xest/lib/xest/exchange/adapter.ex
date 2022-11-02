@@ -32,7 +32,8 @@ defmodule Xest.Exchange.Adapter do
   end
 
   def retrieve(:binance, :symbols) do
-    binance().symbols(Process.whereis(binance()))
+    binance().all_prices(Process.whereis(binance()))
+    |> Enum.map(fn sp -> sp.symbol end)
   end
 
   def retrieve(:kraken, :symbols) do
