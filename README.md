@@ -7,8 +7,16 @@ On each exchange, it publicly retrieves:
   - market tickers (WIP)
 
 In your wallet, it privately:
-  - retrieves currencies (WIP)
-  - visually display your assets (WIP)
+  - retrieves currency balances and transaction (WIP)
+  - visually display the information in a webview (WIP)
+
+You need an API key on the exchange to get it to work properly.
+
+DISCLAIMER : Although this is a web application, it is not designed to be run on a publicly accessible system or network.
+Only use it on your machine, after making sure it is not remotely accessible.
+
+Security is not the current concern. The bare minimum has been done (secrets are on your system, not in the code),
+and it is possible there are times and places where secrets are exposed during runtime.
 
 
 # Learning
@@ -98,19 +106,23 @@ graph TD
 ## time
 
 
-
-# Roadmap
-
-Exchanges:
-- [ ] Binance
-- [ ] Kraken
-- [ ] Bitstamp
-- Add your favorite...
-  
+# Features
+- [X] Exchange Clock
+- [X] Exchange Status
+- [X] Account Balances
+- [X] Account Transactions
+- [ ] Ticker retrieval
 - [ ] Asset visualisation
-- Some way to interface with other systems, for deposit & withdrawal, accounting, trading, etc.
+- [ ] Spot Order
+- [ ] *not sure* Do you want to help ? just open an issue.
 
-# Will Not Do
+# Supported Exchanges:
+- [X] Binance
+- [X] Kraken
+- [ ] Bitstamp
+- [ ] Join and add your favorite...
+
+# Will Not Do (unless you're ready to help out)
 
 - Accounting
 - Advanced Market Data (ie. no candles here, only ticker data)
