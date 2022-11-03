@@ -1,20 +1,21 @@
 defmodule Xest.Account.Trade.Test do
   use ExUnit.Case, async: true
 
-  #  alias Xest.Account.Trade
+  alias Xest.Account.Trade
 
-  # TODO
-  #  test "new asset balance has sensible defaults" do
-  #    assert Trade.new() == %Trade{
-  #             asset: "",
-  #             free: "0.0",
-  #             locked: "0.0"
-  #           }
-  #
-  #    assert Trade.new("DOGE") == %Trade{
-  #             asset: "DOGE",
-  #             free: "0.0",
-  #             locked: "0.0"
-  #           }
-  #  end
+  test "new trade has sensible defaults" do
+    assert Trade.new() == %Trade{
+             pair: "",
+             price: 0.0,
+             time: 0.0,
+             vol: 0.0
+           }
+
+    assert Trade.new("DOGEBTC") == %Trade{
+             pair: "DOGEBTC",
+             price: 0.0,
+             time: 0.0,
+             vol: 0.0
+           }
+  end
 end
