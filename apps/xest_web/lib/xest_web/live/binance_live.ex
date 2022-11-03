@@ -104,8 +104,14 @@ defmodule XestWeb.BinanceLive do
     |> Enum.into(%{}, fn b ->
       {b.asset,
        [
-         buy: exchange().symbols(:binance, buy: b.asset),
-         sell: exchange().symbols(:binance, sell: b.asset)
+         buy:
+           Enum.filter(exchange().symbols(:binance), fn
+             s -> String.ends_with?(s, b.asset)
+           end),
+         sell:
+           Enum.filter(exchange().symbols(:binance), fn
+             s -> String.starts_with?(s, b.asset)
+           end)
        ]}
     end)
   end
@@ -117,11 +123,16 @@ defmodule XestWeb.BinanceLive do
     |> Enum.into(%{}, fn b ->
       {b.asset,
        [
-         buy: exchange().symbols(:binance, buy: b.asset),
-         sell: exchange().symbols(:binance, sell: b.asset)
+         buy:
+           Enum.filter(exchange().symbols(:binance), fn
+             s -> String.ends_with?(s, b.asset)
+           end),
+         sell:
+           Enum.filter(exchange().symbols(:binance), fn
+             s -> String.starts_with?(s, b.asset)
+           end)
        ]}
     end)
-    |> IO.inspect()
   end
 
   defp xest_account() do
