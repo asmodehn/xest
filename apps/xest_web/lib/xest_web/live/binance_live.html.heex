@@ -1,10 +1,10 @@
-<div class="container">
+<.container>
   <h1>Hello Binance!</h1>
   <p>Status: <%= @status_msg %></p>
   <p>Server Clock: <%= Calendar.strftime(@now, "%H:%M:%S") %></p>
-</div>
+</.container>
 
-<div class="container">
+<.container>
   <ul>
   <%= for b <- @account_balances do %>
     <li> <%= b.asset %><%# TODO : better model to make template language cleaner %>
@@ -34,4 +34,4 @@
 
   <% end %>
   </ul>
-</div>
+</.container>
