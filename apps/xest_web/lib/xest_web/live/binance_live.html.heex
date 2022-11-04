@@ -18,14 +18,14 @@
        end %>
 
       <table>
-        <tr><td> BUY</td>
-          <%= for t <- @account_tradables[b.asset][:buy] |> IO.inspect do %>
-          <td> <a href="binance/<%= t %>"><%= t %></a> </td>
+        <tr><td> Quote</td>
+          <%= for t <- @account_tradables[b.asset][:buy] do %>
+          <td> <a href={"binance/#{t}"}><%= t %></a> </td>
           <% end %>
         </tr>
-        <tr><td> SELL</td>
-          <%= for t <- @account_tradables[b.asset][:sell] |> IO.inspect do %>
-          <td> <a href="binance/<%= t %>"><%= t %></a> </td>
+        <tr><td> Base</td>
+          <%= for t <- @account_tradables[b.asset][:sell] do %>
+          <td> <a href={"binance/#{t}"}><%= t %></a> </td>
           <% end %>
         </tr>
       </table>
