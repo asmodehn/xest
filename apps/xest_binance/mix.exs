@@ -59,7 +59,8 @@ defmodule XestBinance.MixProject do
 
       # Binance client !
       #  {:binance, "~> 1.0.1"},
-      {:binance, git: "git://github.com/asmodehn/binance.ex.git", branch: "expose_endpoint"},
+      {:binance, git: "git@github.com:asmodehn/binance.ex.git", branch: "add_my_trades"},
+      #              {:binance, path: "../../../binance.ex"},
 
       # Recording API Responses in tests
       {:exvcr, "~> 0.11", only: [:dev, :test]},
@@ -67,8 +68,14 @@ defmodule XestBinance.MixProject do
       # For integration tests with an actual HTTP server
       {:bypass, "~> 2.1", only: [:dev, :test]},
 
+      # To generate data in tests
+      {:stream_data, "~> 0.5", only: [:dev, :test]},
+
       # Time manipulation
       {:timex, "~> 3.0"},
+
+      # maybe cleaner elixir code & behavior integration than algae ?
+      {:typed_struct, "~> 0.3.0", runtime: false},
 
       # Cache
       {:nebulex, "~> 2.1"},
@@ -76,7 +83,7 @@ defmodule XestBinance.MixProject do
       # => When using Caching Annotations
       {:decorator, "~> 1.3"},
       # => When using the Telemetry events (Nebulex stats)
-      {:telemetry, "~> 0.4"},
+      {:telemetry, "~> 1.0"},
 
       # Runtime configuration
       {:vapor, "~> 0.10"},

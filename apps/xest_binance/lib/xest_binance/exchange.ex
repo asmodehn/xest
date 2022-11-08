@@ -22,6 +22,9 @@ defmodule XestBinance.Exchange do
     # | {:error, reason}
     @callback servertime(mockable_pid) :: servertime
 
+    # | {:error, reason}
+    @callback all_prices(mockable_pid) :: [XestBinance.Exchange.SymbolPrice]
+
     # TODO : by leveraging __using__ we could implement default function
     #
   end
@@ -106,4 +109,17 @@ defmodule XestBinance.Exchange do
       Adapter.servertime(state.client)
     end)
   end
+
+  @impl true
+  def all_prices(agent \\ __MODULE__) do
+    Agent.get(agent, fn state ->
+      Adapter.all_prices(state.client)
+    end)
+  end
+
+  # For some reason this doesnt show up in autocomplete in iex:
+  # iex(3)> XestBinance.Exchange.
+  # Behaviour       ServerTime      Status          SymbolPrice
+  # child_spec/1    start_link/1    start_link/2    state/1
+  # TODO : FIX IT
 end

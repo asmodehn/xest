@@ -7,13 +7,7 @@
 # all use the same configuration file. If you want different
 # configurations or dependencies per app, it is best to
 # move said applications out of the umbrella.
-use Mix.Config
-
-# TODO : migrate to Elixir.Config
-# cf. https://hexdocs.pm/elixir/Config.html#module-migrating-from-use-mix-config
-
-config :xest_web,
-  generators: [context_app: :xest]
+import Config
 
 # Configures the endpoint
 config :xest_web, XestWeb.Endpoint,
@@ -22,6 +16,28 @@ config :xest_web, XestWeb.Endpoint,
   render_errors: [view: XestWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: Xest.PubSub,
   live_view: [signing_salt: "e9m51YXq"]
+
+# Configure esbuild (the version is required)
+config :esbuild,
+  version: "0.14.0",
+  default: [
+    args:
+      ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+    cd: Path.expand("../apps/xest_web/assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
+
+config :tailwind,
+  version: "3.1.6",
+  default: [
+    args: ~w(
+    --config=tailwind.config.js
+    --input=css/app.css
+    --output=../priv/static/assets/app.css
+  ),
+    cd: Path.expand("../apps/xest_web/assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -43,29 +59,29 @@ config :xest_binance, XestBinance.Adapter.Cache,
   # When using :shards as backend
   # backend: :shards,
   # GC interval for pushing new generation: 1 hrs
-  gc_interval: :timer.hours(1),
-  # Max 1 thousand entries in cache
-  max_size: 1_000,
-  # Max 2 MB of memory
-  allocated_memory: 2_000_000,
+  gc_interval: :timer.minutes(5),
+  # Max 10 thousand entries in cache
+  max_size: 10_000,
+  # Max 20 MB of memory
+  allocated_memory: 20_000_000,
   # GC min timeout: 5 sec
   gc_cleanup_min_timeout: :timer.seconds(5),
-  # GC max timeout: 15 min
-  gc_cleanup_max_timeout: :timer.minutes(15)
+  # GC max timeout: 5 min
+  gc_cleanup_max_timeout: :timer.minutes(5)
 
 config :xest_kraken, XestKraken.Adapter.Cache,
   # When using :shards as backend
   # backend: :shards,
   # GC interval for pushing new generation: 1 hrs
-  gc_interval: :timer.hours(1),
-  # Max 1 thousand entries in cache
-  max_size: 1_000,
-  # Max 2 MB of memory
-  allocated_memory: 2_000_000,
+  gc_interval: :timer.minutes(5),
+  # Max 10 thousand entries in cache
+  max_size: 10_000,
+  # Max 20 MB of memory
+  allocated_memory: 20_000_000,
   # GC min timeout: 5 sec
   gc_cleanup_min_timeout: :timer.seconds(5),
-  # GC min timeout: 15 min
-  gc_cleanup_max_timeout: :timer.minutes(15)
+  # GC min timeout: 5 min
+  gc_cleanup_max_timeout: :timer.minutes(5)
 
 config :xest_kraken,
   exchange: XestKraken.Exchange
@@ -80,4 +96,4 @@ config :xest_web,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env()}.exs"
+import_config "#{config_env()}.exs"

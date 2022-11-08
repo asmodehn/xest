@@ -30,4 +30,13 @@ defmodule Xest.Exchange.Adapter do
 
     Xest.Exchange.ServerTime.ACL.new(response)
   end
+
+  def retrieve(:binance, :symbols) do
+    binance().all_prices(Process.whereis(binance()))
+    |> Enum.map(fn sp -> sp.symbol end)
+  end
+
+  def retrieve(:kraken, :symbols) do
+    kraken().symbols(Process.whereis(kraken()))
+  end
 end

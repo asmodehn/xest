@@ -30,9 +30,9 @@ defmodule XestWeb.ImageLive do
   end
 
   def mount(_params, _session, socket) do
-    IO.inspect(
-      {__MODULE__, connected: connected?(socket), root_pid: socket.root_pid, self: self()}
-    )
+    #    IO.inspect(
+    #      {__MODULE__, connected: connected?(socket), root_pid: socket.root_pid, self: self()}
+    #    )
 
     {:ok, assign(socket, width: 100, bg: "white", depth: 0, max_depth: 0)}
   end

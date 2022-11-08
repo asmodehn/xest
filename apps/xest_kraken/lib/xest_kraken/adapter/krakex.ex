@@ -41,4 +41,12 @@ defmodule XestKraken.Adapter.Krakex do
       {:error, reason} -> {:error, reason}
     end
   end
+
+  @impl true
+  def trades(%Client{impl: client}, offset \\ 0) do
+    case Krakex.trades_history(client, offset) do
+      {:ok, response} -> {:ok, response}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 end

@@ -1,0 +1,44 @@
+[
+  {
+    "request": {
+      "body": "",
+      "headers": {
+        "X-MBX-APIKEY": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeFgHiJkLmNoPqRsTuVwXyZ12"
+      },
+      "method": "get",
+      "options": [],
+      "request_body": "",
+      "url": "https://api.binance.com/api/v3/myTrades?recvWindow=5000&symbol=ETHBTC&timestamp=1636308333218&signature=***"
+    },
+    "response": {
+      "binary": false,
+      "body": "{\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action.\"}",
+      "headers": {
+        "Content-Type": "application/json;charset=UTF-8",
+        "Content-Length": "70",
+        "Connection": "keep-alive",
+        "Date": "Sun, 07 Nov 2021 18:05:33 GMT",
+        "Server": "nginx",
+        "x-mbx-uuid": "3a294115-990f-4b56-8951-a318bf4e47f7",
+        "x-mbx-used-weight": "30",
+        "x-mbx-used-weight-1m": "30",
+        "Strict-Transport-Security": "max-age=31536000; includeSubdomains",
+        "X-Frame-Options": "SAMEORIGIN",
+        "X-Xss-Protection": "1; mode=block",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'self'",
+        "X-Content-Security-Policy": "default-src 'self'",
+        "X-WebKit-CSP": "default-src 'self'",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "X-Cache": "Error from cloudfront",
+        "Via": "1.1 2ba5677785db2f66bc73820b2a261477.cloudfront.net (CloudFront)",
+        "X-Amz-Cf-Pop": "CDG50-P2",
+        "X-Amz-Cf-Id": "ucJtqiIXXsLSmwqCcMSiR-Hygf2bvvkDASVrwcH7RpkQyX4ZM3sEzw=="
+      },
+      "status_code": 401,
+      "type": "ok"
+    }
+  }
+]

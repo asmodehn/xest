@@ -15,5 +15,10 @@ defmodule XestBinance.Adapter.Behaviour do
   # | {:error, reason}
   @callback servertime(Client.t()) :: {:ok, DateTime.t()}
   # | {:error, reason}
+  # TODO : refine
+  @callback trades(Client.t(), String.t()) :: {:ok, any()}
+  # | {:error, reason}
   @callback account(Client.t()) :: {:ok, %Binance.Account{}}
+  # | {:error, reason}
+  @callback all_prices(Client.t()) :: {:ok, %Binance.SymbolPrice{}}
 end

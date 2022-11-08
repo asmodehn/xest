@@ -69,8 +69,8 @@ defmodule Xest.MixProject do
 
       # Functional patterns
       #      {:witchcraft, "~> 1.0"},
-      {:witchcraft,
-       git: "git://github.com/asmodehn/witchcraft.git", branch: "fix_then_1_12", override: true},
+      # necessary to work with elixir 1.12. waiting for next release...
+      {:witchcraft, git: "git@github.com:witchcrafters/witchcraft.git", override: true},
       {:algae, "~> 1.3"},
 
       # Test libs

@@ -86,5 +86,79 @@ defmodule XestBinance.Authenticated.Test do
                   update_time: 123_456_789
                 }}
     end
+
+    test "provides trades for a symbol: ETHEUR", %{server_pid: server_pid, bypass: bypass} do
+      Bypass.expect_once(bypass, "GET", "/api/v3/myTrades", fn conn ->
+        Plug.Conn.resp(conn, 200, """
+        [
+          {
+            "symbol": "ETHEUR",
+            "id": 256728,
+            "orderId": 14960773,
+            "orderListId": -1,
+            "price": "300.91000000",
+            "qty": "0.04000000",
+            "quoteQty": "15.80005000",
+            "commission": "0.00060022",
+            "commissionAsset": "BNB",
+            "time": 1597950947442,
+            "isBuyer": true,
+            "isMaker": true,
+            "isBestMatch": true
+          },
+          {
+            "symbol": "ETHEUR",
+            "id": 255935,
+            "orderId": 14978865,
+            "orderListId": -1,
+            "price": "340.33000000",
+            "qty": "0.04500000",
+            "quoteQty": "13.55600000",
+            "commission": "0.00060007",
+            "commissionAsset": "BNB",
+            "time": 1597955357693,
+            "isBuyer": true,
+            "isMaker": true,
+            "isBestMatch": true
+          }
+        ]
+        """)
+      end)
+
+      assert XestBinance.Auth.trades(server_pid, "ETHEUR") ==
+               {:ok,
+                [
+                  %Binance.Trade{
+                    commission: "0.00060022",
+                    commissionAsset: "BNB",
+                    id: 256_728,
+                    isBestMatch: true,
+                    isBuyer: true,
+                    isMaker: true,
+                    orderId: 14_960_773,
+                    orderListId: -1,
+                    price: "300.91000000",
+                    qty: "0.04000000",
+                    quoteQty: "15.80005000",
+                    symbol: "ETHEUR",
+                    time: 1_597_950_947_442
+                  },
+                  %Binance.Trade{
+                    commission: "0.00060007",
+                    commissionAsset: "BNB",
+                    id: 255_935,
+                    isBestMatch: true,
+                    isBuyer: true,
+                    isMaker: true,
+                    orderId: 14_978_865,
+                    orderListId: -1,
+                    price: "340.33000000",
+                    qty: "0.04500000",
+                    quoteQty: "13.55600000",
+                    symbol: "ETHEUR",
+                    time: 1_597_955_357_693
+                  }
+                ]}
+    end
   end
 end

@@ -17,12 +17,14 @@ defmodule XestWeb.BinanceLiveTest do
   test "disconnected and connected render", %{conn: conn} do
     Exchange.Mock
     |> expect(:status, fn :binance -> %Exchange.Status{status: :online, description: "test"} end)
+    |> expect(:symbols, 2, fn :binance -> ["BTCEUR", "ETHBTC"] end)
 
     Clock.Mock
     |> expect(:utc_now, fn :binance -> @time_stop end)
 
+    # called a second time for symbols
     Account.Mock
-    |> expect(:balance, fn :binance ->
+    |> expect(:balance, 2, fn :binance ->
       %Account.Balance{
         balances: [%Account.AssetBalance{asset: "BTC", free: "1.23", locked: "4.56"}]
       }
@@ -48,12 +50,14 @@ defmodule XestWeb.BinanceLiveTest do
   } do
     Exchange.Mock
     |> expect(:status, fn :binance -> %Exchange.Status{status: :online, description: "test"} end)
+    |> expect(:symbols, 2, fn :binance -> ["BTCEUR", "ETHBTC"] end)
 
     Clock.Mock
     |> expect(:utc_now, fn :binance -> @time_stop end)
 
+    # called a second time for symbols
     Account.Mock
-    |> expect(:balance, fn :binance ->
+    |> expect(:balance, 2, fn :binance ->
       %Account.Balance{
         balances: [%Account.AssetBalance{asset: "BTC", free: "1.23", locked: "4.56"}]
       }
