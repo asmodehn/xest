@@ -29,5 +29,6 @@ defmodule Xest.DateTime do
   end
 
   # TODO : put that as module tag, to lockit on compilation...
+  # BUT we currently need it dynamic for some tests ??
   defp date_time(), do: Application.get_env(:xest, :datetime_module, DateTime)
 end

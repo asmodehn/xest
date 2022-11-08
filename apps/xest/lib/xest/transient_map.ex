@@ -3,7 +3,11 @@ defmodule Xest.TransientMap do
     A map that forgets its content after some time...
   """
 
+  # TODO : replace this with nebulex ? or the other way around ??
+  #        OR another, simpler, more standard package ?
+
   require Timex
+  require Xest.DateTime
 
   @type key() :: any()
   @type value() :: any()

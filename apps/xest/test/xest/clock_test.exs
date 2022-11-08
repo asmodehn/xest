@@ -33,4 +33,16 @@ defmodule Xest.Clock.Test do
                ~U[2020-02-02 02:02:02.202Z]
     end
   end
+
+  describe "For local default:" do
+    test "clock works" do
+      Xest.DateTime.Mock
+      |> expect(:utc_now, fn nil ->
+        ~U[2020-02-02 02:02:02.202Z]
+      end)
+
+      assert Clock.utc_now() ==
+               ~U[2020-02-02 02:02:02.202Z]
+    end
+  end
 end

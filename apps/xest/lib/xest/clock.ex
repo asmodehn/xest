@@ -1,7 +1,14 @@
 defmodule Xest.Clock do
+  require Xest.DateTime
+
   defmodule Behaviour do
     @moduledoc "Behaviour to allow mocking a xest clock for tests"
     @callback utc_now(atom()) :: DateTime.t()
+    @callback utc_now() :: DateTime.t()
+  end
+
+  def utc_now() do
+    Xest.DateTime.utc_now()
   end
 
   def utc_now(:binance) do

@@ -19,11 +19,36 @@ defmodule XestWeb.Router do
 
     # keep that for overview dashboard
     get "/", PageController, :index
+
+    # demos
     live "/democlock", ClockLive, :index
     live "/demoimage", ImageLive, :index
+
+    # prototype pages
     live "/binance", BinanceLive, :index
     live "/binance/:symbol", BinanceTradesLive, :index
     live "/kraken", KrakenLive, :index
+
+    # TODO : MVP structure
+    live "/status", StatusLive, :index
+    live "/status/:exchange", StatusLive, :index
+
+    #    live "/assets", AssetsLive, :index
+    #    live "/assets/:symbol", AssetsLive, :index
+    #    live "/assets/:exchange/", AssetsLive, :index
+    #    live "/assets/:exchange/:symbol", AssetsLive, :index
+    #
+    #    live "/markets/", MarketsLive, :index
+    #    live "/markets/:symbol", MarketsLive, :index
+    #
+    #    live "/trades", TradesLive, :index
+    #    live "/trades/:symbol", TradesLive, :index
+    #    live "/trades/:exchange", TradesLive, :index
+    #    live "/trades/:exchange/:symbol", TradesLive, :index
+
+    # TODO live "/orders", OrdersLive
+
+    # TODO live "/bots", BotsLive
   end
 
   # Other scopes may use custom stacks.
