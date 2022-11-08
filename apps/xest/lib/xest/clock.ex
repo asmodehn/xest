@@ -8,7 +8,7 @@ defmodule Xest.Clock do
   end
 
   def utc_now() do
-    Xest.DateTime.utc_now()
+    datetime().utc_now()
   end
 
   def utc_now(:binance) do
@@ -23,6 +23,10 @@ defmodule Xest.Clock do
       # finding the process (or nil if mocked)
       Process.whereis(kraken())
     )
+  end
+
+  defp datetime() do
+    Application.get_env(:xest, :datetime_module, Xest.DateTime)
   end
 
   defp kraken() do
