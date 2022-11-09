@@ -106,4 +106,6 @@ defmodule XestBinance.Exchange.Test do
     servertime = Exchange.servertime(exg_pid)
     assert servertime == %XestBinance.Exchange.ServerTime{servertime: @time_stop}
   end
+
+  # TODO : add tests for symbols
 end

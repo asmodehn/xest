@@ -35,9 +35,9 @@ defmodule XestWeb.Router do
 
     #    live "/assets", AssetsLive, :index
     #    live "/assets/:symbol", AssetsLive, :index
-    #    live "/assets/:exchange/", AssetsLive, :index
+    live "/assets/:exchange/", AssetsLive, :index
     #    live "/assets/:exchange/:symbol", AssetsLive, :index
-    #
+
     #    live "/markets/", MarketsLive, :index
     #    live "/markets/:symbol", MarketsLive, :index
     #

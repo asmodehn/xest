@@ -22,4 +22,6 @@ defmodule XestKraken.Adapter.Behaviour do
   @callback balance(Client.t()) :: {:ok, %{}} | {:error, reason}
 
   @callback trades(Client.t(), integer()) :: {:ok, %{}} | {:error, reason}
+
+  @callback asset_pairs(Client.t()) :: {:ok, %{}} | {:error, reason}
 end

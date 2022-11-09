@@ -38,6 +38,9 @@ defmodule XestKraken.Exchange do
     # | {:error, reason}
     @callback servertime(mockable_pid) :: servertime
 
+    # | {:error, reason}
+    @callback symbols(mockable_pid) :: Map.t()
+
     # TODO : by leveraging __using__ we could implement default function
     #                                   and their unsafe counterparts maybe ?
   end
@@ -92,6 +95,14 @@ defmodule XestKraken.Exchange do
     # For a simulated/proxy local clock, use XestKraken.clock
     Agent.get(agent, fn state ->
       Adapter.servertime(state.client)
+    end)
+  end
+
+  # access to all symbols available on hte (SPOT) exchange
+  @impl true
+  def symbols(agent \\ __MODULE__) do
+    Agent.get(agent, fn state ->
+      Adapter.asset_pairs(state.client)
     end)
   end
 end

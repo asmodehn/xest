@@ -38,5 +38,6 @@ defmodule Xest.Exchange.Adapter do
 
   def retrieve(:kraken, :symbols) do
     kraken().symbols(Process.whereis(kraken()))
+    |> Map.keys()
   end
 end

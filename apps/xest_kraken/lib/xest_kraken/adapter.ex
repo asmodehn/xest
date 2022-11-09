@@ -33,6 +33,14 @@ defmodule XestKraken.Adapter do
     Exchange.ServerTime.new(servertime)
   end
 
+  @spec asset_pairs(Client.t()) :: Map.t()
+  @decorate cacheable(cache: Cache, key: :asset_pairs, opts: [ttl: :timer.minutes(5)])
+  def asset_pairs(%Client{} = client \\ Client.new()) do
+    {:ok, pairs} = client.adapter.asset_pairs(client)
+    # TODO : handle {:error, :nxdomain}
+    pairs
+  end
+
   def balance(%Client{} = cl) do
     cl.adapter.balance(cl)
     # TODO : wrap into some connector specific type...

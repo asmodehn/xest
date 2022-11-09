@@ -3,6 +3,8 @@ defmodule XestWeb.StatusLive do
 
   require Logger
   require Xest
+  alias XestWeb.ExchangeParam
+
   #  require Tarams
 
   # Idea : https://medium.com/grandcentrix/state-management-with-phoenix-liveview-and-liveex-f53f8f1ec4d7
@@ -60,7 +62,7 @@ defmodule XestWeb.StatusLive do
           |> assign_now()
           # retrieve exchange from the valid params
           # AFTER setting other assigns for first render
-          |> assign_exchange(params)
+          |> ExchangeParam.assign_exchange(params)
 
         # second time websocket info
         # TODO : Process.send_after(self(), 30_000, :work) is probably better
@@ -71,7 +73,7 @@ defmodule XestWeb.StatusLive do
             # putting actual server date
             socket
             # retrieve exchange from the valid params BEFORE other assigns
-            |> assign_exchange(params)
+            |> ExchangeParam.assign_exchange(params)
             |> assign_now()
             |> assign_status_msg()
           end
@@ -86,22 +88,6 @@ defmodule XestWeb.StatusLive do
     #                         errors |> Enum.map_join(", ", fn {key, val} -> ~s{"#{key}", "#{val}"} end)
     #                       ), to: "/status")}
     #    end
-  end
-
-  def assign_exchange(socket, params) do
-    case params do
-      %{"exchange" => exchange} when exchange in ["binance", "kraken"] ->
-        # assign exchange to socket if valid, otherwise redirects
-        socket |> assign(exchange: String.to_existing_atom(exchange))
-
-      %{"exchange" => exchange} ->
-        redirect(socket |> put_flash(:error, exchange <> " is not a supported exchange"),
-          to: "/status"
-        )
-
-      _ ->
-        socket |> put_flash(:error, "exchange uri param not found")
-    end
   end
 
   @impl true
