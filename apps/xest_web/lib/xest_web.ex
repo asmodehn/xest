@@ -87,10 +87,11 @@ defmodule XestWeb do
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View
 
+      use PetalComponents
+
       import XestWeb.ErrorHelpers
       import XestWeb.Gettext
       alias XestWeb.Router.Helpers, as: Routes
-      use PetalComponents
     end
   end
 

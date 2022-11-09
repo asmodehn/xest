@@ -1,10 +1,10 @@
-<div class="container">
+<.container>
   <h1>Hello Kraken!</h1>
   <p>Status: <%= @status_msg %></p>
   <p>Server Clock: <%= Calendar.strftime(@now, "%H:%M:%S") %></p>
-</div>
+</.container>
 
-<div class="container">
+<.container>
 
   <ul>
   <%= for b <- @account_balances do %>
@@ -21,7 +21,7 @@
     </li>
   <% end %>
   </ul>
-</div>
+</.container>
 
 <div>
   <table>
