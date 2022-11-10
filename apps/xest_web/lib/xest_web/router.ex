@@ -29,7 +29,7 @@ defmodule XestWeb.Router do
     live "/binance/:symbol", BinanceTradesLive, :index
     live "/kraken", KrakenLive, :index
 
-    # TODO : MVP structure
+    # TODO : use verified routes with recent phoenix ??
     live "/status", StatusLive, :index
     live "/status/:exchange", StatusLive, :index
 

@@ -1,5 +1,6 @@
 defmodule XestWeb.AssetsLive do
   use XestWeb, :live_view
+  # TODO : live components instead ??
 
   require Logger
   require Xest
@@ -10,15 +11,7 @@ defmodule XestWeb.AssetsLive do
     <.container>
       <ul>
       <%= for b <- @account_balances do %>
-        <li> <%= b.asset %><%# TODO : better model to make template language cleaner %>
-          <%= if Map.has_key?(b, :free) do
-            {free, ""} = Float.parse(b.free)
-            if Float.round(free, 8) != 0, do: free
-           end %>
-          <%= if Map.has_key?(b, :locked) do
-            {locked, ""} = Float.parse(b.locked)
-            if Float.round(locked, 8) != 0, do: "(Locked: " <> Float.to_string(locked) <>")"
-           end %>
+        <li> <%= b.asset %> <%= if Map.has_key?(b, :free), do: b.free %> <%= if Map.has_key?(b, :locked), do: "(Locked: #{b.locked})" %>
 
           <table>
             <tr><td> Quote</td>
@@ -95,6 +88,7 @@ defmodule XestWeb.AssetsLive do
         %Xest.Account.Balance{balances: balances} = xest_account().balance(exchg)
         socket |> assign(account_balances: balances)
 
+      # TODO : maybe add tradables in some data structure representing balances, for easier display in view
       # fallback
       _ ->
         socket |> assign(account_balances: Xest.Account.Balance.new().balances)
@@ -120,16 +114,20 @@ defmodule XestWeb.AssetsLive do
     socket |> assign(account_tradables: tradables)
   end
 
-  # TODO : rethink this...
+  # TODO : rethink this... symbols is called too many times !!
   defp symbol_quote_base_correspondence(exchg, asset) do
+    symbols = exchange().symbols(exchg)
+
     {asset,
      [
        buy:
-         Enum.filter(exchange().symbols(exchg), fn
+         symbols
+         |> Enum.filter(fn
            s -> String.ends_with?(s, asset)
          end),
        sell:
-         Enum.filter(exchange().symbols(exchg), fn
+         symbols
+         |> Enum.filter(fn
            s -> String.starts_with?(s, asset)
          end)
      ]}

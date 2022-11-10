@@ -5,6 +5,7 @@ defmodule Xest.Account do
 
   defmodule Behaviour do
     @moduledoc "Behaviour to allow mocking a xest account for tests"
+    @callback balance(atom()) :: %Xest.Account.Balance{}
     @callback balance(atom(), Keyword.t()) :: %Xest.Account.Balance{}
     @callback transactions(atom()) :: %Xest.Account.TradesHistory{}
     @callback transactions(atom(), String.t()) :: %Xest.Account.TradesHistory{}

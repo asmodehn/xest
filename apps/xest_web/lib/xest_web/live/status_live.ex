@@ -1,5 +1,6 @@
 defmodule XestWeb.StatusLive do
   use XestWeb, :live_view
+  # TODO : live components instead ??
 
   require Logger
   require Xest
