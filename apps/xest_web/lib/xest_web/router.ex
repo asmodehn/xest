@@ -34,17 +34,18 @@ defmodule XestWeb.Router do
     live "/status/:exchange", StatusLive, :index
 
     #    live "/assets", AssetsLive, :index
-    #    live "/assets/:symbol", AssetsLive, :index
+    #    live "/assets/:symbol", AssetsLive, :index  # TODO : exchange aggregate view ??
     live "/assets/:exchange/", AssetsLive, :index
-    #    live "/assets/:exchange/:symbol", AssetsLive, :index
+    #    live "/assets/:exchange/:symbol", AssetsLive, :index  # TODO: detail view ??
 
-    #    live "/markets/", MarketsLive, :index
-    #    live "/markets/:symbol", MarketsLive, :index
+    #    live "/markets/", MarketsLive, :index  # multi ticker view
+    #    live "/markets/:symbol", MarketsLive, :index  # detailed ticker (+ candle ??)
     #
     #    live "/trades", TradesLive, :index
     #    live "/trades/:symbol", TradesLive, :index
-    #    live "/trades/:exchange", TradesLive, :index
-    #    live "/trades/:exchange/:symbol", TradesLive, :index
+    #        live "/trades/:exchange", TradesLive, :index  # kraken only ?? TODO : binance aggregate ??
+    # basic for binance, filtered for kraken ??
+    live "/trades/:exchange/:symbol", TradesLive, :index
 
     # TODO live "/orders", OrdersLive
 

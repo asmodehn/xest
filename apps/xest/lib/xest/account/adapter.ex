@@ -39,6 +39,22 @@ defmodule Xest.Account.Adapter do
     connector_response
   end
 
+  def retrieve(:kraken, :trades, symbol) do
+    connector_response =
+      kraken().trades(
+        # looking for process via its name
+        Process.whereis(kraken()),
+        ""
+      )
+      # TMP to get only one symbol (TODO: better in connector)
+      |> Map.update!(:history, &Enum.filter(&1, fn t -> t.symbol == symbol end))
+
+    connector_response
+  end
+
+  # TODO: retrieve trades for *all* symbol
+  # ...  maybe page by page ??
+
   def retrieve(:binance, :trades, symbol) do
     connector_response =
       binance().trades(
