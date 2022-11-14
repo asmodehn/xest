@@ -29,8 +29,8 @@ defmodule XestWeb.Router do
     live "/binance/:symbol", BinanceTradesLive, :index
     live "/kraken", KrakenLive, :index
 
-    # TODO : use verified routes with recent phoenix ??
-    live "/status", StatusLive, :index
+    # TODO : use verified routes with recent phoenix 1.7 ??
+    #    live "/status", StatusLive, :index  # TODO show all exchanges
     live "/status/:exchange", StatusLive, :index
 
     #    live "/assets", AssetsLive, :index

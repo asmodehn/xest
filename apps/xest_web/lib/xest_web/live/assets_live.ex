@@ -6,6 +6,7 @@ defmodule XestWeb.AssetsLive do
   require Xest
   alias XestWeb.ExchangeParam
 
+  @impl true
   def render(assigns) do
     ~H"""
     <.container>
@@ -60,12 +61,11 @@ defmodule XestWeb.AssetsLive do
         true ->
           # refresh account every 10 seconds
           with {:ok, _} <- :timer.send_interval(10_000, self(), :account_refresh) do
-            socket =
-              socket
-              |> ExchangeParam.assign_exchange(params)
-              |> assign_balances()
-              # TODO : organise tradables by currency in balances...
-              |> assign_tradables()
+            socket
+            |> ExchangeParam.assign_exchange(params)
+            |> assign_balances()
+            # TODO : organise tradables by currency in balances...
+            |> assign_tradables()
           end
       end
 

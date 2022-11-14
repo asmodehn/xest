@@ -6,6 +6,7 @@ defmodule XestWeb.TradesLive do
   alias XestWeb.ExchangeParam
   alias XestWeb.SymbolParam
 
+  @impl true
   def render(assigns) do
     ~L"""
     <div>
