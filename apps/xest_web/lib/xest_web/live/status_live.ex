@@ -6,27 +6,6 @@ defmodule XestWeb.StatusLive do
   require Xest
   alias XestWeb.ExchangeParam
 
-  #  require Tarams
-
-  # Idea : https://medium.com/grandcentrix/state-management-with-phoenix-liveview-and-liveex-f53f8f1ec4d7
-
-  #  def supported_exchange(exchange) do
-  #    case exchange do
-  #      okv when okv in ["binance", "kraken"] -> {:ok, String.to_existing_atom(okv)}
-  #      _ -> {:error, exchange <> " is not a supported exchange"}
-  #    end
-  #  end
-  #
-  #  #TODO : use a separate status live page for aggregated exchange status.
-  #  #  Currently using the same page as a first draft... => param not required
-  #  @valid_params  %{
-  #    # Note: by default, changes the map keys from string to atom.
-  #    exchange: [
-  #      type: :string, required: false,
-  #      cast_func: &__MODULE__.supported_exchange/1  # TODO : fix need to pass public function to tarams macro ??
-  #    ],
-  #  }
-
   @impl true
   def render(assigns) do
     # assign default value to exchange if one not present
@@ -81,14 +60,6 @@ defmodule XestWeb.StatusLive do
       end
 
     {:ok, socket}
-    #    else
-    #      {:error, errors} ->
-    #        # redirect and return params error
-    #        {:ok, redirect(socket
-    #                       |> put_flash(:error,
-    #                         errors |> Enum.map_join(", ", fn {key, val} -> ~s{"#{key}", "#{val}"} end)
-    #                       ), to: "/status")}
-    #    end
   end
 
   @impl true
