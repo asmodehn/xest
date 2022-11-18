@@ -28,43 +28,74 @@ defmodule XestClock.Clock do
 
   """
 
-  require Task
+  @enforce_keys [:unit, :read, :origin]
+  defstruct unit: nil,
+            read: nil,
+            origin: nil
 
-  @enforce_keys [:unit]
-  defstruct ticks: nil,
-            unit: nil
-
-  @typedoc "XestClock.Remote.Clock struct"
+  @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
-          ticks: Stream.t(),
-          unit: System.time_unit()
+          unit: System.time_unit(),
+          read: (() -> integer),
+          origin: atom
         }
 
-  @doc """
-  Initializes a remote clock, by specifying the unit in which the time value will be expressed
-  Use the stream interface to record future ticks
-  """
-  @spec new(Stream.t(), System.time_unit()) :: t()
-  def new(stream, unit) do
-    # TODO : maybe this should be external, as stream creation will depend on concrete implementation
-    # Therefore the clock here is too simple...
-    #  stream = Stream.resource(
-    #        fn -> [Task.async(clock_retrieve.())] end,
-    #        # Note : we want the next clock retrieve to happen as early as possible
-    #        # but we need to wait for a response before requesting the next one...
-    #        fn acc ->
-    #        acc = List.update_at(acc, -1, fn l -> Task.await(l) end)
-    #        {[acc.last()], acc ++ [Task.async(clock_retrieve.())]}
-    #        end,  # this lasts for ever, and to keep this simple,
-    ##       errors should be handled in the clock_retrieve closure.
-    #        fn acc -> :done end
-    #      )
-
+  @spec new() :: t()
+  def new(), do: new(:local, :native)
+  @spec new(:local, :native) :: t()
+  def new(:local, :native) do
     %__MODULE__{
-      unit: unit,
-      ticks: stream
+      unit: :native,
+      origin: :local,
+      read: fn -> System.monotonic_time(:native) end
     }
   end
+
+  @spec new(:local, System.time_unit()) :: t()
+  def new(:local, unit) do
+    norm_unit = normalize_time_unit(unit)
+
+    %__MODULE__{
+      unit: norm_unit,
+      origin: :local,
+      read: fn -> System.monotonic_time(norm_unit) end
+    }
+  end
+
+  @spec new(atom, System.time_unit(), (() -> integer)) :: t()
+  def new(origin, unit, read) do
+    %__MODULE__{
+      unit: normalize_time_unit(unit),
+      origin: origin,
+      read: read
+    }
+  end
+
+  #  @doc """
+  #  Initializes a remote clock, by specifying the unit in which the time value will be expressed
+  #  Use the stream interface to record future ticks
+  #  """
+  #  @spec new(Stream.t(), System.time_unit()) :: t()
+  #  def new(stream, unit) do
+  #    # TODO : maybe this should be external, as stream creation will depend on concrete implementation
+  #    # Therefore the clock here is too simple...
+  #    #  stream = Stream.resource(
+  #    #        fn -> [Task.async(clock_retrieve.())] end,
+  #    #        # Note : we want the next clock retrieve to happen as early as possible
+  #    #        # but we need to wait for a response before requesting the next one...
+  #    #        fn acc ->
+  #    #        acc = List.update_at(acc, -1, fn l -> Task.await(l) end)
+  #    #        {[acc.last()], acc ++ [Task.async(clock_retrieve.())]}
+  #    #        end,  # this lasts for ever, and to keep this simple,
+  #    ##       errors should be handled in the clock_retrieve closure.
+  #    #        fn acc -> :done end
+  #    #      )
+  #
+  #    %__MODULE__{
+  #      unit: unit,
+  #      ticks: stream
+  #    }
+  #  end
 
   @doc """
   Returns the current monotonic time in the given time unit.
@@ -73,25 +104,45 @@ defmodule XestClock.Clock do
   This time is monotonically increasing and starts in an unspecified
   point in time.
   """
+  # TODO : this should probably be in a protocol...
   @spec monotonic_time(t(), System.time_unit()) :: integer
-  def monotonic_time(clock, unit) do
+  def monotonic_time(%__MODULE__{} = clock, unit) do
     unit = normalize_time_unit(unit)
-    #    :erlang.monotonic_time(unit)
+    System.convert_time_unit(clock.read.(), clock.unit, unit)
   end
 
-  @doc """
-  Returns the current time offset between the estimated remote monotonic
-  time and the Erlang VM monotonic time.
-  The result is returned in the given time unit `unit`. The returned
-  offset, added to an Erlang monotonic time (for instance, one obtained with
-  `monotonic_time/1`), gives the Erlang system time that corresponds
-  to that remote monotonic time.
-  """
-  @spec monotonic_time_offset(t(), System.time_unit()) :: integer
-  def monotonic_time_offset(clock, unit) do
-    unit = normalize_time_unit(unit)
-    #    :erlang.time_offset(unit)
+  # TODO : this should probably be in a protocol...
+  def stream(%__MODULE__{} = clock, unit) do
+    Stream.resource(
+      # start by reading (to not have an empty stream)
+      fn -> [clock.read.()] end,
+      fn acc ->
+        {
+          [System.convert_time_unit(List.last(acc), clock.unit, unit)],
+          acc ++ [clock.read.()]
+        }
+      end,
+
+      # next
+      # end
+      fn _acc -> :done end
+    )
   end
+
+  # TODO : review this, we should probably do better...
+  #  @doc """
+  #  Returns the current time offset between the Estimated remote (monotonic)
+  #  time and the Erlang VM monotonic time.
+  #  The result is returned in the given time unit `unit`. The returned
+  #  offset, added to an Erlang VM monotonic time (for instance, one obtained with
+  #  `monotonic_time/1`), gives the Estimated remote (monotonic) time.
+  #  """
+  #  @spec monotonic_time_offset(t(), System.time_unit()) :: integer
+  #  def monotonic_time_offset(%__MODULE__{} = clock, unit) do
+  #    unit = normalize_time_unit(unit)
+  #    System.monotonic_time(unit) - System.monotonic_time(clock, unit)
+  #    #    :erlang.time_offset(unit)
+  #  end
 
   ## Duplicated from https://github.com/elixir-lang/elixir/blob/0909940b04a3e22c9ea4fedafa2aac349717011c/lib/elixir/lib/system.ex#L1344
   defp normalize_time_unit(:second), do: :second
@@ -105,17 +156,18 @@ defmodule XestClock.Clock do
             ":microsecond, :nanosecond, or a positive integer, " <> "got #{inspect(other)}"
   end
 
-  defimpl Enumerable, for: XestClock.Clock do
-    # CAREFUL we only care about integer stream here...
-    @type element :: integer
-
-    @doc """
-    Reduces the `XestClock.Clock` into an element.
-    Here `reduce/3` is delegated to the stream of ticks.
-    """
-    @spec reduce(XestClock.Clock.t(), Enumerable.acc(), Enumerable.reducer()) ::
-            Enumerable.result()
-    def reduce(%XestClock.Clock{ticks: stream}, acc, reducer),
-      do: Enumerable.reduce(stream, acc, reducer)
-  end
+  #
+  #  defimpl Enumerable, for: XestClock.Clock do
+  #    # CAREFUL we only care about integer stream here...
+  #    @type element :: integer
+  #
+  #    @doc """
+  #    Reduces the `XestClock.Clock` into an element.
+  #    Here `reduce/3` is delegated to the stream of ticks.
+  #    """
+  #    @spec reduce(XestClock.Clock.t(), Enumerable.acc(), Enumerable.reducer()) ::
+  #            Enumerable.result()
+  #    def reduce(%XestClock.Clock{ticks: stream}, acc, reducer),
+  #      do: Enumerable.reduce(stream, acc, reducer)
+  #  end
 end
