@@ -1,7 +1,14 @@
 defmodule Xest.Clock do
+  require Xest.DateTime
+
   defmodule Behaviour do
     @moduledoc "Behaviour to allow mocking a xest clock for tests"
     @callback utc_now(atom()) :: DateTime.t()
+    @callback utc_now() :: DateTime.t()
+  end
+
+  def utc_now() do
+    datetime().utc_now()
   end
 
   def utc_now(:binance) do
@@ -16,6 +23,10 @@ defmodule Xest.Clock do
       # finding the process (or nil if mocked)
       Process.whereis(kraken())
     )
+  end
+
+  defp datetime() do
+    Application.get_env(:xest, :datetime_module, Xest.DateTime)
   end
 
   defp kraken() do

@@ -19,11 +19,37 @@ defmodule XestWeb.Router do
 
     # keep that for overview dashboard
     get "/", PageController, :index
+
+    # demos
     live "/democlock", ClockLive, :index
     live "/demoimage", ImageLive, :index
+
+    # prototype pages
     live "/binance", BinanceLive, :index
     live "/binance/:symbol", BinanceTradesLive, :index
     live "/kraken", KrakenLive, :index
+
+    # TODO : use verified routes with recent phoenix 1.7 ??
+    #    live "/status", StatusLive, :index  # TODO show all exchanges
+    live "/status/:exchange", StatusLive, :index
+
+    #    live "/assets", AssetsLive, :index
+    #    live "/assets/:symbol", AssetsLive, :index  # TODO : exchange aggregate view ??
+    live "/assets/:exchange/", AssetsLive, :index
+    #    live "/assets/:exchange/:symbol", AssetsLive, :index  # TODO: detail view ??
+
+    #    live "/markets/", MarketsLive, :index  # multi ticker view
+    #    live "/markets/:symbol", MarketsLive, :index  # detailed ticker (+ candle ??)
+    #
+    #    live "/trades", TradesLive, :index
+    #    live "/trades/:symbol", TradesLive, :index
+    #        live "/trades/:exchange", TradesLive, :index  # kraken only ?? TODO : binance aggregate ??
+    # basic for binance, filtered for kraken ??
+    live "/trades/:exchange/:symbol", TradesLive, :index
+
+    # TODO live "/orders", OrdersLive
+
+    # TODO live "/bots", BotsLive
   end
 
   # Other scopes may use custom stacks.

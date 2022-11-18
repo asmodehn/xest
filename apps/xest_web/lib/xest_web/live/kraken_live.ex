@@ -108,16 +108,16 @@ defmodule XestWeb.KrakenLive do
   end
 
   defp xest_account() do
-    Application.get_env(:xest_web, :account, Xest.Account)
+    Application.get_env(:xest, :account, Xest.Account)
   end
 
   defp exchange() do
     # indirection to allow mock during tests
-    Application.get_env(:xest_web, :exchange, Xest.Exchange)
+    Application.get_env(:xest, :exchange, Xest.Exchange)
   end
 
   defp clock() do
     # indirection to allow mock during tests
-    Application.get_env(:xest_web, :clock, Xest.Clock)
+    Application.get_env(:xest, :clock, Xest.Clock)
   end
 end

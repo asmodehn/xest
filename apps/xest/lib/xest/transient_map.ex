@@ -3,7 +3,11 @@ defmodule Xest.TransientMap do
     A map that forgets its content after some time...
   """
 
+  # TODO : replace this with nebulex ? or the other way around ??
+  #        OR another, simpler, more standard package ?
+
   require Timex
+  require Xest.DateTime
 
   @type key() :: any()
   @type value() :: any()
@@ -46,7 +50,7 @@ defmodule Xest.TransientMap do
   end
 
   defp dead_or_alive(t) do
-    now = Xest.DateTime.utc_now()
+    now = datetime().utc_now()
 
     case Timex.compare(
            Timex.add(t.birthdate, Timex.Duration.from_time(t.lifetime)),
@@ -57,5 +61,12 @@ defmodule Xest.TransientMap do
       # else build a new one with same lifetime...
       _ -> new(t.lifetime, now)
     end
+  end
+
+  # TODO : make this a module-level setting.
+  # careful : all tests must specify the expected mock calls
+  # But this is usually behind the Clock module, so it shouldnt spill too far out...
+  defp datetime() do
+    Application.get_env(:xest, :datetime_module, Xest.DateTime)
   end
 end

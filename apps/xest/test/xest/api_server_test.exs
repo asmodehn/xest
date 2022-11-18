@@ -1,5 +1,5 @@
 defmodule Xest.APIServer.Test do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   use FlowAssertions
 
   alias Xest.DateTime

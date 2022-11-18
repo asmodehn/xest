@@ -49,4 +49,12 @@ defmodule XestKraken.Adapter.Krakex do
       {:error, reason} -> {:error, reason}
     end
   end
+
+  @impl true
+  def asset_pairs(%Client{impl: client}) do
+    case Krakex.asset_pairs(client) do
+      {:ok, response} -> {:ok, response}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 end
