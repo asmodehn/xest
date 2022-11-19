@@ -51,6 +51,8 @@ defmodule XestClock.Clock do
     }
   end
 
+  # TODO : make this one singleton, to prevent duplication...
+
   @spec new(:local, System.time_unit()) :: t()
   def new(:local, unit) do
     norm_unit = normalize_time_unit(unit)
@@ -69,6 +71,11 @@ defmodule XestClock.Clock do
       origin: origin,
       read: read
     }
+  end
+
+  def tick(%__MODULE__{} = clock) do
+    # TODO : make this a timestamp struct
+    %{origin: clock.origin, time: clock.read.(), unit: clock.unit}
   end
 
   #  @doc """
