@@ -28,7 +28,7 @@ defmodule XestClock.Event do
     %__MODULE__{data: data, at: at}
   end
 
-  # TODO : defalut integer to utc_now from the singleton local clock
+  # TODO : default integer to utc_now from the singleton local clock
 
   @spec stream((() -> any()), Clock.t()) :: Stream.t()
   # TODO : default to singleton local clock
