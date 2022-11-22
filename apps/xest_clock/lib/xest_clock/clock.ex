@@ -28,6 +28,8 @@ defmodule XestClock.Clock do
 
   """
 
+  require XestClock.Clock.Timestamp
+
   @enforce_keys [:unit, :read, :origin]
   defstruct unit: nil,
             read: nil,
@@ -74,8 +76,7 @@ defmodule XestClock.Clock do
   end
 
   def tick(%__MODULE__{} = clock) do
-    # TODO : make this a timestamp struct
-    %{origin: clock.origin, time: clock.read.(), unit: clock.unit}
+    XestClock.Clock.Timestamp.new(clock.origin, clock.unit, clock.read.())
   end
 
   #  @doc """

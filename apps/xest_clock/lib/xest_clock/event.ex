@@ -11,40 +11,23 @@ defmodule XestClock.Event do
 
   """
 
-  alias XestClock.Clock
+  require XestClock.Event.Local
+  require XestClock.Event.Remote
 
-  @enforce_keys [:at, :data]
-  defstruct at: nil,
-            data: nil
+  @type t() :: XestClock.Event.Local.t() | XestClock.Event.Remote.t()
 
-  @typedoc "Remote Event struct"
-  @type t() :: %__MODULE__{
-          at: integer,
-          data: any()
-        }
+  @spec local(any(), Clock.Timestamp.t()) :: t()
+  defdelegate local(data, at), to: XestClock.Event.Local, as: :new
 
-  @spec new(any(), integer) :: t()
-  def new(data, at) do
-    %__MODULE__{data: data, at: at}
-  end
+  @spec remote(any(), Clock.Timeinterval.t()) :: t()
+  defdelegate remote(data, inside), to: XestClock.Event.Remote, as: :new
 
-  # TODO : default integer to utc_now from the singleton local clock
+  # TODO : different structs for notice or retrieve could help us pick the correct implementation here...
+  # Problem :timing and noticing are local (even for remote events... ???)
 
-  @spec stream((() -> any()), Clock.t()) :: Stream.t()
-  # TODO : default to singleton local clock
-  def stream(notice, clock \\ Clock.new()) do
-    Stream.resource(
-      fn -> [new(notice.(), Clock.tick(clock).time)] end,
-      fn acc ->
-        {
-          [List.last(acc, nil)],
-          acc ++ [new(notice.(), Clock.tick(clock).time)]
-        }
-      end,
-
-      # next
-      # end
-      fn _acc -> :done end
-    )
-  end
+  #  @doc "wait for and return the next event, synchronously"
+  #  def next(notice_or_retrieve, local_clock)
+  #
+  #  @doc "create a stream that will retrieve all further events, asynchronously"
+  #  def stream(notice_or_retrieve, local_clock)
 end
