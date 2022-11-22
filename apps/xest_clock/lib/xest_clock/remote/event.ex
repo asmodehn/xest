@@ -5,26 +5,29 @@ defmodule XestClock.Remote.Event do
 
   alias XestClock.Clock
 
-  @enforce_keys [:before, :data]
-  defstruct before: nil,
+  @enforce_keys [:inside, :data]
+  defstruct inside: nil,
             data: nil
 
   @typedoc "Remote.Event struct"
   @type t() :: %__MODULE__{
           # Note : these are **local** timestamps
-          before: Clock.Timestamps.t(),
+          inside: Clock.Timeinterval.t(),
           data: any()
         }
 
   # We need to force the timestamp to be a local one here
   # The remote timestamp can be in data...
-  def new(data, %Clock.Timestamps{origin: :local} = ts) do
+  # or exception?
+  @spec new(any(), Clock.Timeinterval.t()) :: t()
+  def new(data, %Clock.Timeinterval{origin: :local} = interval) do
     %__MODULE__{
-      before: ts,
+      inside: interval,
       data: data
     }
   end
 
-  def new(data, %Clock.Timestamps{origin: origin}),
-    do: raise(ArgumentError, message: "invalid origin: #{origin}")
+  def new(data, %Clock.Timeinterval{origin: somewhere}) do
+    raise(ArgumentError, message: "interval for a Remote event can only be measured locally")
+  end
 end
