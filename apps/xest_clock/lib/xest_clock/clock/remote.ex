@@ -37,14 +37,12 @@ defmodule XestClock.Remote.Clock do
   @enforce_keys [:origin, :unit, :next_tick]
   defstruct origin: nil,
             unit: nil,
-            ticks: [],
             next_tick: nil
 
   @typedoc "XestClock.Remote.Clock struct"
   @type t() :: %__MODULE__{
           origin: atom(),
           unit: System.time_unit(),
-          ticks: [Remote.Event.t()],
           # next tick does(not) time it with local clock ?
           next_tick: (() -> Timestamps.t())
         }
@@ -57,8 +55,7 @@ defmodule XestClock.Remote.Clock do
     # but embeds a task for the long running request
     %__MODULE__{
       origin: origin,
-      unit: unit,
-      ticks: ticks,
+      unit: XestClock.Clock.Timeunit.normalize(unit),
       next_tick: fn -> Task.async(retrieve) end
     }
   end
@@ -110,16 +107,4 @@ defmodule XestClock.Remote.Clock do
   #    t = tick(clock)
   #    System.convert_time_unit(t., clock.unit, unit)
   #  end
-
-  ## Duplicated from https://github.com/elixir-lang/elixir/blob/0909940b04a3e22c9ea4fedafa2aac349717011c/lib/elixir/lib/system.ex#L1344
-  defp normalize_time_unit(:second), do: :second
-  defp normalize_time_unit(:millisecond), do: :millisecond
-  defp normalize_time_unit(:microsecond), do: :microsecond
-  defp normalize_time_unit(:nanosecond), do: :nanosecond
-
-  defp normalize_time_unit(other) do
-    raise ArgumentError,
-          "unsupported time unit. Expected :second, :millisecond, " <>
-            ":microsecond, :nanosecond, or a positive integer, " <> "got #{inspect(other)}"
-  end
 end

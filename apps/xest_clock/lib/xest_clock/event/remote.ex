@@ -1,6 +1,6 @@
 defmodule XestClock.Event.Remote do
   @docmodule """
-    A Remote Event, therefore not happening **at** a specific time, but **before** the response timestamp
+    A Remote Event, therefore not happening **at** a specific time, but **inside** the timeinterval
   """
 
   alias XestClock.Clock
