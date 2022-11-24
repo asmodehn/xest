@@ -3,18 +3,6 @@ defmodule XestClock.Clock.Test do
   doctest XestClock.Clock
 
   describe "XestClock.Clock" do
-    test "new/0 generates local clock" do
-      clock = XestClock.Clock.new()
-      assert clock.origin == :local
-      assert clock.unit == :native
-    end
-
-    test "new(:local, :native) generates local clock with native unit" do
-      clock = XestClock.Clock.new(:local, :native)
-      assert clock.origin == :local
-      assert clock.unit == :native
-    end
-
     test "new(:local, time_unit) generates local clock with custom time_unit" do
       for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
         clock = XestClock.Clock.new(:local, unit)
@@ -23,7 +11,11 @@ defmodule XestClock.Clock.Test do
       end
     end
 
-    test "new/2 refuses unknown time units" do
+    test "new/2 refuses :native or unknown time units" do
+      assert_raise(ArgumentError, fn ->
+        XestClock.Clock.new(:local, :native)
+      end)
+
       assert_raise(ArgumentError, fn ->
         XestClock.Clock.new(:local, :unknown_time_unit)
       end)

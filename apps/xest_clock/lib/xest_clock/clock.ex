@@ -28,7 +28,8 @@ defmodule XestClock.Clock do
 
   """
 
-  require XestClock.Clock.Timestamp
+  alias XestClock.Clock.Timestamp
+  alias XestClock.Clock.Timeunit
 
   @enforce_keys [:unit, :read, :origin]
   defstruct unit: nil,
@@ -42,41 +43,28 @@ defmodule XestClock.Clock do
           origin: atom
         }
 
-  @spec new() :: t()
-  def new(), do: new(:local, :native)
-  @spec new(:local, :native) :: t()
-  def new(:local, :native) do
-    %__MODULE__{
-      unit: :native,
-      origin: :local,
-      read: fn -> System.monotonic_time(:native) end
-    }
-  end
-
-  # TODO : make this one singleton, to prevent duplication...
-
-  @spec new(:local, System.time_unit()) :: t()
-  def new(:local, unit) do
-    norm_unit = normalize_time_unit(unit)
+  @spec new(atom, System.time_unit()) :: t()
+  def new(origin, unit) do
+    unit = Timeunit.normalize(unit)
 
     %__MODULE__{
-      unit: norm_unit,
-      origin: :local,
-      read: fn -> System.monotonic_time(norm_unit) end
+      unit: unit,
+      origin: origin,
+      read: fn -> System.monotonic_time(unit) end
     }
   end
 
   @spec new(atom, System.time_unit(), (() -> integer)) :: t()
   def new(origin, unit, read) do
     %__MODULE__{
-      unit: normalize_time_unit(unit),
+      unit: Timeunit.normalize(unit),
       origin: origin,
       read: read
     }
   end
 
   def tick(%__MODULE__{} = clock) do
-    XestClock.Clock.Timestamp.new(clock.origin, clock.unit, clock.read.())
+    Timestamp.new(clock.origin, clock.unit, clock.read.())
   end
 
   #  @doc """
@@ -113,20 +101,26 @@ defmodule XestClock.Clock do
   point in time.
   """
   # TODO : this should probably be in a protocol...
+  @spec monotonic_time(t()) :: integer
+  def monotonic_time(%__MODULE__{} = clock) do
+    clock.read.()
+  end
+
   @spec monotonic_time(t(), System.time_unit()) :: integer
   def monotonic_time(%__MODULE__{} = clock, unit) do
-    unit = normalize_time_unit(unit)
-    System.convert_time_unit(clock.read.(), clock.unit, unit)
+    unit = Timeunit.normalize(unit)
+    Timeunit.convert(clock.read.(), clock.unit, unit)
   end
 
   # TODO : this should probably be in a protocol...
   def stream(%__MODULE__{} = clock, unit) do
+    # TODO or maybe just Stream.repeatedly() ??
     Stream.resource(
       # start by reading (to not have an empty stream)
       fn -> [clock.read.()] end,
       fn acc ->
         {
-          [System.convert_time_unit(List.last(acc), clock.unit, unit)],
+          [Timeunit.convert(List.last(acc), clock.unit, unit)],
           acc ++ [clock.read.()]
         }
       end,
@@ -135,33 +129,6 @@ defmodule XestClock.Clock do
       # end
       fn _acc -> :done end
     )
-  end
-
-  # TODO : review this, we should probably do better...
-  #  @doc """
-  #  Returns the current time offset between the Estimated remote (monotonic)
-  #  time and the Erlang VM monotonic time.
-  #  The result is returned in the given time unit `unit`. The returned
-  #  offset, added to an Erlang VM monotonic time (for instance, one obtained with
-  #  `monotonic_time/1`), gives the Estimated remote (monotonic) time.
-  #  """
-  #  @spec monotonic_time_offset(t(), System.time_unit()) :: integer
-  #  def monotonic_time_offset(%__MODULE__{} = clock, unit) do
-  #    unit = normalize_time_unit(unit)
-  #    System.monotonic_time(unit) - System.monotonic_time(clock, unit)
-  #    #    :erlang.time_offset(unit)
-  #  end
-
-  ## Duplicated from https://github.com/elixir-lang/elixir/blob/0909940b04a3e22c9ea4fedafa2aac349717011c/lib/elixir/lib/system.ex#L1344
-  defp normalize_time_unit(:second), do: :second
-  defp normalize_time_unit(:millisecond), do: :millisecond
-  defp normalize_time_unit(:microsecond), do: :microsecond
-  defp normalize_time_unit(:nanosecond), do: :nanosecond
-
-  defp normalize_time_unit(other) do
-    raise ArgumentError,
-          "unsupported time unit. Expected :second, :millisecond, " <>
-            ":microsecond, :nanosecond, or a positive integer, " <> "got #{inspect(other)}"
   end
 
   #

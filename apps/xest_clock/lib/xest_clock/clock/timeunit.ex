@@ -1,4 +1,6 @@
 defmodule XestClock.Clock.Timeunit do
+  @type t() :: System.time_unit()
+
   ## Duplicated from https://github.com/elixir-lang/elixir/blob/0909940b04a3e22c9ea4fedafa2aac349717011c/lib/elixir/lib/system.ex#L1344
   def normalize(:second), do: :second
   def normalize(:millisecond), do: :millisecond
@@ -24,5 +26,5 @@ defmodule XestClock.Clock.Timeunit do
   def convert(_time, :native, _to_unit),
     do: raise(ArgumentError, message: "convert_time_unit does not support :native unit")
 
-  defdelegate convert_time_unit(time, from_unit, to_unit), to: System
+  defdelegate convert(time, from_unit, to_unit), to: System, as: :convert_time_unit
 end
