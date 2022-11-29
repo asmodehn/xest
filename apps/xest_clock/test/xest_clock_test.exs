@@ -3,31 +3,101 @@ defmodule XestClockTest do
   doctest XestClock
 
   describe "XestClock" do
-    test "defaults to no remote and local naive utc_now closure" do
-      clk = %XestClock{}
-      assert clk.remotes == %{}
-      assert clk.system_clock_closure == (&NaiveDateTime.utc_now/0)
+    test "local/0 builds a nanosecond clock with a local key" do
+      clk = XestClock.local()
+      assert %XestClock.Clock{unit: :nanosecond} = clk.local
     end
 
-    test "accepts different system closures for tests" do
-      clk = %XestClock{system_clock_closure: fn -> ~N[2010-04-17 14:00:00] end}
-      assert clk.remotes == %{}
-      assert clk.system_clock_closure.() == ~N[2010-04-17 14:00:00]
+    test "local/1 builds a clock with a local key" do
+      for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
+        clk = XestClock.local(unit)
+        assert %XestClock.Clock{unit: ^unit} = clk.local
+      end
+    end
+
+    test "remote/3 builds a remote clock with the origin key" do
+      clk = XestClock.remote(:testclock, :nanosecond, [1, 2, 3, 4])
+
+      assert %XestClock.Clock{origin: :testclock, unit: :nanosecond, read: [1, 2, 3, 4]} ==
+               clk.testclock
     end
   end
 
-  describe "utc_now/1" do
+  describe "XestClock inside a Process" do
     setup do
-      clk = %XestClock{system_clock_closure: fn -> ~N[2010-04-17 14:00:00] end}
-      %{clock: clk}
+      {:ok, clock_agent} =
+        Agent.start_link(fn ->
+          # For testing we use a specific local clock
+          clkinit = XestClock.local()
+          clk = %{clkinit | local: clkinit.local |> XestClock.Clock.with_read([1, 2, 3, 4, 5])}
+          #  and merge with another "remote" clock
+          Map.merge(clk, XestClock.remote(:testremote, :nanosecond, [1, 2, 3, 4, 5]))
+        end)
+
+      ltick = fn ->
+        Agent.get_and_update(
+          clock_agent,
+          fn %{local: local, testremote: remote} ->
+            # Note : we update teh agent, by returning one tick from the stream,
+            #                             and dropping it in the state.
+            # With a function read() instead of a list, that drop is implicit,
+            # and the state is the system clock tracking current time
+            {
+              %{
+                local:
+                  local
+                  |> Stream.take(1)
+                  |> Enum.into([]),
+                testremote: remote.last
+              },
+              %{
+                local:
+                  local
+                  |> Stream.drop(1),
+                testremote: remote
+              }
+            }
+          end
+        )
+      end
+
+      rtick = fn ->
+        Agent.get_and_update(
+          clock_agent,
+          fn %{local: local, testremote: remote} ->
+            {
+              %{
+                local: local.last,
+                testremote:
+                  remote
+                  |> Stream.take(1)
+                  |> Enum.into([])
+              },
+              %{
+                local: local,
+                testremote:
+                  remote
+                  |> Stream.drop(1)
+              }
+            }
+          end
+        )
+      end
+
+      %{local_tick: ltick, remote_tick: rtick}
     end
 
-    test "returns local now", %{clock: clk} do
-      assert XestClock.utc_now(clk) == ~N[2010-04-17 14:00:00]
+    test "can get one local tick as a timestamp", %{local_tick: ltick, remote_tick: rtick} do
+      %{local: ltick} = ltick.()
+      assert ltick == [%XestClock.Clock.Timestamp{origin: :local, ts: 1, unit: :nanosecond}]
     end
-  end
 
-  describe "utc_now/2" do
-    test "returns exchange clock"
+    test "can output one remote tick as a timestamp", %{local_tick: ltick, remote_tick: rtick} do
+      %{testremote: rtick} = rtick.()
+      assert rtick == [%XestClock.Clock.Timestamp{origin: :testremote, ts: 1, unit: :nanosecond}]
+    end
+
+    #    test "can output one actual remote tick as a time"
+    #    test "can output one simulated remote tick as a time"
   end
 end
