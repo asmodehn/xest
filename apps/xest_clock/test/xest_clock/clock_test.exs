@@ -96,16 +96,50 @@ defmodule XestClock.Clock.Test do
              ]
     end
 
-    test "Enum can be zipped alongside another" do
+    test "stamp/2 make use of the Enum to stamp a sequence of events" do
       clock = Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
       events = [:one, :two, :three, :five]
 
-      assert clock |> Stream.zip(events) |> Enum.to_list() == [
+      assert clock |> Clock.stamp(events) |> Enum.to_list() == [
                {%XestClock.Clock.Timestamp{origin: :testclock, ts: 1, unit: :second}, :one},
                {%XestClock.Clock.Timestamp{origin: :testclock, ts: 2, unit: :second}, :two},
                {%XestClock.Clock.Timestamp{origin: :testclock, ts: 3, unit: :second}, :three},
                {%XestClock.Clock.Timestamp{origin: :testclock, ts: 5, unit: :second}, :five}
+             ]
+    end
+
+    test "stamp/2 stops on shortest stream" do
+      clock = Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
+
+      events = [:one, :two]
+
+      assert clock |> Clock.stamp(events) |> Enum.to_list() == [
+               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 1, unit: :second}, :one},
+               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 2, unit: :second}, :two}
+             ]
+    end
+
+    test "offset/2 computes difference between clocks" do
+      clockA = Clock.new(:testclockA, :second, [1, 2, 3, 5, 4])
+      clockB = Clock.new(:testclockB, :second, [11, 12, 13, 15, 124])
+
+      assert clockA |> Clock.offset(clockB) |> Enum.to_list() == [
+               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
+               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
+               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
+               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second}
+             ]
+    end
+
+    test "offset of same clock is null" do
+      clockA = Clock.new(:testclockA, :second, [1, 2, 3])
+      clockB = Clock.new(:testclockB, :second, [1, 2, 3])
+
+      assert clockA |> Clock.offset(clockB) |> Enum.to_list() == [
+               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 0, unit: :second},
+               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 0, unit: :second},
+               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 0, unit: :second}
              ]
     end
   end

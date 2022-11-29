@@ -34,6 +34,7 @@ defmodule XestClock.Clock do
   @enforce_keys [:unit, :read, :origin]
   defstruct unit: nil,
             read: nil,
+            # TODO: get rid of this ? makes sens only when comparing many of them...
             origin: nil,
             last: nil
 
@@ -132,6 +133,9 @@ defmodule XestClock.Clock do
       # TODO : on error stop
 
       # verify increasing monotonicity with acc
+      # TODO : make read() or list the same reduce implementation, somehow...
+      # TODO : then use Task.async to make the request asynchronous ??
+      #        or separate specific reduce for remote clocks ??
       cond do
         is_integer(clock.last) and
             tick < clock.last ->
@@ -170,7 +174,22 @@ defmodule XestClock.Clock do
     end
   end
 
-  # note: this is a stream clock : no unique tick() !
-  # This would require to keep state in a process...
-  # and we want to bring that up to the user-level
+  @spec stamp(t(), Enumerable.t()) :: t()
+  def stamp(%__MODULE__{} = clock, events) do
+    Stream.zip(clock, events)
+  end
+
+  @doc """
+    computes offset between two clocks, in the unit of the first one.
+    This returns time values as a stream (is this a clock??)
+  """
+  @spec offset(t(), t()) :: Enumerable.t()
+  def offset(%__MODULE__{} = clock, %__MODULE__{} = reference) do
+    # we stamp one clock tick with the other...
+    reference
+    |> stamp(clock)
+    |> Stream.map(fn {a, b} ->
+      Timestamp.diff(a, b)
+    end)
+  end
 end

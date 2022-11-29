@@ -38,11 +38,9 @@ defmodule XestClockTest do
         Agent.get_and_update(
           clock_agent,
           fn %{local: local, testremote: remote} ->
-            # Note : we update teh agent, by returning one tick from the stream,
-            #                             and dropping it in the state.
-            # With a function read() instead of a list, that drop is implicit,
-            # and the state is the system clock tracking current time
             {
+              # Note : we update the agent, by returning one tick from the stream,
+              #                             and dropping it in the state.
               %{
                 local:
                   local
@@ -50,6 +48,9 @@ defmodule XestClockTest do
                   |> Enum.into([]),
                 testremote: remote.last
               },
+
+              # With a function read() instead of a list, that drop is implicit,
+              # and the state is the system clock tracking current time
               %{
                 local:
                   local
@@ -96,8 +97,44 @@ defmodule XestClockTest do
       %{testremote: rtick} = rtick.()
       assert rtick == [%XestClock.Clock.Timestamp{origin: :testremote, ts: 1, unit: :nanosecond}]
     end
+  end
 
-    #    test "can output one actual remote tick as a time"
-    #    test "can output one simulated remote tick as a time"
+  describe "XestClock as a stream" do
+    setup do
+      # For testing we use a specific local clock
+      clkinit = XestClock.local(:microsecond)
+      clk = %{clkinit | local: clkinit.local |> XestClock.Clock.with_read([1, 2, 3, 4, 5])}
+      #  and merge with another "remote" clock
+      %{clk: Map.merge(clk, XestClock.remote(:testremote, :millisecond, [11, 12, 13, 14, 15]))}
+    end
+
+    @tag :try_me
+    test "can compute local time as datetime", %{clk: clk} do
+      # no offset needed since we dont use monotone time here
+      offset = fn _unit -> 0 end
+
+      # epoch + 1 micro
+      assert clk |> XestClock.to_datetime(:local, :local, offset) |> Enum.at(0) |> IO.inspect() ==
+               ~U[1970-01-01 00:00:00.000001Z]
+
+      # TODO : stream
+    end
+
+    test "can compute remote time as datetime", %{clk: clk} do
+      # no offset needed since we dont use monotone time here
+      offset = fn _unit -> 0 end
+
+      # epoch + 11 milli (still in micro -local- precision)
+      assert clk
+             |> XestClock.to_datetime(:testremote, :local, offset)
+             |> Enum.at(0)
+             |> IO.inspect() ==
+               ~U[1970-01-01 00:00:00.011000Z]
+
+      # TODO : stream
+    end
+
+    #    test "can output simulated remote time as datetime"
+    #    test "can output simulated remote time as erl tuple"
   end
 end

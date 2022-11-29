@@ -31,5 +31,22 @@ defmodule XestClock.Clock.Timestamp.Test do
                ts: -123_000 + 123
              }
     end
+
+    test "plus/2 compute sums, convert units, and ignores origin" do
+      tsa = Timestamp.new(:somewhere, :millisecond, 123)
+      tsb = Timestamp.new(:anotherplace, :microsecond, 123)
+
+      assert Timestamp.plus(tsa, tsb) == %Timestamp{
+               origin: :somewhere,
+               unit: :microsecond,
+               ts: 123_000 + 123
+             }
+
+      assert Timestamp.plus(tsb, tsa) == %Timestamp{
+               origin: :anotherplace,
+               unit: :microsecond,
+               ts: 123_000 + 123
+             }
+    end
   end
 end

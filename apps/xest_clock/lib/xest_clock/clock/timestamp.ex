@@ -50,4 +50,20 @@ defmodule XestClock.Clock.Timestamp do
         new(tsa.origin, tsa.unit, tsa.ts - Timeunit.convert(tsb.ts, tsb.unit, tsa.unit))
     end
   end
+
+  def plus(%__MODULE__{} = tsa, %__MODULE__{} = tsb) do
+    cond do
+      # if equality just add
+      tsa.unit == tsb.unit ->
+        new(tsa.origin, tsa.unit, tsa.ts + tsb.ts)
+
+      # if conversion needed to tsb unit
+      Timeunit.sup(tsb.unit, tsa.unit) ->
+        new(tsa.origin, tsb.unit, Timeunit.convert(tsa.ts, tsa.unit, tsb.unit) + tsb.ts)
+
+      # otherwise (tsa unit)
+      true ->
+        new(tsa.origin, tsa.unit, tsa.ts + Timeunit.convert(tsb.ts, tsb.unit, tsa.unit))
+    end
+  end
 end

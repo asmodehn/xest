@@ -13,11 +13,14 @@ defmodule XestClock do
   """
 
   alias XestClock.Clock
+  alias XestClock.Clock.Timestamp
 
   @typedoc "A naive clock, callable (impure) function returning a DateTime"
   @type naive_clock() :: (() -> NaiveDateTime.t())
+  @typedoc "A naive clock, callable (impure) function returning a integer"
+  @type naive_integer_clock() :: (() -> integer)
 
-  @typedoc "Remote NaiveDatetime struct"
+  @typedoc "XestClock as a map or Clocks indexed by origin"
   @type t() :: %{atom() => Clock.t()}
 
   @spec local() :: t()
@@ -31,5 +34,36 @@ defmodule XestClock do
   @spec remote(atom(), System.time_unit(), (() -> integer)) :: t()
   def remote(origin, unit, read) do
     Map.put(%{}, origin, Clock.new(origin, unit, read))
+  end
+
+  @doc """
+      convert a remote clock to a datetime, that we can locally compare with datetime.utc_now().CAREFUL: converting to datetime might drop precision (especially nanosecond...)
+  """
+  def to_datetime(xestclock, origin, reference \\ :local, time_offset \\ &System.time_offset/1) do
+    monotone_offset =
+      xestclock[reference]
+      |> Clock.offset(xestclock[origin])
+      # because one time is enough to compute offset
+      |> Enum.at(0)
+
+    # we take the reference (usually :local)
+    # and we add the monotone offset, as well as a the local system offset to deduce current datetime
+    xestclock[reference]
+    |> Stream.map(fn ref ->
+      tstamp =
+        Timestamp.plus(
+          ref,
+          Timestamp.plus(
+            monotone_offset,
+            Timestamp.new(
+              :local_offset,
+              xestclock[reference].unit,
+              time_offset.(xestclock[reference].unit)
+            )
+          )
+        )
+
+      DateTime.from_unix!(tstamp.ts, tstamp.unit)
+    end)
   end
 end
