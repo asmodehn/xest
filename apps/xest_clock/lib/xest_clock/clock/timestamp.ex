@@ -8,6 +8,8 @@ defmodule XestClock.Clock.Timestamp do
   and managing the place of measurement is left to the client code.
   """
 
+  alias XestClock.Clock.Timeunit
+
   @enforce_keys [:origin, :unit, :ts]
   defstruct ts: nil,
             unit: nil,
@@ -27,7 +29,25 @@ defmodule XestClock.Clock.Timestamp do
       origin: origin,
       # TODO : normalize unit (clock ? not private ?)
       unit: unit,
+      # TODO : after getting rid of origin, this becomes just a time value...
       ts: ts
     }
+  end
+
+  # Note :we are currently abusing timestamp to denote timevalues...
+  def diff(%__MODULE__{} = tsa, %__MODULE__{} = tsb) do
+    cond do
+      # if equality, just diff
+      tsa.unit == tsb.unit ->
+        new(tsa.origin, tsa.unit, tsa.ts - tsb.ts)
+
+      # if conversion needed to tsb unit
+      Timeunit.sup(tsb.unit, tsa.unit) ->
+        new(tsa.origin, tsb.unit, Timeunit.convert(tsa.ts, tsa.unit, tsb.unit) - tsb.ts)
+
+      # otherwise (tsa unit)
+      true ->
+        new(tsa.origin, tsa.unit, tsa.ts - Timeunit.convert(tsb.ts, tsb.unit, tsa.unit))
+    end
   end
 end

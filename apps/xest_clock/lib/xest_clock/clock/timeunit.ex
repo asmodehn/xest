@@ -27,4 +27,16 @@ defmodule XestClock.Clock.Timeunit do
     do: raise(ArgumentError, message: "convert_time_unit does not support :native unit")
 
   defdelegate convert(time, from_unit, to_unit), to: System, as: :convert_time_unit
+
+  @doc """
+    ordered by precision leveraging convert to detect precision loss
+  Note the order on unit is hte opposite order than on values with those unit...
+  """
+  def inf(a, b) do
+    convert(1, normalize(b), normalize(a)) == 0
+  end
+
+  def sup(a, b) do
+    not inf(a, b) and a != b
+  end
 end
