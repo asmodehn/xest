@@ -41,7 +41,7 @@ defmodule XestClock.Clock.Test do
       end)
     end
 
-    test "tick/1 returns increasing timestamp for local clock" do
+    test "Enum returns increasing timestamp for local clock" do
       for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
         clock = Clock.new(:local, unit)
 
@@ -51,7 +51,7 @@ defmodule XestClock.Clock.Test do
       end
     end
 
-    test "tick/1 using list of integers stops at the first integer that is not greater than the current one" do
+    test "Enum stops at the first integer that is not greater than the current one" do
       clock = Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
       assert ts_retrieve(:testclock, :second).(clock |> Stream.take(5) |> Enum.to_list()) == [
@@ -62,7 +62,7 @@ defmodule XestClock.Clock.Test do
              ]
     end
 
-    test "tick/1 returns increasing timestamp for clock using agent update as read function" do
+    test "Enum returns increasing timestamp for clock using agent update as read function" do
       #  A simple test ticker agent, that ticks everytime it is called
       # TODO : use start_supervised ??
       {:ok, clock_agent} =
@@ -96,68 +96,17 @@ defmodule XestClock.Clock.Test do
              ]
     end
 
-    # TODO, but as a stream of ticks
-    #    test "tick/1 returns timestamp" do
-    #      clock = Clock.new(:local_testclock, :nanosecond, [1, 2_000, 3_000_000, 4_000_000_000, 42])
-    #
-    #      assert Clock.tick(clock) ==  %Clock.Timestamp{
-    #              origin: :local_testclock,
-    #              ts: 1,
-    #              unit: :nanosecond
-    #            }
-    #                  assert XestClock.Clock.tick(clock) ==  %Clock.Timestamp{
-    #              origin: :local_testclock,
-    #              ts: 2000,
-    #              unit: :nanosecond
-    #            }
-    #                              assert XestClock.Clock.tick(clock) ==  %Clock.Timestamp{
-    #              origin: :local_testclock,
-    #              ts: 3_000_000,
-    #              unit: :nanosecond
-    #            }
-    #                              assert XestClock.Clock.tick(clock) ==  %Clock.Timestamp{
-    #              origin: :local_testclock,
-    #              ts: 4_000_000_000,
-    #              unit: :nanosecond
-    #            }
-    #    end
+    test "Enum can be zipped alongside another" do
+      clock = Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-    #
-    #    test "monotonic_time/2 returns clock time and convert between units", %{ticker: ticker} do
-    #      clock = Clock.new(:local_testclock, :nanosecond, ticker)
-    #
-    #      assert Clock.monotonic_time(clock, :nanosecond) == 1
-    #      assert Clock.monotonic_time(clock, :microsecond) == 2
-    #      assert Clock.monotonic_time(clock, :millisecond) == 3
-    #      assert Clock.monotonic_time(clock, :second) == 4
-    #    end
+      events = [:one, :two, :three, :five]
 
-    #
-    #    test "stream returns a stream", %{ticker: ticker} do
-    #      clock = Clock.new(:local_testclock, :nanosecond, ticker)
-    #
-    #      assert Clock.stream(clock, :nanosecond)
-    #             |> Stream.take(4)
-    #             |> Enum.to_list() == [
-    #               1,
-    #               2_000,
-    #               3_000_000,
-    #               4_000_000_000
-    #             ]
-    #    end
-    #
-    #    test "stream manages unit conversion", %{ticker: ticker} do
-    #      clock = Clock.new(:local_testclock, :nanosecond, ticker)
-    #
-    #      assert Clock.stream(clock, :microsecond)
-    #             |> Stream.take(4)
-    #             |> Enum.to_list() == [
-    #               # Note : only integer : lower precision is lost !
-    #               0,
-    #               2,
-    #               3_000,
-    #               4_000_000
-    #             ]
-    #    end
+      assert clock |> Stream.zip(events) |> Enum.to_list() == [
+               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 1, unit: :second}, :one},
+               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 2, unit: :second}, :two},
+               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 3, unit: :second}, :three},
+               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 5, unit: :second}, :five}
+             ]
+    end
   end
 end
