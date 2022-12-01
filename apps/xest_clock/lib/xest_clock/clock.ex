@@ -33,6 +33,7 @@ defmodule XestClock.Clock do
 
   @enforce_keys [:unit, :read, :origin]
   defstruct unit: nil,
+            # TODO: if Enumerable, some Enum function might consume elements implicitely (like Enum.at())
             read: nil,
             # TODO: get rid of this ? makes sens only when comparing many of them...
             origin: nil,
@@ -41,6 +42,7 @@ defmodule XestClock.Clock do
   @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
           unit: System.time_unit(),
+          # TODO : convert enum to clock and back...
           read: (() -> integer) | Enumerable.t(),
           origin: atom,
           last: integer | nil
@@ -82,6 +84,8 @@ defmodule XestClock.Clock do
       read: read
     }
   end
+
+  # TODO : if read is a clock or a stream of a clock -> monadic...
 
   @doc """
     This is not aimed for principal use, but it is useful to have during lazy enumeration,
@@ -127,7 +131,6 @@ defmodule XestClock.Clock do
     defp timestamp(clock, read_value), do: Timestamp.new(clock.origin, clock.unit, read_value)
 
     def reduce(%XestClock.Clock{read: read} = clock, {:cont, acc}, fun) when is_function(read) do
-      IO.inspect(clock)
       # get next tick.
       tick = read.()
       # TODO : on error stop
@@ -145,6 +148,7 @@ defmodule XestClock.Clock do
           reduce(
             clock
             |> XestClock.Clock.with_last(tick),
+            # TODO : we might want to add 'last tick' here to avoid having it in struct...
             fun.(timestamp(clock, tick), acc),
             fun
           )
@@ -154,8 +158,6 @@ defmodule XestClock.Clock do
     def reduce(%XestClock.Clock{read: []} = clock, {:cont, acc}, fun), do: {:done, acc}
 
     def reduce(%XestClock.Clock{read: [tick | t]} = clock, {:cont, acc}, fun) do
-      IO.inspect(clock)
-
       # verify increasing monotonicity with acc
       cond do
         is_integer(clock.last) and
@@ -191,5 +193,7 @@ defmodule XestClock.Clock do
     |> Stream.map(fn {a, b} ->
       Timestamp.diff(a, b)
     end)
+
+    # TODO : this is a stream... is this a clock ??
   end
 end
