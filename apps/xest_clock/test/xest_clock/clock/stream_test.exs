@@ -104,18 +104,6 @@ defmodule XestClock.Clock.Stream.Test do
              ]
     end
 
-    test "stream/4 accepts offset integer to add to the stream elements" do
-      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
-
-      assert clock |> XestClock.Clock.Stream.with_offset(10) |> Enum.to_list() ==
-               [
-                 11,
-                 12,
-                 13,
-                 15
-               ]
-    end
-
     test "as_timestamp/1 transform the clock stream into a stream of timestamps." do
       clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
 
@@ -126,6 +114,17 @@ defmodule XestClock.Clock.Stream.Test do
                  3,
                  5
                ]
+    end
+
+    test "convert/2 convert from one unit to another" do
+      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
+
+      assert XestClock.Clock.Stream.convert(clock, :millisecond) |> Enum.to_list() == [
+               1000,
+               2000,
+               3000,
+               5000
+             ]
     end
   end
 end

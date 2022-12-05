@@ -3,6 +3,8 @@ defmodule XestClock.Clock.Stream do
     A Clock as a Stream, directly.
   """
 
+  # TODO : replace XestClock.Clock with this...
+
   alias XestClock.Monotone
   alias XestClock.Timestamp
   alias XestClock.Clock.Timeunit
@@ -108,17 +110,14 @@ defmodule XestClock.Clock.Stream do
     end)
   end
 
-  # TODO : Think about : local clockstream has a specific well defined offset.
-  # It must follow the remote clock structure, but there the offset varies...
-  # TODO : proper module design for this ??
-  @spec with_offset(t(), integer) :: t()
-  def with_offset(%__MODULE__{} = clockstream, offset) when is_integer(offset) do
-    # update the clock
+  @spec convert(t(), System.time_unit()) :: t()
+  def convert(%__MODULE__{} = clockstream, unit) do
     %{
       clockstream
       | stream:
           clockstream.stream
-          |> Stream.map(fn e -> e + offset end)
+          |> Stream.map(fn ts -> Timeunit.convert(ts, clockstream.unit, unit) end),
+        unit: unit
     }
   end
 end
