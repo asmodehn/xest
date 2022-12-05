@@ -12,10 +12,11 @@ defmodule XestClock.Clock.Timeinterval do
   and managing the place of measurement is left to the client code.
   """
 
-  alias XestClock.Clock.Timestamp
+  alias XestClock.Timestamp
 
   # Note : The interval represented is a time interval -> continuous
   # EVEN IF the encoding interval is discrete (integer)
+  # TODO : check https://github.com/kipcole9/tempo
 
   @enforce_keys [:origin, :unit, :interval]
   defstruct interval: nil,

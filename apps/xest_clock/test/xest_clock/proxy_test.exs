@@ -4,6 +4,7 @@ defmodule XestClock.Proxy.Test do
 
   alias XestClock.Proxy
   alias XestClock.Clock
+  alias XestClock.Timestamp
 
   describe "Xestclock.Proxy" do
     setup do
@@ -48,7 +49,7 @@ defmodule XestClock.Proxy.Test do
         assert Proxy.with_offset(proxy) == %Proxy{
                  remote: clock,
                  reference: ref,
-                 offset: %Clock.Timestamp{
+                 offset: %Timestamp{
                    origin: :testremote,
                    unit: :second,
                    # this is only computed with one check of each clock
@@ -70,7 +71,7 @@ defmodule XestClock.Proxy.Test do
 
         assert proxy
                |> Proxy.time_offset(fn :second -> 42 end) ==
-                 %Clock.Timestamp{
+                 %Timestamp{
                    origin: :testremote,
                    unit: :second,
                    # this is only computed with one check of each clock

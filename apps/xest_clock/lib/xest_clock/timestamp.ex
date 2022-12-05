@@ -1,4 +1,4 @@
-defmodule XestClock.Clock.Timestamp do
+defmodule XestClock.Timestamp do
   @docmodule """
   The `XestClock.Clock.Timestamp` module deals with timestamp struct.
   This struct can store one timestamp.
@@ -15,7 +15,7 @@ defmodule XestClock.Clock.Timestamp do
             unit: nil,
             origin: nil
 
-  @typedoc "XestClock.Clock.Timestamp struct"
+  @typedoc "XestClock.Timestamp struct"
   @type t() :: %__MODULE__{
           ts: integer(),
           unit: System.time_unit(),

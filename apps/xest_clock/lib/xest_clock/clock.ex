@@ -28,7 +28,7 @@ defmodule XestClock.Clock do
 
   """
 
-  alias XestClock.Clock.Timestamp
+  alias XestClock.Timestamp
   alias XestClock.Clock.Timeunit
 
   @enforce_keys [:unit, :read, :origin]
@@ -174,6 +174,17 @@ defmodule XestClock.Clock do
           )
       end
     end
+  end
+
+  @doc """
+    A clock as a stream
+  """
+  def stream(:local, unit) do
+    Stream.stream(:local, unit)
+  end
+
+  def stream(origin, unit, read) do
+    Stream.stream(origin, unit, read)
   end
 
   @spec stamp(t(), Enumerable.t()) :: t()

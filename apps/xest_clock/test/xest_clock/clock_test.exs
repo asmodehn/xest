@@ -2,6 +2,7 @@ defmodule XestClock.Clock.Test do
   use ExUnit.Case
   doctest XestClock.Clock
 
+  alias XestClock.Timestamp
   alias XestClock.Clock
 
   @doc """
@@ -11,7 +12,7 @@ defmodule XestClock.Clock.Test do
     fn ticks ->
       ts_stream =
         for t <- ticks do
-          %Clock.Timestamp{
+          %Timestamp{
             origin: ^origin,
             ts: ts,
             unit: ^unit
@@ -102,10 +103,10 @@ defmodule XestClock.Clock.Test do
       events = [:one, :two, :three, :five]
 
       assert clock |> Clock.stamp(events) |> Enum.to_list() == [
-               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 1, unit: :second}, :one},
-               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 2, unit: :second}, :two},
-               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 3, unit: :second}, :three},
-               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 5, unit: :second}, :five}
+               {%XestClock.Timestamp{origin: :testclock, ts: 1, unit: :second}, :one},
+               {%XestClock.Timestamp{origin: :testclock, ts: 2, unit: :second}, :two},
+               {%XestClock.Timestamp{origin: :testclock, ts: 3, unit: :second}, :three},
+               {%XestClock.Timestamp{origin: :testclock, ts: 5, unit: :second}, :five}
              ]
     end
 
@@ -115,8 +116,8 @@ defmodule XestClock.Clock.Test do
       events = [:one, :two]
 
       assert clock |> Clock.stamp(events) |> Enum.to_list() == [
-               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 1, unit: :second}, :one},
-               {%XestClock.Clock.Timestamp{origin: :testclock, ts: 2, unit: :second}, :two}
+               {%XestClock.Timestamp{origin: :testclock, ts: 1, unit: :second}, :one},
+               {%XestClock.Timestamp{origin: :testclock, ts: 2, unit: :second}, :two}
              ]
     end
 
@@ -125,10 +126,10 @@ defmodule XestClock.Clock.Test do
       clockB = Clock.new(:testclockB, :second, [11, 12, 13, 15, 124])
 
       assert clockA |> Clock.offset(clockB) |> Enum.to_list() == [
-               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
-               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
-               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
-               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 10, unit: :second}
+               %XestClock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
+               %XestClock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
+               %XestClock.Timestamp{origin: :testclockB, ts: 10, unit: :second},
+               %XestClock.Timestamp{origin: :testclockB, ts: 10, unit: :second}
              ]
     end
 
@@ -137,9 +138,9 @@ defmodule XestClock.Clock.Test do
       clockB = Clock.new(:testclockB, :second, [1, 2, 3])
 
       assert clockA |> Clock.offset(clockB) |> Enum.to_list() == [
-               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 0, unit: :second},
-               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 0, unit: :second},
-               %XestClock.Clock.Timestamp{origin: :testclockB, ts: 0, unit: :second}
+               %XestClock.Timestamp{origin: :testclockB, ts: 0, unit: :second},
+               %XestClock.Timestamp{origin: :testclockB, ts: 0, unit: :second},
+               %XestClock.Timestamp{origin: :testclockB, ts: 0, unit: :second}
              ]
     end
   end

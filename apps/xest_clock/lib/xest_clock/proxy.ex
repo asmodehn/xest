@@ -7,9 +7,11 @@ defmodule XestClock.Proxy do
   """
 
   alias XestClock.Clock
+  alias XestClock.Timestamp
 
   # TODO : gen_server, like gen_stage.Streamer,
   # to be able to get one element in a stream to use as offset
+  # TODO : Better: everything in a stream ??
 
   @enforce_keys [:remote, :reference]
   defstruct remote: nil,
@@ -56,9 +58,9 @@ defmodule XestClock.Proxy do
     # forcing offset to be there
     proxy = proxy |> with_offset()
 
-    Clock.Timestamp.plus(
+    Timestamp.plus(
       proxy.offset,
-      Clock.Timestamp.new(
+      Timestamp.new(
         :time_offset,
         proxy.offset.unit,
         time_offset.(proxy.offset.unit)
@@ -71,7 +73,7 @@ defmodule XestClock.Proxy do
     proxy.reference
     |> Stream.map(fn ref ->
       tstamp =
-        Clock.Timestamp.plus(
+        Timestamp.plus(
           ref,
           time_offset(proxy, monotone_time_offset)
         )

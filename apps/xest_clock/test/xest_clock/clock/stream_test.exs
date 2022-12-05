@@ -2,7 +2,7 @@ defmodule XestClock.Clock.Stream.Test do
   use ExUnit.Case
   doctest XestClock.Clock.Stream
 
-  alias XestClock.Clock.Timestamp
+  alias XestClock.Timestamp
 
   @doc """
   util function to always pattern match on timestamps
@@ -43,7 +43,7 @@ defmodule XestClock.Clock.Stream.Test do
       end
     end
 
-    test "stream/2 stops at the first integer that is not greater than the current one" do
+    test "stream/3 stops at the first integer that is not greater than the current one" do
       clock = XestClock.Clock.Stream.stream(:testclock, :second, [1, 2, 3, 5, 4])
 
       assert ts_retrieve(:testclock, :second).(clock |> Stream.take(5) |> Enum.to_list()) == [
@@ -55,7 +55,7 @@ defmodule XestClock.Clock.Stream.Test do
     end
 
     @tag :try_me
-    test "stream/2 returns increasing timestamp for clock using agent update as read function" do
+    test "stream/3 returns increasing timestamp for clock using agent update as read function" do
       #  A simple test ticker agent, that ticks everytime it is called
       {:ok, clock_agent} =
         start_supervised(
@@ -100,6 +100,17 @@ defmodule XestClock.Clock.Stream.Test do
                2,
                3,
                5
+             ]
+    end
+
+    test "stream/4 accepts offset integer to add to the stream elements" do
+      clock = XestClock.Clock.Stream.stream(:testclock, :second, [1, 2, 3, 5, 4], 10)
+
+      assert ts_retrieve(:testclock, :second).(clock |> Stream.take(5) |> Enum.to_list()) == [
+               11,
+               12,
+               13,
+               15
              ]
     end
   end

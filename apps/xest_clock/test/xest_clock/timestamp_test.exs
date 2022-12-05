@@ -1,10 +1,10 @@
-defmodule XestClock.Clock.Timestamp.Test do
+defmodule XestClock.Timestamp.Test do
   use ExUnit.Case
-  doctest XestClock.Clock.Timestamp
+  doctest XestClock.Timestamp
 
-  alias XestClock.Clock.Timestamp
+  alias XestClock.Timestamp
 
-  describe "Clock.Timestamp" do
+  describe "Timestamp" do
     test "new/3" do
       ts = Timestamp.new(:test_origin, :millisecond, 123)
 
