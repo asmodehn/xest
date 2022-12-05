@@ -1,6 +1,6 @@
-defmodule XestClock.CheckServer.Test do
+defmodule XestClock.StreamStepper.Test do
   use ExUnit.Case
-  doctest XestClock.CheckServer
+  doctest XestClock.StreamStepper
 
   alias XestClock.Monotone
   alias XestClock.StreamStepper
