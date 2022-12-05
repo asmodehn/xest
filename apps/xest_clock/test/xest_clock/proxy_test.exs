@@ -26,8 +26,8 @@ defmodule XestClock.Proxy.Test do
       ref: ref_seq,
       expect: expected_offsets
     } do
-      clock = Clock.Stream.new(:testremote, :second, clock_seq)
-      ref = Clock.Stream.new(:refclock, :second, ref_seq)
+      clock = Clock.new(:testremote, :second, clock_seq)
+      ref = Clock.new(:refclock, :second, ref_seq)
 
       assert Proxy.new(clock, ref) == %Proxy{
                remote: clock,
@@ -42,8 +42,8 @@ defmodule XestClock.Proxy.Test do
       expect: expected_offsets
     } do
       for i <- 0..4 do
-        clock = Clock.Stream.new(:testremote, :second, clock_seq |> Enum.drop(i))
-        ref = Clock.Stream.new(:refclock, :second, ref_seq |> Enum.drop(i))
+        clock = Clock.new(:testremote, :second, clock_seq |> Enum.drop(i))
+        ref = Clock.new(:refclock, :second, ref_seq |> Enum.drop(i))
         proxy = Proxy.new(clock, ref)
 
         assert Proxy.with_offset(proxy) == %Proxy{
@@ -65,8 +65,8 @@ defmodule XestClock.Proxy.Test do
       expect: expected_offsets
     } do
       for i <- 0..4 do
-        clock = Clock.Stream.new(:testremote, :second, clock_seq |> Enum.drop(i))
-        ref = Clock.Stream.new(:refclock, :second, ref_seq |> Enum.drop(i))
+        clock = Clock.new(:testremote, :second, clock_seq |> Enum.drop(i))
+        ref = Clock.new(:refclock, :second, ref_seq |> Enum.drop(i))
         proxy = Proxy.new(clock, ref) |> Proxy.with_offset()
 
         assert proxy
@@ -97,8 +97,8 @@ defmodule XestClock.Proxy.Test do
 
       # TODO : fix implementation... test seems okay ??
       for i <- 0..4 do
-        clock = Clock.Stream.new(:testremote, :second, clock_seq |> Enum.drop(i))
-        ref = Clock.Stream.new(:refclock, :second, ref_seq |> Enum.drop(i))
+        clock = Clock.new(:testremote, :second, clock_seq |> Enum.drop(i))
+        ref = Clock.new(:refclock, :second, ref_seq |> Enum.drop(i))
         proxy = Proxy.new(clock, ref) |> Proxy.with_offset()
 
         assert proxy

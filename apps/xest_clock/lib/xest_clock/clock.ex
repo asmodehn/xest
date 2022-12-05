@@ -1,9 +1,16 @@
-defmodule XestClock.Clock.Stream do
+defmodule XestClock.Clock do
   @docmodule """
-    A Clock as a Stream, directly.
+    A Clock as a Stream.
+
+  This module contains only the data structure and necessary functions.
+
+  For usage, there are two cases :
+   - local
+   - remote
+  and various functions are provided
   """
 
-  # TODO : replace XestClock.Clock with this...
+  # TODO : extract remote things into remote/proxy module
 
   alias XestClock.Monotone
   alias XestClock.Timestamp

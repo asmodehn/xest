@@ -28,12 +28,12 @@ defmodule XestClock do
   @spec local(System.time_unit()) :: t()
   def local(unit \\ :nanosecond) do
     %{
-      local: Clock.Stream.new(:local, unit)
+      local: Clock.new(:local, unit)
     }
   end
 
   @spec with_proxy(t(), Clock.t()) :: t()
-  def with_proxy(%{local: local_clock}, %Clock.Stream{} = remote) do
+  def with_proxy(%{local: local_clock}, %Clock{} = remote) do
     proxy = Proxy.new(remote, local_clock)
     Map.put(%{}, remote.origin, proxy)
   end

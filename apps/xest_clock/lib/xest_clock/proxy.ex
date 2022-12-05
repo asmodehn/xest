@@ -20,25 +20,25 @@ defmodule XestClock.Proxy do
 
   @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
-          remote: Clock.Stream.t(),
-          reference: Clock.Stream.t(),
+          remote: Clock.t(),
+          reference: Clock.t(),
           offset: Clock.Timestamp.t()
         }
 
-  @spec new(Clock.Stream.t(), Clock.Stream.t()) :: t()
-  def new(%Clock.Stream{} = clock, %Clock.Stream{} = ref) do
+  @spec new(Clock.t(), Clock.t()) :: t()
+  def new(%Clock{} = clock, %Clock{} = ref) do
     # force same unit on both clock, to simplify computations later on
     cond do
       Clock.Timeunit.inf(clock.unit, ref.unit) ->
         %__MODULE__{
-          remote: Clock.Stream.convert(clock, ref.unit),
+          remote: Clock.convert(clock, ref.unit),
           reference: ref
         }
 
       Clock.Timeunit.sup(clock.unit, ref.unit) ->
         %__MODULE__{
           remote: clock,
-          reference: Clock.Stream.convert(ref, clock.unit)
+          reference: Clock.convert(ref, clock.unit)
         }
 
       true ->
@@ -57,7 +57,7 @@ defmodule XestClock.Proxy do
   def with_offset(%__MODULE__{offset: nil} = proxy) do
     offset = %{
       proxy
-      | offset: Clock.Stream.offset(proxy.reference, proxy.remote),
+      | offset: Clock.offset(proxy.reference, proxy.remote),
 
         # TODO : since we consume here one tick of the reference, the reference should be changed...
         reference: proxy.reference

@@ -1,6 +1,6 @@
-defmodule XestClock.Clock.Stream.Test do
+defmodule XestClock.Clock.Test do
   use ExUnit.Case
-  doctest XestClock.Clock.Stream
+  doctest XestClock.Clock
 
   alias XestClock.Timestamp
 
@@ -22,20 +22,20 @@ defmodule XestClock.Clock.Stream.Test do
     end
   end
 
-  describe "XestClock.Clock.Stream" do
+  describe "XestClock.Clock" do
     test "stream/2 refuses :native or unknown time units" do
       assert_raise(ArgumentError, fn ->
-        XestClock.Clock.Stream.new(:local, :native)
+        XestClock.Clock.new(:local, :native)
       end)
 
       assert_raise(ArgumentError, fn ->
-        XestClock.Clock.Stream.new(:local, :unknown_time_unit)
+        XestClock.Clock.new(:local, :unknown_time_unit)
       end)
     end
 
     test "stream/2 pipes increasing timestamp for local clock" do
       for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
-        clock = XestClock.Clock.Stream.new(:local, unit)
+        clock = XestClock.Clock.new(:local, unit)
 
         tick_list = clock |> Enum.take(2) |> Enum.to_list()
 
@@ -44,7 +44,7 @@ defmodule XestClock.Clock.Stream.Test do
     end
 
     test "stream/3 stops at the first integer that is not greater than the current one" do
-      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
+      clock = XestClock.Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
       assert clock |> Enum.to_list() == [
                1,
@@ -85,7 +85,7 @@ defmodule XestClock.Clock.Stream.Test do
       # with a stream repeatedly calling and updating the agent (as with the system clock)
 
       clock =
-        XestClock.Clock.Stream.new(
+        XestClock.Clock.new(
           :testclock,
           :nanosecond,
           Stream.repeatedly(fn -> ticker.() end)
@@ -104,9 +104,9 @@ defmodule XestClock.Clock.Stream.Test do
     end
 
     test "as_timestamp/1 transform the clock stream into a stream of timestamps." do
-      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
+      clock = XestClock.Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      assert ts_retrieve(:testclock, :second).(clock |> XestClock.Clock.Stream.as_timestamp()) ==
+      assert ts_retrieve(:testclock, :second).(clock |> XestClock.Clock.as_timestamp()) ==
                [
                  1,
                  2,
@@ -116,9 +116,9 @@ defmodule XestClock.Clock.Stream.Test do
     end
 
     test "convert/2 convert from one unit to another" do
-      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
+      clock = XestClock.Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      assert XestClock.Clock.Stream.convert(clock, :millisecond) |> Enum.to_list() == [
+      assert XestClock.Clock.convert(clock, :millisecond) |> Enum.to_list() == [
                1000,
                2000,
                3000,
@@ -127,18 +127,18 @@ defmodule XestClock.Clock.Stream.Test do
     end
 
     test "offset/2 computes difference between clocks" do
-      clockA = XestClock.Clock.Stream.new(:testclockA, :second, [1, 2, 3, 5, 4])
-      clockB = XestClock.Clock.Stream.new(:testclockB, :second, [11, 12, 13, 15, 124])
+      clockA = XestClock.Clock.new(:testclockA, :second, [1, 2, 3, 5, 4])
+      clockB = XestClock.Clock.new(:testclockB, :second, [11, 12, 13, 15, 124])
 
-      assert clockA |> XestClock.Clock.Stream.offset(clockB) ==
+      assert clockA |> XestClock.Clock.offset(clockB) ==
                %XestClock.Timestamp{origin: :testclockB, ts: 10, unit: :second}
     end
 
     test "offset/2 of same clock is null" do
-      clockA = XestClock.Clock.Stream.new(:testclockA, :second, [1, 2, 3])
-      clockB = XestClock.Clock.Stream.new(:testclockB, :second, [1, 2, 3])
+      clockA = XestClock.Clock.new(:testclockA, :second, [1, 2, 3])
+      clockB = XestClock.Clock.new(:testclockB, :second, [1, 2, 3])
 
-      assert clockA |> XestClock.Clock.Stream.offset(clockB) ==
+      assert clockA |> XestClock.Clock.offset(clockB) ==
                %XestClock.Timestamp{origin: :testclockB, ts: 0, unit: :second}
     end
   end
