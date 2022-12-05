@@ -25,28 +25,28 @@ defmodule XestClock.Clock.Stream.Test do
   describe "XestClock.Clock.Stream" do
     test "stream/2 refuses :native or unknown time units" do
       assert_raise(ArgumentError, fn ->
-        XestClock.Clock.Stream.stream(:local, :native)
+        XestClock.Clock.Stream.new(:local, :native)
       end)
 
       assert_raise(ArgumentError, fn ->
-        XestClock.Clock.Stream.stream(:local, :unknown_time_unit)
+        XestClock.Clock.Stream.new(:local, :unknown_time_unit)
       end)
     end
 
     test "stream/2 pipes increasing timestamp for local clock" do
       for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
-        clock = XestClock.Clock.Stream.stream(:local, unit)
+        clock = XestClock.Clock.Stream.new(:local, unit)
 
-        ts_list = ts_retrieve(:local, unit).(clock |> Enum.take(2) |> Enum.to_list())
+        tick_list = clock |> Enum.take(2) |> Enum.to_list()
 
-        assert Enum.sort(ts_list, :asc) == ts_list
+        assert Enum.sort(tick_list, :asc) == tick_list
       end
     end
 
     test "stream/3 stops at the first integer that is not greater than the current one" do
-      clock = XestClock.Clock.Stream.stream(:testclock, :second, [1, 2, 3, 5, 4])
+      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      assert ts_retrieve(:testclock, :second).(clock |> Stream.take(5) |> Enum.to_list()) == [
+      assert clock |> Enum.to_list() == [
                1,
                2,
                3,
@@ -86,16 +86,17 @@ defmodule XestClock.Clock.Stream.Test do
       # with a stream repeatedly calling and updating the agent (as with the system clock)
 
       clock =
-        XestClock.Clock.Stream.stream(
+        XestClock.Clock.Stream.new(
           :testclock,
           :nanosecond,
           Stream.repeatedly(fn -> ticker.() end)
         )
 
-      # Note : Enum can only take 4 elements (because of monotonicity constraint).
+      # Note : we can take/2 only 4 elements (because of monotonicity constraint).
       # Attempting to take more will keep calling the ticker
       # and fail since the [] -> {nil, []} line is commented
-      assert ts_retrieve(:testclock, :nanosecond).(clock |> Enum.take(4) |> Enum.to_list()) == [
+      # TODO : taking more should stop the agent, and end the stream...
+      assert clock |> Stream.take(4) |> Enum.to_list() == [
                1,
                2,
                3,
@@ -104,14 +105,27 @@ defmodule XestClock.Clock.Stream.Test do
     end
 
     test "stream/4 accepts offset integer to add to the stream elements" do
-      clock = XestClock.Clock.Stream.stream(:testclock, :second, [1, 2, 3, 5, 4], 10)
+      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      assert ts_retrieve(:testclock, :second).(clock |> Stream.take(5) |> Enum.to_list()) == [
-               11,
-               12,
-               13,
-               15
-             ]
+      assert clock |> XestClock.Clock.Stream.with_offset(10) |> Enum.to_list() ==
+               [
+                 11,
+                 12,
+                 13,
+                 15
+               ]
+    end
+
+    test "as_timestamp/1 transform the clock stream into a stream of timestamps." do
+      clock = XestClock.Clock.Stream.new(:testclock, :second, [1, 2, 3, 5, 4])
+
+      assert ts_retrieve(:testclock, :second).(clock |> XestClock.Clock.Stream.as_timestamp()) ==
+               [
+                 1,
+                 2,
+                 3,
+                 5
+               ]
     end
   end
 end

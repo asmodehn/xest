@@ -24,6 +24,8 @@ defmodule XestClock.Timestamp do
 
   @spec new(atom(), System.time_unit(), integer()) :: t()
   def new(origin, unit, ts) do
+    Timeunit.normalize(unit)
+
     %__MODULE__{
       # TODO : should be an already known atom...
       origin: origin,
