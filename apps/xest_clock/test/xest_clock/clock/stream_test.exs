@@ -54,7 +54,6 @@ defmodule XestClock.Clock.Stream.Test do
              ]
     end
 
-    @tag :try_me
     test "stream/3 returns increasing timestamp for clock using agent update as read function" do
       #  A simple test ticker agent, that ticks everytime it is called
       {:ok, clock_agent} =
@@ -125,6 +124,22 @@ defmodule XestClock.Clock.Stream.Test do
                3000,
                5000
              ]
+    end
+
+    test "offset/2 computes difference between clocks" do
+      clockA = XestClock.Clock.Stream.new(:testclockA, :second, [1, 2, 3, 5, 4])
+      clockB = XestClock.Clock.Stream.new(:testclockB, :second, [11, 12, 13, 15, 124])
+
+      assert clockA |> XestClock.Clock.Stream.offset(clockB) ==
+               %XestClock.Timestamp{origin: :testclockB, ts: 10, unit: :second}
+    end
+
+    test "offset/2 of same clock is null" do
+      clockA = XestClock.Clock.Stream.new(:testclockA, :second, [1, 2, 3])
+      clockB = XestClock.Clock.Stream.new(:testclockB, :second, [1, 2, 3])
+
+      assert clockA |> XestClock.Clock.Stream.offset(clockB) ==
+               %XestClock.Timestamp{origin: :testclockB, ts: 0, unit: :second}
     end
   end
 end

@@ -28,6 +28,30 @@ defmodule XestClock.Monotone.Test do
 
       assert Monotone.strictly(enum, :desc) |> Enum.to_list() == [6, 5, 3, 2, 1]
     end
+
+    test "offset/2 can apply an offset to the enum" do
+      enum = [1, 2, 3, 5, 4]
+
+      # offset doesnt enforce monotonicity
+      assert Monotone.offset(enum, 10) |> Enum.to_list() ==
+               [
+                 11,
+                 12,
+                 13,
+                 15,
+                 14
+               ]
+
+      # but offset preserves monotonicity.
+
+      assert Monotone.strictly(enum, :asc) |> Monotone.offset(10) |> Enum.to_list() ==
+               [
+                 11,
+                 12,
+                 13,
+                 15
+               ]
+    end
   end
 
   describe "Monotone on stateful resources" do

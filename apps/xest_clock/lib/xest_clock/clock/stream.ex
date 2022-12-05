@@ -120,4 +120,24 @@ defmodule XestClock.Clock.Stream do
         unit: unit
     }
   end
+
+  @spec offset(t(), t()) :: Timestamp.t()
+  def offset(%__MODULE__{} = clockstream, %__MODULE__{} = otherclock) do
+    # Here we need timestamp for the unit, to be able to compare integers...
+
+    Stream.zip(
+      otherclock |> as_timestamp(),
+      clockstream |> as_timestamp()
+    )
+    |> Stream.map(fn {a, b} ->
+      Timestamp.diff(a, b)
+    end)
+    |> Enum.at(0)
+
+    # Note : we return only one element, as returning a stream might not make much sense ??
+    # Later skew and more can be evaluated more cleverly, but just a set of values will be returned here,
+    # not a stream.
+  end
+
+  # TODO : estimate linear deviation...
 end

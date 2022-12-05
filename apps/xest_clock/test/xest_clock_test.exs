@@ -3,17 +3,18 @@ defmodule XestClockTest do
   doctest XestClock
 
   alias XestClock.Clock
+  alias XestClock.Monotone
 
   describe "XestClock" do
     test "local/0 builds a nanosecond clock with a local key" do
       clk = XestClock.local()
-      assert %Clock{unit: :nanosecond} = clk.local
+      assert %Clock.Stream{unit: :nanosecond} = clk.local
     end
 
     test "local/1 builds a clock with a local key" do
       for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
         clk = XestClock.local(unit)
-        assert %Clock{unit: ^unit} = clk.local
+        assert %Clock.Stream{unit: ^unit} = clk.local
       end
     end
 
@@ -21,10 +22,14 @@ defmodule XestClockTest do
       clk =
         XestClock.with_proxy(
           XestClock.local(),
-          Clock.new(:testclock, :nanosecond, [1, 2, 3, 4])
+          Clock.Stream.new(:testclock, :nanosecond, [1, 2, 3, 4])
         )
 
-      assert %Clock{origin: :testclock, unit: :nanosecond, read: [1, 2, 3, 4]} ==
+      assert %Clock.Stream{
+               origin: :testclock,
+               unit: :nanosecond,
+               stream: [1, 2, 3, 4] |> Monotone.strictly(:asc)
+             } ==
                clk.testclock.remote
     end
   end
