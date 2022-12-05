@@ -8,15 +8,17 @@ defmodule XestClock.Monotone do
 
   @spec increasing(Enumerable.t()) :: Enumerable.t()
   def increasing(enum) do
-    Stream.transform(enum, enum |> Enum.at(0), fn i, acc ->
-      if acc <= i, do: {[i], i}, else: {[acc], acc}
+    Stream.transform(enum, nil, fn
+      i, nil -> {[i], i}
+      i, acc -> if acc <= i, do: {[i], i}, else: {[acc], acc}
     end)
   end
 
   @spec decreasing(Enumerable.t()) :: Enumerable.t()
   def decreasing(enum) do
-    Stream.transform(enum, enum |> Enum.at(0), fn i, acc ->
-      if acc >= i, do: {[i], i}, else: {[acc], acc}
+    Stream.transform(enum, nil, fn
+      i, nil -> {[i], i}
+      i, acc -> if acc >= i, do: {[i], i}, else: {[acc], acc}
     end)
   end
 
