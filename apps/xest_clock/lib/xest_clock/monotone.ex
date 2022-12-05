@@ -6,8 +6,6 @@ defmodule XestClock.Monotone do
   it can return the same value multiple times...
   """
 
-  require XestClock.Monotone.Reducers, as: Reducers
-
   @spec increasing(Enumerable.t()) :: Enumerable.t()
   def increasing(enum) do
     Stream.transform(enum, enum |> Enum.at(0), fn i, acc ->
