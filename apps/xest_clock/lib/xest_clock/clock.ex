@@ -10,8 +10,6 @@ defmodule XestClock.Clock do
   and various functions are provided
   """
 
-  # TODO : extract remote things into remote/proxy module
-
   alias XestClock.Monotone
   alias XestClock.Timestamp
   alias XestClock.Clock.Timeunit
@@ -21,14 +19,20 @@ defmodule XestClock.Clock do
             # TODO: if Enumerable, some Enum function might consume elements implicitely (like Enum.at())
             stream: nil,
             # TODO: get rid of this ? makes sens only when comparing many of them...
-            origin: nil
+            origin: nil,
+            offset: %Timestamp{
+              origin: :testremote,
+              unit: :second,
+              ts: 0
+            }
 
   @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
           unit: System.time_unit(),
           # TODO : convert enum to clock and back...
           stream: Enumerable.t(),
-          origin: atom
+          origin: atom,
+          offset: Timestamp.t()
         }
 
   def new(:local, unit) do
@@ -48,8 +52,8 @@ defmodule XestClock.Clock do
     A stream representing the timeflow, ie a clock.
   """
   # TODO : clearer name : from_tickstream
-  @spec new(atom(), System.time_unit(), Enumerable.t()) :: Enumerable.t()
-  def new(origin, unit, tickstream) do
+  @spec new(atom(), System.time_unit(), Enumerable.t(), integer) :: Enumerable.t()
+  def new(origin, unit, tickstream, offset \\ 0) do
     nu = Timeunit.normalize(unit)
 
     %__MODULE__{
@@ -59,11 +63,48 @@ defmodule XestClock.Clock do
         tickstream
         # guaranteeing strict monotonicity
         |> Monotone.increasing()
-        |> Stream.dedup()
-      # TODO : offset (non-monotonic !) before timestamp, or after ???
-      #   => is Timestamp monotonic (distrib), or local ???
-      #    |> Stream.map(fn v -> Timestamp.new(origin, nu, v) end)
+        |> Stream.dedup(),
+      offset: Timestamp.new(origin, nu, offset)
     }
+  end
+
+  @doc """
+      add_offset adds an offset to the clock
+  """
+  @spec add_offset(t(), Timestamp.t()) :: t()
+  def add_offset(%__MODULE__{} = clock, %Timestamp{} = offset) do
+    %{
+      clock
+      | # Note : order matter in plus() regarding origin in Timestamp...
+        offset: Timestamp.plus(offset, clock.offset)
+    }
+  end
+
+  @spec offset(t(), t()) :: Timestamp.t()
+  def offset(%__MODULE__{} = clockstream, %__MODULE__{} = otherclock) do
+    # Here we need timestamp for the unit, to be able to compare integers...
+
+    Stream.zip(
+      otherclock |> as_timestamp(),
+      clockstream |> as_timestamp()
+    )
+    |> Stream.map(fn {a, b} ->
+      Timestamp.diff(a, b)
+    end)
+    |> Enum.at(0)
+
+    # Note : we return only one element, as returning a stream might not make much sense ??
+    # Later skew and more can be evaluated more cleverly, but just a set of values will be returned here,
+    # not a stream.
+  end
+
+  @doc """
+    follow determines the offset with the followed clock and adds it to the current clock
+  """
+  @spec follow(t(), t()) :: t()
+  def follow(%__MODULE__{} = clock, %__MODULE__{} = followed) do
+    clock
+    |> add_offset(offset(clock, followed))
   end
 
   @doc """
@@ -108,12 +149,17 @@ defmodule XestClock.Clock do
     # take the clock stream and map to get a timestamp
     clockstream.stream
     |> Stream.map(fn cs ->
-      %XestClock.Timestamp{
-        origin: clockstream.origin,
-        unit: clockstream.unit,
-        # No offset allowed for monotone clock stream.
-        ts: cs
-      }
+      Timestamp.plus(
+        # build a timestamp from the clock tick
+        %XestClock.Timestamp{
+          origin: clockstream.origin,
+          unit: clockstream.unit,
+          # No offset allowed for monotone clock stream.
+          ts: cs
+        },
+        # add the offset
+        clockstream.offset
+      )
     end)
   end
 
@@ -128,23 +174,24 @@ defmodule XestClock.Clock do
     }
   end
 
-  @spec offset(t(), t()) :: Timestamp.t()
-  def offset(%__MODULE__{} = clockstream, %__MODULE__{} = otherclock) do
-    # Here we need timestamp for the unit, to be able to compare integers...
+  @spec to_datetime(t(), (System.time_unit() -> integer)) :: Enumerable.t()
+  def to_datetime(%__MODULE__{} = clock, monotone_time_offset \\ &System.time_offset/1) do
+    clock
+    |> as_timestamp()
+    |> Stream.map(fn ts ->
+      tstamp =
+        Timestamp.plus(
+          # take the clock tick as a timestamp
+          ts,
+          Timestamp.new(
+            # add the local monotone_time VM offset
+            :time_offset,
+            clock.unit,
+            monotone_time_offset.(clock.unit)
+          )
+        )
 
-    Stream.zip(
-      otherclock |> as_timestamp(),
-      clockstream |> as_timestamp()
-    )
-    |> Stream.map(fn {a, b} ->
-      Timestamp.diff(a, b)
+      DateTime.from_unix!(tstamp.ts, tstamp.unit)
     end)
-    |> Enum.at(0)
-
-    # Note : we return only one element, as returning a stream might not make much sense ??
-    # Later skew and more can be evaluated more cleverly, but just a set of values will be returned here,
-    # not a stream.
   end
-
-  # TODO : estimate linear deviation...
 end
