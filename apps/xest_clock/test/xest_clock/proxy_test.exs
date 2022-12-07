@@ -21,7 +21,7 @@ defmodule XestClock.Proxy.Test do
       }
     end
 
-    test "new/1 does set remote but not offset", %{
+    test "new/1 does set remote and set offset of zero", %{
       clock: clock_seq,
       ref: ref_seq,
       expect: expected_offsets
@@ -32,11 +32,15 @@ defmodule XestClock.Proxy.Test do
       assert Proxy.new(clock, ref) == %Proxy{
                remote: clock,
                reference: ref,
-               offset: nil
+               offset: %Timestamp{
+                 origin: :testremote,
+                 unit: :second,
+                 ts: 0
+               }
              }
     end
 
-    test "with_offset/1 does computes the offset if needed", %{
+    test "add_offset/1 does computes the offset if needed", %{
       clock: clock_seq,
       ref: ref_seq,
       expect: expected_offsets
@@ -46,7 +50,7 @@ defmodule XestClock.Proxy.Test do
         ref = Clock.new(:refclock, :second, ref_seq |> Enum.drop(i))
         proxy = Proxy.new(clock, ref)
 
-        assert Proxy.with_offset(
+        assert Proxy.add_offset(
                  proxy,
                  Clock.offset(
                    proxy.reference,
@@ -65,7 +69,7 @@ defmodule XestClock.Proxy.Test do
       end
     end
 
-    test "time_offset/2 computes the time_offset but for a proxy clock", %{
+    test "add_offset/2 computes the time offset but for a proxy clock", %{
       clock: clock_seq,
       ref: ref_seq,
       expect: expected_offsets
@@ -76,7 +80,7 @@ defmodule XestClock.Proxy.Test do
 
         proxy =
           Proxy.new(clock, ref)
-          |> Proxy.with_offset(
+          |> Proxy.add_offset(
             Clock.offset(
               ref,
               clock
@@ -84,13 +88,13 @@ defmodule XestClock.Proxy.Test do
           )
 
         assert proxy
-               |> Proxy.time_offset(fn :second -> 42 end) ==
-                 %Timestamp{
-                   origin: :testremote,
-                   unit: :second,
-                   # this is only computed with one check of each clock
-                   ts: 42 + Enum.at(expected_offsets, i)
-                 }
+               # here we check one by one
+               |> Proxy.to_datetime(fn :second -> 42 end)
+               |> Enum.at(0) ==
+                 DateTime.from_unix!(
+                   Enum.at(ref_seq, i) + 42 + Enum.at(expected_offsets, i),
+                   :second
+                 )
       end
     end
 
@@ -116,7 +120,7 @@ defmodule XestClock.Proxy.Test do
 
         proxy =
           Proxy.new(clock, ref)
-          |> Proxy.with_offset(
+          |> Proxy.add_offset(
             Clock.offset(
               ref,
               clock

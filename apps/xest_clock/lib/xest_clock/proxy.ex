@@ -31,19 +31,22 @@ defmodule XestClock.Proxy do
       Clock.Timeunit.inf(clock.unit, ref.unit) ->
         %__MODULE__{
           remote: Clock.convert(clock, ref.unit),
-          reference: ref
+          reference: ref,
+          offset: Timestamp.new(clock.origin, ref.unit, 0)
         }
 
       Clock.Timeunit.sup(clock.unit, ref.unit) ->
         %__MODULE__{
           remote: clock,
-          reference: Clock.convert(ref, clock.unit)
+          reference: Clock.convert(ref, clock.unit),
+          offset: Timestamp.new(clock.origin, ref.unit, 0)
         }
 
       true ->
         %__MODULE__{
           remote: clock,
-          reference: ref
+          reference: ref,
+          offset: Timestamp.new(clock.origin, ref.unit, 0)
         }
     end
   end
@@ -55,42 +58,33 @@ defmodule XestClock.Proxy do
     with_offset computes offset compared with a reference clock.
     To force recomputation, just set the offset to nil.
   """
-  @spec with_offset(t()) :: t()
-  def with_offset(%__MODULE__{offset: nil} = proxy, offset) do
-    offset = %{
+  @spec add_offset(t(), Timestamp.t()) :: t()
+  def add_offset(%__MODULE__{} = proxy, %Timestamp{} = offset) do
+    %{
       proxy
-      | offset: offset,
+      | offset: Timestamp.plus(proxy.offset, offset),
 
         # TODO : since we consume here one tick of the reference, the reference should be changed...
         reference: proxy.reference
     }
   end
 
-  def with_offset(%__MODULE__{} = proxy), do: proxy
-
-  @spec time_offset(t(), (System.time_unit() -> integer)) :: Clock.Timestamp.t()
-  def time_offset(%__MODULE__{} = proxy, time_offset \\ &System.time_offset/1) do
-    # forcing offset to be there
-    proxy = proxy |> with_offset()
-
-    Timestamp.plus(
-      proxy.offset,
-      Timestamp.new(
-        :time_offset,
-        proxy.reference.unit,
-        time_offset.(proxy.reference.unit)
-      )
-    )
-  end
-
   @spec to_datetime(t(), (System.time_unit() -> integer)) :: Enumerable.t()
   def to_datetime(%__MODULE__{} = proxy, monotone_time_offset \\ &System.time_offset/1) do
     proxy.reference
+    |> Clock.as_timestamp()
     |> Stream.map(fn ref ->
       tstamp =
         Timestamp.plus(
           ref,
-          time_offset(proxy, monotone_time_offset)
+          Timestamp.plus(
+            proxy.offset,
+            Timestamp.new(
+              :time_offset,
+              proxy.reference.unit,
+              monotone_time_offset.(proxy.reference.unit)
+            )
+          )
         )
 
       DateTime.from_unix!(tstamp.ts, tstamp.unit)
