@@ -9,7 +9,6 @@ defmodule XestClock.Proxy do
   alias XestClock.Clock
   alias XestClock.Timestamp
 
-  # TODO : gen_server, like gen_stage.Streamer,
   # to be able to get one element in a stream to use as offset
   # TODO : Better: everything in a stream ??
 
@@ -49,15 +48,18 @@ defmodule XestClock.Proxy do
     end
   end
 
+  # TODO : remote() that is the offset, simulated version of the remote clock...
+  # TODO : Make local and proxy interface converge...
+
   @doc """
     with_offset computes offset compared with a reference clock.
     To force recomputation, just set the offset to nil.
   """
   @spec with_offset(t()) :: t()
-  def with_offset(%__MODULE__{offset: nil} = proxy) do
+  def with_offset(%__MODULE__{offset: nil} = proxy, offset) do
     offset = %{
       proxy
-      | offset: Clock.offset(proxy.reference, proxy.remote),
+      | offset: offset,
 
         # TODO : since we consume here one tick of the reference, the reference should be changed...
         reference: proxy.reference

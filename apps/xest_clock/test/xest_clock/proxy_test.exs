@@ -46,7 +46,13 @@ defmodule XestClock.Proxy.Test do
         ref = Clock.new(:refclock, :second, ref_seq |> Enum.drop(i))
         proxy = Proxy.new(clock, ref)
 
-        assert Proxy.with_offset(proxy) == %Proxy{
+        assert Proxy.with_offset(
+                 proxy,
+                 Clock.offset(
+                   proxy.reference,
+                   clock
+                 )
+               ) == %Proxy{
                  remote: clock,
                  reference: ref,
                  offset: %Timestamp{
@@ -67,7 +73,15 @@ defmodule XestClock.Proxy.Test do
       for i <- 0..4 do
         clock = Clock.new(:testremote, :second, clock_seq |> Enum.drop(i))
         ref = Clock.new(:refclock, :second, ref_seq |> Enum.drop(i))
-        proxy = Proxy.new(clock, ref) |> Proxy.with_offset()
+
+        proxy =
+          Proxy.new(clock, ref)
+          |> Proxy.with_offset(
+            Clock.offset(
+              ref,
+              clock
+            )
+          )
 
         assert proxy
                |> Proxy.time_offset(fn :second -> 42 end) ==
@@ -99,7 +113,15 @@ defmodule XestClock.Proxy.Test do
       for i <- 0..4 do
         clock = Clock.new(:testremote, :second, clock_seq |> Enum.drop(i))
         ref = Clock.new(:refclock, :second, ref_seq |> Enum.drop(i))
-        proxy = Proxy.new(clock, ref) |> Proxy.with_offset()
+
+        proxy =
+          Proxy.new(clock, ref)
+          |> Proxy.with_offset(
+            Clock.offset(
+              ref,
+              clock
+            )
+          )
 
         assert proxy
                |> Proxy.to_datetime(fn :second -> 42 end)
