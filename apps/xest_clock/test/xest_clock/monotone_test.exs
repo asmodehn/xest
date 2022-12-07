@@ -57,7 +57,6 @@ defmodule XestClock.Monotone.Test do
   describe "Monotone on stateful resources" do
     setup %{enum: enum} do
       #  A simple test ticker agent, that ticks everytime it is called
-      # TODO : use start_supervised ??
       {:ok, clock_agent} = start_supervised({Agent, fn -> enum end})
 
       ticker = fn ->

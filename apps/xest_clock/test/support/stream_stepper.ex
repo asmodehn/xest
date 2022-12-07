@@ -9,79 +9,52 @@ defmodule XestClock.StreamStepper do
     into xestclock code, to manage the proxy data, while stream executes...
   """
 
-  use GenStage
+  use GenServer
 
-  def start_link({stream, opts}) do
-    {:current_stacktrace, [_info_call | stack]} = Process.info(self(), :current_stacktrace)
-    GenStage.start_link(__MODULE__, {stream, stack, opts}, opts)
+  def start_link(stream, opts \\ []) do
+    GenServer.start_link(__MODULE__, stream, opts)
   end
 
-  def init({stream, stack, opts}) do
+  def take(pid \\ __MODULE__, demand) do
+    GenServer.call(pid, {:take, demand})
+  end
+
+  @impl true
+  def init(stream) do
     continuation =
       &Enumerable.reduce(stream, &1, fn
         x, {acc, 1} -> {:suspend, {[x | acc], 0}}
         x, {acc, counter} -> {:cont, {[x | acc], counter - 1}}
       end)
 
-    {:producer, {stack, continuation}, Keyword.take(opts, [:dispatcher, :demand])}
+    {:ok, continuation}
   end
 
-  ### Addendum, shortcut to get stream synchronously as in functional code
-  def next(pid \\ __MODULE__) do
-    GenServer.call(pid, :next)
-  end
-
-  def handle_call(:next, _from, {stack, continuation}) when is_atom(continuation) do
+  def handle_call({:take, demand}, _from, continuation) when is_atom(continuation) do
     # nothing produced, returns nil in this case...
-    {:reply, nil, {stack, continuation}}
+    {:reply, nil, continuation}
+    # TODO: Shall we halt on nil ?? or keep it around ??
+    # or maybe have a reset() that reuses the acc ??
+    #  cf. gen_stage.streamer module for ideas...
   end
 
-  def handle_call(:next, _from, {stack, continuation}) do
+  def handle_call({:take, demand}, _from, continuation) do
     # Ref: https://hexdocs.pm/gen_stage/GenStage.html#c:handle_call/3
     # we immediately return the result of the computation,
     # but we also set it to be dispatch as an event (other subscribers ?),
     # just as a demand of 1 would have.
-    case continuation.({:cont, {[], 1}}) do
-      {:suspended, {[], 0}, continuation} ->
-        {:reply, nil, [], {stack, continuation}}
-
-      {:suspended, {list, 0}, continuation} ->
-        {:reply, hd(list), :lists.reverse(list), {stack, continuation}}
-
-      {status, {[], _}} ->
-        GenStage.async_info(self(), :stop)
-        {:reply, nil, [], {stack, status}}
-
-      {status, {list, _}} ->
-        GenStage.async_info(self(), :stop)
-        {:reply, hd(list), :lists.reverse(list), {stack, status}}
-    end
-  end
-
-  ###
-
-  def handle_demand(_demand, {stack, continuation}) when is_atom(continuation) do
-    {:noreply, [], {stack, continuation}}
-  end
-
-  def handle_demand(demand, {stack, continuation}) when demand > 0 do
     case continuation.({:cont, {[], demand}}) do
+      #      {:suspended, {[], 0}, continuation} ->
+      #        {:reply, nil, continuation}
+
       {:suspended, {list, 0}, continuation} ->
-        {:noreply, :lists.reverse(list), {stack, continuation}}
+        {:reply, :lists.reverse(list), continuation}
+
+      #      {status, {[], _}} ->
+      #        {:reply, nil, status}
 
       {status, {list, _}} ->
-        GenStage.async_info(self(), :stop)
-        {:noreply, :lists.reverse(list), {stack, status}}
+        {:reply, :lists.reverse(list), status}
     end
-  end
-
-  def handle_info(:stop, state) do
-    {:stop, :normal, state}
-  end
-
-  def handle_info(msg, {stack, continuation}) do
-    log = '** Undefined handle_info in ~tp~n** Unhandled message: ~tp~n** Stream started at:~n~ts'
-    :error_logger.warning_msg(log, [inspect(__MODULE__), msg, Exception.format_stacktrace(stack)])
-    {:noreply, [], {stack, continuation}}
   end
 end
