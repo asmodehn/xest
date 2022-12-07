@@ -3,8 +3,6 @@ defmodule XestClockTest do
   doctest XestClock
 
   alias XestClock.Clock
-  alias XestClock.Proxy
-  alias XestClock.Monotone
 
   describe "XestClock" do
     test "local/0 builds a nanosecond clock with a local key" do

@@ -129,21 +129,6 @@ defmodule XestClock.Clock do
     end
   end
 
-  #  @spec stream(atom(), System.time_unit(), Enumerable.t(), integer) :: Enumerable.t()
-  #  def stream(origin, unit, tickstream, offset) do
-  #    nu = Timeunit.normalize(unit)
-  #
-  #    tickstream
-  #    # guaranteeing strict monotonicity
-  #    |> Monotone.increasing()
-  #    |> Stream.dedup()
-  #    # apply the offset on the integer before outputting (possibly non monotonic) timestamp.
-  #    |> Stream.map(fn v -> v + offset end)
-  #    # TODO : offset (non-monotonic !) before timestamp, or after ???
-  #    #   => is Timestamp monotonic (distrib), or local ???
-  #    |> Stream.map(fn v -> Timestamp.new(origin, nu, v) end)
-  #  end
-
   @spec as_timestamp(t()) :: Enumerable.t()
   def as_timestamp(%__MODULE__{} = clockstream) do
     # take the clock stream and map to get a timestamp
@@ -165,6 +150,7 @@ defmodule XestClock.Clock do
 
   @spec convert(t(), System.time_unit()) :: t()
   def convert(%__MODULE__{} = clockstream, unit) do
+    # TODO :careful with loss of precision !!
     %{
       clockstream
       | stream:

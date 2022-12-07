@@ -14,7 +14,6 @@ defmodule XestClock do
   """
 
   alias XestClock.Clock
-  alias XestClock.Proxy
 
   @typedoc "A naive clock, callable (impure) function returning a DateTime"
   @type naive_clock() :: (() -> NaiveDateTime.t())
@@ -70,6 +69,6 @@ defmodule XestClock do
   CAREFUL: converting to datetime might drop precision (especially nanosecond...)
   """
   def to_datetime(xestclock, origin, monotone_time_offset \\ &System.time_offset/1) do
-    Proxy.to_datetime(xestclock[origin], monotone_time_offset)
+    Clock.to_datetime(xestclock[origin], monotone_time_offset)
   end
 end

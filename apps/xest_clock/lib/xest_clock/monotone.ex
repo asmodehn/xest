@@ -57,5 +57,6 @@ defmodule XestClock.Monotone do
 
   # TODO : linear map ! a * x + b with a and b monotonous will conserve monotonicity
   # a is the skew of the clock... CAREFUL : this might be linked with the time_unit concept...
+  # or maybe not since a 1000 *  and a skew of 1.0001 *  are quite different in nature...
   # def skew(enum, skew) do end
 end

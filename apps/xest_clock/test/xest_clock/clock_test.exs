@@ -10,16 +10,15 @@ defmodule XestClock.Clock.Test do
   """
   def ts_retrieve(origin, unit) do
     fn ticks ->
-      ts_stream =
-        for t <- ticks do
-          %Timestamp{
-            origin: ^origin,
-            ts: ts,
-            unit: ^unit
-          } = t
+      for t <- ticks do
+        %Timestamp{
+          origin: ^origin,
+          ts: ts,
+          unit: ^unit
+        } = t
 
-          ts
-        end
+        ts
+      end
     end
   end
 
@@ -160,9 +159,7 @@ defmodule XestClock.Clock.Test do
     end
 
     test "new/3 does return clock with offset of zero", %{
-      clock: clock_seq,
-      ref: ref_seq,
-      expect: expected_offsets
+      ref: ref_seq
     } do
       ref = Clock.new(:refclock, :second, ref_seq)
 
