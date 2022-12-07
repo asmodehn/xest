@@ -257,7 +257,7 @@ defmodule XestClock.Clock.Test do
         proxy = ref |> Clock.follow(clock)
 
         assert proxy
-               |> Proxy.to_datetime(fn :second -> 42 end)
+               |> Clock.to_datetime(fn :second -> 42 end)
                |> Enum.to_list() == expected_dt
       end
     end

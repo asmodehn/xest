@@ -12,6 +12,21 @@ Usually the timezone is unspecified (unix time), but could be somewhat deduced..
 
 The goal is for this library to be the only one dealing with time concerns, to free other apps from this burden.
 
+## Roadmap
+
+- [X] Clock as a Stream of Timestamps (internally integers for optimization)
+- [X] Clock with offset, used to simulate remote clocks locally.
+- [ ] NaiveDateTime integration
+
+## Later, maybe ?
+
+- erlang timestamp integration
+- Tempo integration
+- Clock with offset and skew / linear map ?
+- Clock with error anticipation and correction
+- Generic Event Stream
+
+
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed

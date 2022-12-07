@@ -44,17 +44,25 @@ defmodule XestClock do
 
   @spec with_proxy(t(), Clock.t()) :: t()
   def with_proxy(%{local: local_clock} = xc, %Clock{} = remote) do
-    proxy = Proxy.new(local_clock, Clock.offset(local_clock, remote))
-    Map.put(xc, remote.origin, proxy)
+    offset = Clock.offset(local_clock, remote)
+    Map.put(xc, remote.origin, local_clock |> Clock.add_offset(offset))
   end
 
-  @spec with_proxy(t(), Clock.t()) :: t()
+  @spec with_proxy(t(), Clock.t(), atom()) :: t()
   def with_proxy(xc, %Clock{} = remote, reference_key) do
     # Note: reference key must already be in xc map
     # so we can discover it, and add it as the tick stream for the proxy.
     # Note THe original clock is ONLY USED to compute OFFSET !
-    proxy = Proxy.new(xc[reference_key], Clock.offset(xc[reference_key], remote))
-    Map.put(xc, remote.origin, proxy)
+    offset = Clock.offset(xc[reference_key], remote)
+
+    Map.put(
+      xc,
+      remote.origin,
+      xc[reference_key]
+      # we need to replace the origin in the clock
+      |> Map.put(:origin, remote.origin)
+      |> Clock.add_offset(offset)
+    )
   end
 
   @doc """

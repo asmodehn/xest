@@ -30,6 +30,7 @@ defmodule XestClock.StreamStepper do
     {:ok, continuation}
   end
 
+  @impl true
   def handle_call({:take, demand}, _from, continuation) when is_atom(continuation) do
     # nothing produced, returns nil in this case...
     {:reply, nil, continuation}
@@ -38,20 +39,15 @@ defmodule XestClock.StreamStepper do
     #  cf. gen_stage.streamer module for ideas...
   end
 
+  @impl true
   def handle_call({:take, demand}, _from, continuation) do
     # Ref: https://hexdocs.pm/gen_stage/GenStage.html#c:handle_call/3
     # we immediately return the result of the computation,
     # but we also set it to be dispatch as an event (other subscribers ?),
     # just as a demand of 1 would have.
     case continuation.({:cont, {[], demand}}) do
-      #      {:suspended, {[], 0}, continuation} ->
-      #        {:reply, nil, continuation}
-
       {:suspended, {list, 0}, continuation} ->
         {:reply, :lists.reverse(list), continuation}
-
-      #      {status, {[], _}} ->
-      #        {:reply, nil, status}
 
       {status, {list, _}} ->
         {:reply, :lists.reverse(list), status}

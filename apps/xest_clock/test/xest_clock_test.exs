@@ -45,10 +45,14 @@ defmodule XestClockTest do
           :testref
         )
 
-      assert %Proxy{
-               reference: clk.testref,
-               offset: Clock.offset(clk.testref, Clock.new(:testclock, :nanosecond, [1, 2, 3, 4]))
-             } == clk.testclock
+      offset = Clock.offset(clk.testref, Clock.new(:testclock, :nanosecond, [1, 2, 3, 4]))
+
+      assert %Clock{
+               origin: :testclock,
+               unit: :nanosecond,
+               stream: [0, 1, 2, 3],
+               offset: offset
+             } == %{clk.testclock | stream: clk.testclock.stream |> Enum.to_list()}
     end
   end
 end
