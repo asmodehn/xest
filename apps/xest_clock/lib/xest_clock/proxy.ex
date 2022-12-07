@@ -12,46 +12,31 @@ defmodule XestClock.Proxy do
   # to be able to get one element in a stream to use as offset
   # TODO : Better: everything in a stream ??
 
-  @enforce_keys [:remote, :reference]
-  defstruct remote: nil,
-            reference: nil,
+  @enforce_keys [:reference]
+  defstruct reference: nil,
             offset: nil
 
   @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
-          remote: Clock.t(),
           reference: Clock.t(),
           offset: Clock.Timestamp.t()
         }
 
-  @spec new(Clock.t(), Clock.t()) :: t()
-  def new(%Clock{} = clock, %Clock{} = ref) do
-    # force same unit on both clock, to simplify computations later on
-    cond do
-      Clock.Timeunit.inf(clock.unit, ref.unit) ->
-        %__MODULE__{
-          remote: Clock.convert(clock, ref.unit),
-          reference: ref,
-          offset: Timestamp.new(clock.origin, ref.unit, 0)
+  @spec new(Clock.t(), Timestamp.t()) :: t()
+  def new(
+        %Clock{} = ref,
+        %Timestamp{} = offset \\ %Timestamp{
+          origin: :testremote,
+          unit: :second,
+          ts: 0
         }
-
-      Clock.Timeunit.sup(clock.unit, ref.unit) ->
-        %__MODULE__{
-          remote: clock,
-          reference: Clock.convert(ref, clock.unit),
-          offset: Timestamp.new(clock.origin, ref.unit, 0)
-        }
-
-      true ->
-        %__MODULE__{
-          remote: clock,
-          reference: ref,
-          offset: Timestamp.new(clock.origin, ref.unit, 0)
-        }
-    end
+      ) do
+    %__MODULE__{
+      reference: ref,
+      offset: offset
+    }
   end
 
-  # TODO : remote() that is the offset, simulated version of the remote clock...
   # TODO : Make local and proxy interface converge...
 
   @doc """
