@@ -11,10 +11,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     name: Build and Test on OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
-    strategy:
-      matrix:
-        otp: ['24.2', '25.1']
-        elixir: ['1.12.3', '1.13.4']
     steps:
 
     - uses: actions/checkout@v2
@@ -24,9 +20,7 @@ jobs:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_REPO }}
 
     - uses: erlef/setup-beam@v1
-      with:
-        otp-version: ${{matrix.otp}}
-        elixir-version: ${{matrix.elixir}}
+      version-file: .tool-versions
 
     - name: Install dependencies
       run: mix deps.get
