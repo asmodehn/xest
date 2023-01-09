@@ -8,12 +8,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     name: Build and Test on OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: ['24.1'] #, '25.1']
+        otp: ['24.2', '25.1']
         elixir: ['1.12.3', '1.13.4']
     steps:
 
