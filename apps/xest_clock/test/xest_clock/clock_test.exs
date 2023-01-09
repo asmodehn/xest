@@ -50,6 +50,7 @@ defmodule XestClock.Clock.Test do
                1,
                2,
                3,
+               5,
                5
              ]
     end
@@ -103,7 +104,7 @@ defmodule XestClock.Clock.Test do
              ]
     end
 
-    test "as_timestamp/1 transform the clock stream into a stream of timestamps." do
+    test "as_timestamp/1 transform the clock stream into a stream of monotonous timestamps." do
       clock = XestClock.Clock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
       assert ts_retrieve(:testclock, :second).(clock |> XestClock.Clock.as_timestamp()) ==
@@ -111,6 +112,7 @@ defmodule XestClock.Clock.Test do
                  1,
                  2,
                  3,
+                 5,
                  5
                ]
     end
@@ -122,24 +124,25 @@ defmodule XestClock.Clock.Test do
                1000,
                2000,
                3000,
+               5000,
                5000
              ]
     end
 
     test "offset/2 computes difference between clocks" do
-      clockA = XestClock.Clock.new(:testclockA, :second, [1, 2, 3, 5, 4])
-      clockB = XestClock.Clock.new(:testclockB, :second, [11, 12, 13, 15, 124])
+      clock_a = XestClock.Clock.new(:testclock_a, :second, [1, 2, 3, 5, 4])
+      clock_b = XestClock.Clock.new(:testclock_b, :second, [11, 12, 13, 15, 124])
 
-      assert clockA |> XestClock.Clock.offset(clockB) ==
-               %XestClock.Timestamp{origin: :testclockB, ts: 10, unit: :second}
+      assert clock_a |> XestClock.Clock.offset(clock_b) ==
+               %XestClock.Timestamp{origin: :testclock_b, ts: 10, unit: :second}
     end
 
     test "offset/2 of same clock is null" do
-      clockA = XestClock.Clock.new(:testclockA, :second, [1, 2, 3])
-      clockB = XestClock.Clock.new(:testclockB, :second, [1, 2, 3])
+      clock_a = XestClock.Clock.new(:testclock_a, :second, [1, 2, 3])
+      clock_b = XestClock.Clock.new(:testclock_b, :second, [1, 2, 3])
 
-      assert clockA |> XestClock.Clock.offset(clockB) ==
-               %XestClock.Timestamp{origin: :testclockB, ts: 0, unit: :second}
+      assert clock_a |> XestClock.Clock.offset(clock_b) ==
+               %XestClock.Timestamp{origin: :testclock_b, ts: 0, unit: :second}
     end
   end
 

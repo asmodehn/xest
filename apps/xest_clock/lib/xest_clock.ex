@@ -15,7 +15,7 @@ defmodule XestClock do
 
   alias XestClock.Clock
 
-  @typedoc "A naive clock, callable (impure) function returning a DateTime"
+  @typedoc "A naive clock, callable (impure) function returning a NaiveDateTime"
   @type naive_clock() :: (() -> NaiveDateTime.t())
   @typedoc "A naive clock, callable (impure) function returning a integer"
   @type naive_integer_clock() :: (() -> integer)

@@ -1,9 +1,8 @@
 defmodule XestClock.Clock.Local do
-  @docmodule """
+  @moduledoc """
   Managing function specific to local (or local-relative) clocks
   """
 
-  alias XestClock.Clock.Timeunit
   require XestClock.Timestamp
 
   @spec timestamp(atom(), System.time_unit(), integer()) :: XestClock.Timestamp.t()

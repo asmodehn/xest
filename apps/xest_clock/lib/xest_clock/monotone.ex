@@ -1,5 +1,5 @@
 defmodule XestClock.Monotone do
-  @docmodule """
+  @moduledoc """
     this module only deals with monotone enumerables.
 
   increasing and decreasing, just like for time warping and monotone time,
@@ -11,6 +11,17 @@ defmodule XestClock.Monotone do
   This means the elements of the stream must be comparable with >= <= and ==
   """
 
+  @doc """
+  A Monotonously increasing stream. Replace values that would invalidate the monotonicity
+  with a duplicate of the previous value.
+  Use Stream.dedup/1 if you want unique values, ie. a strictly monotonous stream.
+
+  iex> m = XestClock.Monotone.increasing([1,3,2,5,4])
+  iex(1)> Enum.to_list(m)
+  [1,3,3,5,5]
+  iex(2)> m |> Stream.dedup() |> Enum.to_list()
+  [1,3,5]
+  """
   @spec increasing(Enumerable.t()) :: Enumerable.t()
   def increasing(enum) do
     Stream.transform(enum, nil, fn
@@ -19,31 +30,23 @@ defmodule XestClock.Monotone do
     end)
   end
 
+  @doc """
+  A Monotonously decreasing stream. Replace values that would invalidate the monotonicity
+  with a duplicate of the previous value.
+  Use Stream.dedup/1 if you want unique value, ie. a strictly monotonous stream.
+
+  iex> m = XestClock.Monotone.decreasing([4,5,2,3,1])
+  iex(1)> Enum.to_list(m)
+  [4,4,2,2,1]
+  iex(2)> m |> Stream.dedup() |> Enum.to_list()
+  [4,2,1]
+  """
   @spec decreasing(Enumerable.t()) :: Enumerable.t()
   def decreasing(enum) do
     Stream.transform(enum, nil, fn
       i, nil -> {[i], i}
       i, acc -> if acc >= i, do: {[i], i}, else: {[acc], acc}
     end)
-  end
-
-  @spec strictly(Enumerable.t(), atom) :: Enumerable.t()
-  def strictly(enum, :asc) do
-    enum
-    |> increasing
-    # since we are working with integers,
-    |> Stream.dedup()
-
-    # this will eliminate values that pass the increasing test because they are equal
-  end
-
-  def strictly(enum, :desc) do
-    enum
-    |> decreasing
-    # since we are working with integers,
-    |> Stream.dedup()
-
-    # this will eliminate values that pass the decreasing test because they are equal
   end
 
   @doc """

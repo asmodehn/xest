@@ -17,16 +17,16 @@ defmodule XestClock.Monotone.Test do
       assert Monotone.decreasing(enum) |> Enum.to_list() == [6, 5, 3, 3, 2, 1]
     end
 
-    test "strict/2 with :asc is stictly monotonically increasing" do
+    test "increasing/1 with Stream.dedup/1 is stictly monotonically increasing" do
       enum = [1, 2, 3, 5, 4, 6]
 
-      assert Monotone.strictly(enum, :asc) |> Enum.to_list() == [1, 2, 3, 5, 6]
+      assert Monotone.increasing(enum) |> Stream.dedup() |> Enum.to_list() == [1, 2, 3, 5, 6]
     end
 
-    test "strict/2 with :desc is stictly monotonically decreasing" do
+    test "decreasing/1 with Stream.dedup/1  is stictly monotonically decreasing" do
       enum = [6, 5, 3, 4, 2, 1]
 
-      assert Monotone.strictly(enum, :desc) |> Enum.to_list() == [6, 5, 3, 2, 1]
+      assert Monotone.decreasing(enum) |> Stream.dedup() |> Enum.to_list() == [6, 5, 3, 2, 1]
     end
 
     test "offset/2 can apply an offset to the enum" do
@@ -44,7 +44,7 @@ defmodule XestClock.Monotone.Test do
 
       # but offset preserves monotonicity.
 
-      assert Monotone.strictly(enum, :asc) |> Monotone.offset(10) |> Enum.to_list() ==
+      assert Monotone.increasing(enum) |> Stream.dedup() |> Monotone.offset(10) |> Enum.to_list() ==
                [
                  11,
                  12,
@@ -88,16 +88,18 @@ defmodule XestClock.Monotone.Test do
     end
 
     @tag enum: [1, 2, 3, 5, 4, 6]
-    test "strict/2 with :asc doesnt consume elements", %{source: source} do
+    test "increasing/1 with Stream.dedup/1 doesnt consume elements", %{source: source} do
       assert Stream.repeatedly(source)
-             |> Monotone.strictly(:asc)
+             |> Monotone.increasing()
+             |> Stream.dedup()
              |> Enum.take(5) == [1, 2, 3, 5, 6]
     end
 
     @tag enum: [6, 5, 3, 4, 2, 1]
-    test "strict/2 with :desc doesnt consume elements", %{source: source} do
+    test "decreasing/1 with Stream.dedup/1 doesnt consume elements", %{source: source} do
       assert Stream.repeatedly(source)
-             |> Monotone.strictly(:desc)
+             |> Monotone.decreasing()
+             |> Stream.dedup()
              |> Enum.take(5) == [6, 5, 3, 2, 1]
     end
   end

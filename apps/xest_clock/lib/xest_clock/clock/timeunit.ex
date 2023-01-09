@@ -1,4 +1,9 @@
 defmodule XestClock.Clock.Timeunit do
+  @moduledoc """
+  This module deals with time unit, just like System.
+  However, we do not admit the ambiguous :native unit here.
+  """
+
   @type t() :: System.time_unit()
 
   ## Duplicated from https://github.com/elixir-lang/elixir/blob/0909940b04a3e22c9ea4fedafa2aac349717011c/lib/elixir/lib/system.ex#L1344

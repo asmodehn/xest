@@ -10,7 +10,18 @@ defmodule XestClock.MixProject do
       # TMP : warning shoudl be fixed !!!
       elixirc_options: [warnings_as_errors: false],
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+
+      # Docs
+      name: "XestClock",
+      source_url: "https://github.com/asmodehn/xest",
+      homepage_url: "https://github.com/asmodehn/xest",
+      docs: [
+        # The main page in the docs
+        main: "XestClock",
+        #        logo: "path/to/logo.png",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -31,7 +42,9 @@ defmodule XestClock.MixProject do
   defp deps do
     [
       {:interval, "~> 0.3.2"},
-      {:gen_stage, "~> 1.0", only: [:test]}
+      {:gen_stage, "~> 1.0", only: [:test]},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

@@ -1,12 +1,9 @@
 defmodule XestClock.StreamStepper do
   # Designed from GenStage.Streamer
   @moduledoc """
-  This is a GenStage, abused to hold a stream (designed from GenStage.Streamer as in Elixir 1.14)
-    and setup so that a client process can ask for one element at a time, synchrounously.
+  This is a GenServer holding a stream (designed from GenStage.Streamer as in Elixir 1.14)
+    and setup so that a client process can ask for one element at a time, synchronously.
   We attempt to keep the same semantics, so the synchronous request will immediately trigger an event to be sent to all subscribers.
-
-  Currently it is just a support for testing, but it begs to wonder if we need something like this, maybe more "lightweight"
-    into xestclock code, to manage the proxy data, while stream executes...
   """
 
   use GenServer

@@ -7,8 +7,8 @@ defmodule XestClock.Clock.Timeinterval.Test do
 
   describe "Clock.Timeinterval" do
     setup do
-      tsb = %Timestamp{origin: :somewhere, unit: :millisecond, ts: 12345}
-      tsa = %Timestamp{origin: :somewhere, unit: :millisecond, ts: 12346}
+      tsb = %Timestamp{origin: :somewhere, unit: :millisecond, ts: 12_345}
+      tsa = %Timestamp{origin: :somewhere, unit: :millisecond, ts: 12_346}
       %{before: tsb, after: tsa}
     end
 
@@ -59,8 +59,8 @@ defmodule XestClock.Clock.Timeinterval.Test do
                origin: :somewhere,
                unit: :millisecond,
                interval: %Interval.Integer{
-                 left: {:inclusive, 12345},
-                 right: {:exclusive, 12346}
+                 left: {:inclusive, 12_345},
+                 right: {:exclusive, 12_346}
                }
              }
     end
@@ -70,8 +70,8 @@ defmodule XestClock.Clock.Timeinterval.Test do
                origin: :somewhere,
                unit: :millisecond,
                interval: %Interval.Integer{
-                 left: {:inclusive, 12345},
-                 right: {:exclusive, 12346}
+                 left: {:inclusive, 12_345},
+                 right: {:exclusive, 12_346}
                }
              }
     end

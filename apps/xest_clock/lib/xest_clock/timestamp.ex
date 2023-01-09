@@ -1,5 +1,5 @@
 defmodule XestClock.Timestamp do
-  @docmodule """
+  @moduledoc """
   The `XestClock.Clock.Timestamp` module deals with timestamp struct.
   This struct can store one timestamp.
 
@@ -24,13 +24,12 @@ defmodule XestClock.Timestamp do
 
   @spec new(atom(), System.time_unit(), integer()) :: t()
   def new(origin, unit, ts) do
-    Timeunit.normalize(unit)
+    nu = Timeunit.normalize(unit)
 
     %__MODULE__{
       # TODO : should be an already known atom...
       origin: origin,
-      # TODO : normalize unit (clock ? not private ?)
-      unit: unit,
+      unit: nu,
       # TODO : after getting rid of origin, this becomes just a time value...
       ts: ts
     }

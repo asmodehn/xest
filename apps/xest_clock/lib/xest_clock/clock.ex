@@ -1,13 +1,9 @@
 defmodule XestClock.Clock do
-  @docmodule """
+  @moduledoc """
     A Clock as a Stream.
 
   This module contains only the data structure and necessary functions.
 
-  For usage, there are two cases :
-   - local
-   - remote
-  and various functions are provided
   """
 
   alias XestClock.Monotone
@@ -16,7 +12,6 @@ defmodule XestClock.Clock do
 
   @enforce_keys [:unit, :stream, :origin]
   defstruct unit: nil,
-            # TODO: if Enumerable, some Enum function might consume elements implicitely (like Enum.at())
             stream: nil,
             # TODO: get rid of this ? makes sens only when comparing many of them...
             origin: nil,
@@ -29,7 +24,6 @@ defmodule XestClock.Clock do
   @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
           unit: System.time_unit(),
-          # TODO : convert enum to clock and back...
           stream: Enumerable.t(),
           origin: atom,
           offset: Timestamp.t()
@@ -50,8 +44,28 @@ defmodule XestClock.Clock do
 
   @doc """
     A stream representing the timeflow, ie a clock.
+
+  The calling code can pass an enumerable, for deterministic testing for example:
+
+  iex> enum_clock = XestClock.Clock.new(:enum_clock, :millisecond, [1,2,3,4,5])
+  iex(1)> Enum.to_list(enum_clock)
+  [1, 2, 3, 4, 5]
+
+  A stream is also an enumerable, and can be formed from a function called repeatedly.
+    Note a constant clock is monotonous, and therefore valid.
+
+  iex> call_clock = XestClock.Clock.new(:call_clock, :millisecond, Stream.repeatedly(fn -> 42 end))
+  iex(1)> call_clock |> Enum.take(3) |> Enum.to_list()
+
+    The specific local clock is accessible via new(:local, :millisecond)
+
+  iex> local_clock = XestClock.Clock.new(:local, :millisecond)
+  iex(1)> local_clock |> Enum.take(1) |> Enum.to_list()
+
+  Note : to be able to get one tick at a time from the clock (from the stream),
+  you ll probably need an agent or some gen_server to keep state around...
+
   """
-  # TODO : clearer name : from_tickstream
   @spec new(atom(), System.time_unit(), Enumerable.t(), integer) :: Enumerable.t()
   def new(origin, unit, tickstream, offset \\ 0) do
     nu = Timeunit.normalize(unit)
@@ -61,9 +75,9 @@ defmodule XestClock.Clock do
       unit: nu,
       stream:
         tickstream
-        # guaranteeing strict monotonicity
-        |> Monotone.increasing()
-        |> Stream.dedup(),
+        # guaranteeing (weak) monotonicity
+        # Less surprising for the user than a strict monotonicity dropping elements.
+        |> Monotone.increasing(),
       offset: Timestamp.new(origin, nu, offset)
     }
   end
