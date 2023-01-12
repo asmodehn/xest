@@ -1,4 +1,6 @@
 defmodule XestCache.ExampleCache do
+  @moduledoc false
+
   use XestCache.Decorators
 
   @decorate cacheable(cache: XestCache.Nebulex, key: some_value)

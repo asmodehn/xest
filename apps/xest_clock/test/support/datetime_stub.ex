@@ -1,5 +1,5 @@
-defmodule Xest.DateTime.Stub do
-  @behaviour Xest.DateTime.Behaviour
+defmodule XestClock.DateTime.Stub do
+  @behaviour XestClock.DateTime.Behaviour
 
   # harcoding stub to refer to datetime.
 

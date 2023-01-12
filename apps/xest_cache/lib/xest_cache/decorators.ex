@@ -1,4 +1,6 @@
 defmodule XestCache.Decorators do
+  @moduledoc false
+
   use Decorator.Define, cacheable: 1
 
   require Nebulex.Caching

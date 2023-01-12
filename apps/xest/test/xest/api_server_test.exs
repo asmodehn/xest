@@ -2,7 +2,7 @@ defmodule Xest.APIServer.Test do
   use ExUnit.Case, async: false
   use FlowAssertions
 
-  alias Xest.DateTime
+  alias XestClock.DateTime
   alias Xest.APIServer
 
   # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
@@ -52,8 +52,15 @@ defmodule Xest.APIServer.Test do
 
   describe "Given time to cache" do
     setup do
-      # setting up datetime mock
-      Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
+      # saving XestClock.DateTime implementation
+      previous_datetime = Application.get_env(:xest_clock, :datetime_module)
+      # Setup XestClock.DateTime Mock for these tests
+      Application.put_env(:xest_clock, :datetime_module, XestClock.DateTime.Mock)
+
+      on_exit(fn ->
+        # restoring config
+        Application.put_env(:xest_clock, :datetime_module, previous_datetime)
+      end)
 
       # starts server test process
       server_pid =
@@ -72,7 +79,7 @@ defmodule Xest.APIServer.Test do
         {:reply, state, state}
       end)
 
-      # because we need ot play with time here...
+      # because we need to play with time here...
       DateTime.Mock
       |> allow(self(), server_pid)
 

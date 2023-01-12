@@ -6,14 +6,14 @@ defmodule Xest.Clock.Proxy.Test do
   import Hammox
 
   setup do
-    # saving Xest.DateTime implementation
-    previous = Application.get_env(:xest, :datetime_module)
-    # Setup Xest.DateTime Mock for these tests
-    Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
+    # saving XestClock.DateTime implementation
+    previous = Application.get_env(:xest_clock, :datetime_module)
+    # Setup XestClock.DateTime Mock for these tests
+    Application.put_env(:xest_clock, :datetime_module, XestClock.DateTime.Mock)
 
     on_exit(fn ->
       # restoring config
-      Application.put_env(:xest, :datetime_module, previous)
+      Application.put_env(:xest_clock, :datetime_module, previous)
     end)
   end
 
@@ -30,13 +30,13 @@ defmodule Xest.Clock.Proxy.Test do
     end
 
     test "when retrieving local clock, skew remains at exactly 0", %{state: clock_state} do
-      Xest.DateTime.Mock
+      XestClock.DateTime.Mock
       |> expect(:utc_now, fn -> ~U[2020-02-02 02:02:02.202Z] end)
 
       skew = clock_state |> Clock.Proxy.retrieve() |> Map.get(:skew)
       assert skew == Timex.Duration.from_microseconds(0)
 
-      Xest.DateTime.Mock
+      XestClock.DateTime.Mock
       # retrieve
       |> expect(:utc_now, fn -> ~U[2020-02-02 02:02:02.202Z] end)
 
@@ -50,7 +50,7 @@ defmodule Xest.Clock.Proxy.Test do
     end
 
     test "when asking for expiration after retrieve, it is false (no ttl)", %{state: clock_state} do
-      Xest.DateTime.Mock
+      XestClock.DateTime.Mock
       # retrieve
       |> expect(:utc_now, fn -> ~U[2020-02-02 02:02:02.202Z] end)
       # expiration check (1 day diff)
@@ -67,7 +67,7 @@ defmodule Xest.Clock.Proxy.Test do
 
     test "when we add a ttl, after a retrieval, state expires if utc_now request happens too late",
          %{state: clock_state} do
-      Xest.DateTime.Mock
+      XestClock.DateTime.Mock
       # retrieve
       |> expect(:utc_now, fn -> ~U[2020-02-02 02:02:02.202Z] end)
 

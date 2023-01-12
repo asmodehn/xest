@@ -54,6 +54,9 @@ defmodule Xest.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:xest_clock, in_umbrella: true},
+      {:xest_cache, in_umbrella: true},
+
       # Tooling
       {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},

@@ -28,7 +28,7 @@ defmodule XestClock.StreamStepper do
   end
 
   @impl true
-  def handle_call({:take, demand}, _from, continuation) when is_atom(continuation) do
+  def handle_call({:take, _demand}, _from, continuation) when is_atom(continuation) do
     # nothing produced, returns nil in this case...
     {:reply, nil, continuation}
     # TODO: Shall we halt on nil ?? or keep it around ??

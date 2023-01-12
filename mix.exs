@@ -75,7 +75,9 @@ defmodule Xest.Umbrella.MixProject do
   defp aliases do
     [
       # run `mix setup` in all child apps
-      setup: ["cmd mix setup"]
+      setup: [~S|cmd "mix setup"|]
+      # alias test with --trace to see all test comments
+      #      test: [~S|cmd "mix test --trace"|]
     ]
   end
 end

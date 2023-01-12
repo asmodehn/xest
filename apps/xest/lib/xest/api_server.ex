@@ -41,14 +41,14 @@ defmodule Xest.APIServer do
       def handle_call(request, from, state) do
         {tmap, actual_state} = state
         # Note: actual state should !never! impact request/response
-        case Xest.TransientMap.fetch(tmap, request) do
+        case XestCache.TransientMap.fetch(tmap, request) do
           {:ok, hit} ->
             {:reply, hit, state}
 
           :error ->
             case mockable_impl().handle_cachemiss(request, from, actual_state) do
               {:reply, reply, new_state} ->
-                tmap = Xest.TransientMap.put(tmap, request, reply)
+                tmap = XestCache.TransientMap.put(tmap, request, reply)
                 {:reply, reply, {tmap, new_state}}
 
               {:noreply, new_state} ->
@@ -71,7 +71,7 @@ defmodule Xest.APIServer do
     # Here we add a trasient map to use as cache
     # and prevent call to be handled in client code when possible
     lifetime = Keyword.get(options, :lifetime, nil)
-    tmap = Xest.TransientMap.new(lifetime)
+    tmap = XestCache.TransientMap.new(lifetime)
     # leveraging GenServer behaviour
     GenServer.start_link(module, {tmap, init_arg}, options)
   end
