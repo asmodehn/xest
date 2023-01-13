@@ -1,9 +1,9 @@
 defmodule XestClock.StreamStepper.Test do
   # TMP to prevent errors given the stateful gen_server
   use ExUnit.Case, async: false
-  doctest XestClock.StreamStepper
+  doctest XestClock.Ticker
 
-  alias XestClock.StreamStepper
+  alias XestClock.Ticker
 
   describe "StreamStepper" do
     setup [:test_stream, :stepper_setup]
@@ -30,15 +30,15 @@ defmodule XestClock.StreamStepper.Test do
     defp stepper_setup(%{test_stream: test_stream}) do
       # We use start_supervised! from ExUnit to manage gen_stage
       # and not with the gen_stage :link option
-      streamstpr = start_supervised!({StreamStepper, test_stream})
+      streamstpr = start_supervised!({Ticker, test_stream})
       %{streamstpr: streamstpr}
     end
 
     @tag usecase: :list
-    test "with List, returns it on take(<pid>, 42)", %{streamstpr: streamstpr} do
+    test "with List, returns it on ticks(<pid>, 42)", %{streamstpr: streamstpr} do
       before = Process.info(streamstpr)
 
-      assert StreamStepper.take(streamstpr, 42) == [5, 4, 3, 2, 1]
+      assert Ticker.ticks(streamstpr, 42) == [5, 4, 3, 2, 1]
 
       after_compute = Process.info(streamstpr)
 
@@ -47,13 +47,13 @@ defmodule XestClock.StreamStepper.Test do
     end
 
     @tag usecase: :const_fun
-    test "with constant function in a Stream return value on take(<pid>,1)",
+    test "with constant function in a Stream return value on tick(<pid>)",
          %{streamstpr: streamstpr} do
       before = Process.info(streamstpr)
-      current_value = StreamStepper.take(streamstpr, 1)
+      current_value = Ticker.tick(streamstpr)
       after_compute = Process.info(streamstpr)
 
-      assert current_value == [42]
+      assert current_value == 42
 
       # Memory stay constant
       assert assert_constant_memory_reductions(before, after_compute) > 0
@@ -68,30 +68,30 @@ defmodule XestClock.StreamStepper.Test do
     end
 
     @tag usecase: :list
-    test "with List return value on take(<pid>,1)", %{streamstpr: streamstpr} do
+    test "with List return value on tick(<pid>)", %{streamstpr: streamstpr} do
       before = Process.info(streamstpr)
 
-      assert StreamStepper.take(streamstpr, 1) == [5]
+      assert Ticker.tick(streamstpr) == 5
 
       first = Process.info(streamstpr)
 
       # Memory stay constant
       assert assert_constant_memory_reductions(before, first) > 0
 
-      assert StreamStepper.take(streamstpr, 1) == [4]
+      assert Ticker.tick(streamstpr) == 4
 
       second = Process.info(streamstpr)
 
       # Memory stay constant
       assert assert_constant_memory_reductions(first, second) > 0
 
-      assert StreamStepper.take(streamstpr, 1) == [3]
+      assert Ticker.tick(streamstpr) == 3
 
-      assert StreamStepper.take(streamstpr, 1) == [2]
+      assert Ticker.tick(streamstpr) == 2
 
-      assert StreamStepper.take(streamstpr, 1) == [1]
+      assert Ticker.tick(streamstpr) == 1
 
-      assert StreamStepper.take(streamstpr, 1) == []
+      assert Ticker.tick(streamstpr) == nil
       # Note : the Process is still there (in case more data gets written into the stream...)
     end
 
@@ -99,27 +99,27 @@ defmodule XestClock.StreamStepper.Test do
     test "with Stream.unfold() return value on next()", %{streamstpr: streamstpr} do
       before = Process.info(streamstpr)
 
-      assert StreamStepper.take(streamstpr, 1) == [5]
+      assert Ticker.tick(streamstpr) == 5
 
       first = Process.info(streamstpr)
 
       # Memory stay constant
       assert assert_constant_memory_reductions(before, first) > 0
 
-      assert StreamStepper.take(streamstpr, 1) == [4]
+      assert Ticker.tick(streamstpr) == 4
 
       second = Process.info(streamstpr)
 
       # Memory stay constant
       assert assert_constant_memory_reductions(first, second) > 0
 
-      assert StreamStepper.take(streamstpr, 1) == [3]
+      assert Ticker.tick(streamstpr) == 3
 
-      assert StreamStepper.take(streamstpr, 1) == [2]
+      assert Ticker.tick(streamstpr) == 2
 
-      assert StreamStepper.take(streamstpr, 1) == [1]
+      assert Ticker.tick(streamstpr) == 1
 
-      assert StreamStepper.take(streamstpr, 1) == []
+      assert Ticker.tick(streamstpr) == nil
       # Note : the Process is still there (in case more data gets written into the stream...)
     end
   end

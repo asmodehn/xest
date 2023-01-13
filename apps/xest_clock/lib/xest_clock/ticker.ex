@@ -1,5 +1,4 @@
-defmodule XestClock.StreamStepper do
-  # Designed from GenStage.Streamer
+defmodule XestClock.Ticker do
   @moduledoc """
   This is a GenServer holding a stream (designed from GenStage.Streamer as in Elixir 1.14)
     and setup so that a client process can ask for one element at a time, synchronously.
@@ -12,8 +11,12 @@ defmodule XestClock.StreamStepper do
     GenServer.start_link(__MODULE__, stream, opts)
   end
 
-  def take(pid \\ __MODULE__, demand) do
-    GenServer.call(pid, {:take, demand})
+  def tick(pid \\ __MODULE__) do
+    List.first(ticks(pid, 1))
+  end
+
+  def ticks(pid \\ __MODULE__, demand) do
+    GenServer.call(pid, {:ticks, demand})
   end
 
   @impl true
@@ -28,7 +31,7 @@ defmodule XestClock.StreamStepper do
   end
 
   @impl true
-  def handle_call({:take, _demand}, _from, continuation) when is_atom(continuation) do
+  def handle_call({:ticks, _demand}, _from, continuation) when is_atom(continuation) do
     # nothing produced, returns nil in this case...
     {:reply, nil, continuation}
     # TODO: Shall we halt on nil ?? or keep it around ??
@@ -37,7 +40,7 @@ defmodule XestClock.StreamStepper do
   end
 
   @impl true
-  def handle_call({:take, demand}, _from, continuation) do
+  def handle_call({:ticks, demand}, _from, continuation) do
     # Ref: https://hexdocs.pm/gen_stage/GenStage.html#c:handle_call/3
     # we immediately return the result of the computation,
     # but we also set it to be dispatch as an event (other subscribers ?),
