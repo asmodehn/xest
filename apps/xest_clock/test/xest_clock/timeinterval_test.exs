@@ -1,9 +1,9 @@
-defmodule XestClock.Clock.Timeinterval.Test do
+defmodule XestClock.Timeinterval.Test do
   use ExUnit.Case
-  doctest XestClock.Clock.Timeinterval
+  doctest XestClock.Timeinterval
 
   alias XestClock.Timestamp
-  alias XestClock.Clock.Timeinterval
+  alias XestClock.Timeinterval
 
   describe "Clock.Timeinterval" do
     setup do

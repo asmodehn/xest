@@ -1,8 +1,8 @@
-defmodule XestClock.Clock.Timeunit.Test do
+defmodule XestClock.Timeunit.Test do
   use ExUnit.Case
-  doctest XestClock.Clock.Timeunit
+  doctest XestClock.Timeunit
 
-  alias XestClock.Clock.Timeunit
+  alias XestClock.Timeunit
 
   describe "Timeunit is ordered by precision" do
     test " second < millisecond < microsecond < nanosecond " do

@@ -1,4 +1,4 @@
-defmodule XestClock.Clock.Timeinterval do
+defmodule XestClock.Timeinterval do
   @moduledoc """
   The `XestClock.Clock.Timeinterval` module deals with timeinterval struct.
   This struct can store one timeinterval with measurements from the same origin, with the same unit.

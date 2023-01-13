@@ -8,7 +8,7 @@ defmodule XestClock.Clock do
 
   alias XestClock.Monotone
   alias XestClock.Timestamp
-  alias XestClock.Clock.Timeunit
+  alias XestClock.Timeunit
 
   @enforce_keys [:unit, :stream, :origin]
   defstruct unit: nil,

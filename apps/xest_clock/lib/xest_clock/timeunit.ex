@@ -1,4 +1,4 @@
-defmodule XestClock.Clock.Timeunit do
+defmodule XestClock.Timeunit do
   @moduledoc """
   This module deals with time unit, just like System.
   However, we do not admit the ambiguous :native unit here.

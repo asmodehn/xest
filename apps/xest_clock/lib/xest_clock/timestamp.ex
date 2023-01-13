@@ -8,7 +8,7 @@ defmodule XestClock.Timestamp do
   and managing the place of measurement is left to the client code.
   """
 
-  alias XestClock.Clock.Timeunit
+  alias XestClock.Timeunit
 
   @enforce_keys [:origin, :unit, :ts]
   defstruct ts: nil,
