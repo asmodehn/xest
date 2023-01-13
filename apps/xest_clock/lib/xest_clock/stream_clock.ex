@@ -1,4 +1,4 @@
-defmodule XestClock.Clock do
+defmodule XestClock.StreamClock do
   @moduledoc """
     A Clock as a Stream.
 
@@ -47,19 +47,19 @@ defmodule XestClock.Clock do
 
   The calling code can pass an enumerable, for deterministic testing for example:
 
-  iex> enum_clock = XestClock.Clock.new(:enum_clock, :millisecond, [1,2,3,4,5])
+  iex> enum_clock = XestClock.StreamClock.new(:enum_clock, :millisecond, [1,2,3,4,5])
   iex(1)> Enum.to_list(enum_clock)
   [1, 2, 3, 4, 5]
 
   A stream is also an enumerable, and can be formed from a function called repeatedly.
     Note a constant clock is monotonous, and therefore valid.
 
-  iex> call_clock = XestClock.Clock.new(:call_clock, :millisecond, Stream.repeatedly(fn -> 42 end))
+  iex> call_clock = XestClock.StreamClock.new(:call_clock, :millisecond, Stream.repeatedly(fn -> 42 end))
   iex(1)> call_clock |> Enum.take(3) |> Enum.to_list()
 
     The specific local clock is accessible via new(:local, :millisecond)
 
-  iex> local_clock = XestClock.Clock.new(:local, :millisecond)
+  iex> local_clock = XestClock.StreamClock.new(:local, :millisecond)
   iex(1)> local_clock |> Enum.take(1) |> Enum.to_list()
 
   Note : to be able to get one tick at a time from the clock (from the stream),

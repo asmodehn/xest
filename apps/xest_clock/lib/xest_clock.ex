@@ -15,7 +15,7 @@ defmodule XestClock do
   Note : XestClock.Ticker module can be used to get one tick at a time from the clock struct.
   """
 
-  alias XestClock.Clock
+  alias XestClock.StreamClock
 
   @typedoc "A naive clock, callable (impure) function returning a NaiveDateTime"
   @type naive_clock() :: (() -> NaiveDateTime.t())
@@ -29,32 +29,32 @@ defmodule XestClock do
   @spec local(System.time_unit()) :: t()
   def local(unit \\ :nanosecond) do
     %{
-      local: Clock.new(:local, unit)
+      local: StreamClock.new(:local, unit)
     }
   end
 
   @spec custom(atom(), System.time_unit(), Enumerable.t()) :: t()
   def custom(origin, unit, tickstream) do
-    Map.put(%{}, origin, Clock.new(origin, unit, tickstream))
+    Map.put(%{}, origin, StreamClock.new(origin, unit, tickstream))
   end
 
   @spec with_custom(t(), atom(), System.time_unit(), Enumerable.t()) :: t()
   def with_custom(xc, origin, unit, tickstream) do
-    Map.put(xc, origin, Clock.new(origin, unit, tickstream))
+    Map.put(xc, origin, StreamClock.new(origin, unit, tickstream))
   end
 
-  @spec with_proxy(t(), Clock.t()) :: t()
-  def with_proxy(%{local: local_clock} = xc, %Clock{} = remote) do
-    offset = Clock.offset(local_clock, remote)
-    Map.put(xc, remote.origin, local_clock |> Clock.add_offset(offset))
+  @spec with_proxy(t(), StreamClock.t()) :: t()
+  def with_proxy(%{local: local_clock} = xc, %StreamClock{} = remote) do
+    offset = StreamClock.offset(local_clock, remote)
+    Map.put(xc, remote.origin, local_clock |> StreamClock.add_offset(offset))
   end
 
-  @spec with_proxy(t(), Clock.t(), atom()) :: t()
-  def with_proxy(xc, %Clock{} = remote, reference_key) do
+  @spec with_proxy(t(), StreamClock.t(), atom()) :: t()
+  def with_proxy(xc, %StreamClock{} = remote, reference_key) do
     # Note: reference key must already be in xc map
     # so we can discover it, and add it as the tick stream for the proxy.
     # Note THe original clock is ONLY USED to compute OFFSET !
-    offset = Clock.offset(xc[reference_key], remote)
+    offset = StreamClock.offset(xc[reference_key], remote)
 
     Map.put(
       xc,
@@ -62,7 +62,7 @@ defmodule XestClock do
       xc[reference_key]
       # we need to replace the origin in the clock
       |> Map.put(:origin, remote.origin)
-      |> Clock.add_offset(offset)
+      |> StreamClock.add_offset(offset)
     )
   end
 
@@ -71,6 +71,6 @@ defmodule XestClock do
   CAREFUL: converting to datetime might drop precision (especially nanosecond...)
   """
   def to_datetime(xestclock, origin, monotone_time_offset \\ &System.time_offset/1) do
-    Clock.to_datetime(xestclock[origin], monotone_time_offset)
+    StreamClock.to_datetime(xestclock[origin], monotone_time_offset)
   end
 end
