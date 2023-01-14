@@ -151,7 +151,6 @@ defmodule XestClock.StreamClock do
           %XestClock.Timestamp{
             origin: clock.origin,
             unit: clock.unit,
-            # No offset allowed for monotone clock stream.
             ts: cs
           },
           # add the offset

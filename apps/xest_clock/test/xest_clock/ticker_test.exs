@@ -6,7 +6,7 @@ defmodule XestClock.StreamStepper.Test do
   alias XestClock.Ticker
   alias XestClock.StreamClock
 
-  describe "StreamStepper" do
+  describe "Ticker" do
     setup [:test_stream, :stepper_setup]
 
     defp test_stream(%{usecase: usecase}) do
