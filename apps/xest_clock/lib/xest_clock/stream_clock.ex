@@ -1,6 +1,6 @@
 defmodule XestClock.StreamClock do
   @moduledoc """
-    A Clock as a Stream.
+    A Clock as a Stream of timestamps
 
   This module contains only the data structure and necessary functions.
 
@@ -49,7 +49,13 @@ defmodule XestClock.StreamClock do
 
   iex> enum_clock = XestClock.StreamClock.new(:enum_clock, :millisecond, [1,2,3,4,5])
   iex(1)> Enum.to_list(enum_clock)
-  [1, 2, 3, 4, 5]
+  [
+  %XestClock.Timestamp{origin: :enum_clock, ts: 1, unit: :millisecond},
+  %XestClock.Timestamp{origin: :enum_clock, ts: 2, unit: :millisecond},
+  %XestClock.Timestamp{origin: :enum_clock, ts: 3, unit: :millisecond},
+  %XestClock.Timestamp{origin: :enum_clock, ts: 4, unit: :millisecond},
+  %XestClock.Timestamp{origin: :enum_clock, ts: 5, unit: :millisecond}
+  ]
 
   A stream is also an enumerable, and can be formed from a function called repeatedly.
     Note a constant clock is monotonous, and therefore valid.
@@ -65,6 +71,9 @@ defmodule XestClock.StreamClock do
   Note : to be able to get one tick at a time from the clock (from the stream),
   you ll probably need an agent or some gen_server to keep state around...
 
+
+  Note: The stream returns nil only before it has been initialized. If after a while, no new tick is in the stream, it will return the last known tick value.
+    This keeps the weak monotone semantics, simplify the usage, while keeping the nil value in case internal errors were detected, and streamclock needs to be reinitialized.
   """
   @spec new(atom(), System.time_unit(), Enumerable.t(), integer) :: Enumerable.t()
   def new(origin, unit, tickstream, offset \\ 0) do
@@ -98,10 +107,7 @@ defmodule XestClock.StreamClock do
   def offset(%__MODULE__{} = clockstream, %__MODULE__{} = otherclock) do
     # Here we need timestamp for the unit, to be able to compare integers...
 
-    Stream.zip(
-      otherclock |> as_timestamp(),
-      clockstream |> as_timestamp()
-    )
+    Stream.zip(otherclock, clockstream)
     |> Stream.map(fn {a, b} ->
       Timestamp.diff(a, b)
     end)
@@ -136,30 +142,25 @@ defmodule XestClock.StreamClock do
     def reduce(_clock, {:halt, acc}, _fun), do: {:halted, acc}
     def reduce(clock, {:suspend, acc}, fun), do: {:suspended, acc, &reduce(clock, &1, fun)}
 
-    # delegating continuing reduce to the generic Enumerable implementation of reduce
+    # reducing a streamclock produces timestamps
     def reduce(clock, {:cont, acc}, fun) do
-      # we do not need to do anything with the result (used internally by the stream)
-      Enumerable.reduce(clock.stream, {:cont, acc}, fun)
+      clock.stream
+      |> Stream.map(fn cs ->
+        Timestamp.plus(
+          # build a timestamp from the clock tick
+          %XestClock.Timestamp{
+            origin: clock.origin,
+            unit: clock.unit,
+            # No offset allowed for monotone clock stream.
+            ts: cs
+          },
+          # add the offset
+          clock.offset
+        )
+      end)
+      # delegating continuing reduce to the generic Enumerable implementation of reduce
+      |> Enumerable.reduce({:cont, acc}, fun)
     end
-  end
-
-  @spec as_timestamp(t()) :: Enumerable.t()
-  def as_timestamp(%__MODULE__{} = clockstream) do
-    # take the clock stream and map to get a timestamp
-    clockstream.stream
-    |> Stream.map(fn cs ->
-      Timestamp.plus(
-        # build a timestamp from the clock tick
-        %XestClock.Timestamp{
-          origin: clockstream.origin,
-          unit: clockstream.unit,
-          # No offset allowed for monotone clock stream.
-          ts: cs
-        },
-        # add the offset
-        clockstream.offset
-      )
-    end)
   end
 
   @spec convert(t(), System.time_unit()) :: t()
@@ -174,10 +175,15 @@ defmodule XestClock.StreamClock do
     }
   end
 
-  @spec to_datetime(t(), (System.time_unit() -> integer)) :: Enumerable.t()
+  # TODO : move that to a Datetime module specific for those APIs...
+  #  find how to relate to from_unix DateTime API... maybe using a clock process ??
+  @doc """
+    from_unix! expects a clock and returns the current datetime of that clock, with the local timezone information.
+    The system timezone is assumed, in order to stay close to Elixir interface.
+  """
+  @spec to_datetime(XestClock.StreamClock.t(), (System.time_unit() -> integer)) :: Enumerable.t()
   def to_datetime(%__MODULE__{} = clock, monotone_time_offset \\ &System.time_offset/1) do
     clock
-    |> as_timestamp()
     |> Stream.map(fn ts ->
       tstamp =
         Timestamp.plus(

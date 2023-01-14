@@ -8,17 +8,15 @@ defmodule XestClock.StreamClockTest do
   @doc """
   util function to always pattern match on timestamps
   """
-  def ts_retrieve(origin, unit) do
-    fn ticks ->
-      for t <- ticks do
-        %Timestamp{
-          origin: ^origin,
-          ts: ts,
-          unit: ^unit
-        } = t
+  def ts_retrieve(ticks, origin, unit) do
+    for t <- ticks do
+      %Timestamp{
+        origin: ^origin,
+        ts: ts,
+        unit: ^unit
+      } = t
 
-        ts
-      end
+      ts
     end
   end
 
@@ -46,7 +44,7 @@ defmodule XestClock.StreamClockTest do
     test "stream/3 stops at the first integer that is not greater than the current one" do
       clock = XestClock.StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      assert clock |> Enum.to_list() == [
+      assert clock |> Enum.to_list() |> ts_retrieve(:testclock, :second) == [
                1,
                2,
                3,
@@ -96,18 +94,19 @@ defmodule XestClock.StreamClockTest do
       # Attempting to take more will keep calling the ticker
       # and fail since the [] -> {nil, []} line is commented
       # TODO : taking more should stop the agent, and end the stream...
-      assert clock |> Stream.take(4) |> Enum.to_list() == [
-               1,
-               2,
-               3,
-               5
-             ]
+      assert clock |> Stream.take(4) |> Enum.to_list() |> ts_retrieve(:testclock, :nanosecond) ==
+               [
+                 1,
+                 2,
+                 3,
+                 5
+               ]
     end
 
     test "as_timestamp/1 transform the clock stream into a stream of monotonous timestamps." do
       clock = XestClock.StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      assert ts_retrieve(:testclock, :second).(clock |> XestClock.StreamClock.as_timestamp()) ==
+      assert clock |> Enum.to_list() |> ts_retrieve(:testclock, :second) ==
                [
                  1,
                  2,
@@ -120,7 +119,9 @@ defmodule XestClock.StreamClockTest do
     test "convert/2 convert from one unit to another" do
       clock = XestClock.StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      assert XestClock.StreamClock.convert(clock, :millisecond) |> Enum.to_list() == [
+      assert XestClock.StreamClock.convert(clock, :millisecond)
+             |> Enum.to_list()
+             |> ts_retrieve(:testclock, :millisecond) == [
                1000,
                2000,
                3000,
@@ -146,7 +147,7 @@ defmodule XestClock.StreamClockTest do
     end
   end
 
-  describe "Xestclock.StreamClock as Proxy" do
+  describe "Xestclock.StreamClock with offset" do
     setup do
       clock_seq = [1, 2, 3, 4, 5]
       ref_seq = [0, 2, 4, 6, 8]
@@ -235,7 +236,7 @@ defmodule XestClock.StreamClockTest do
     end
 
     @tag skip: true
-    test "to_datetime/2 computes the current datetime for a proxy clock", %{
+    test "to_datetime/2 computes the current datetime for a clock", %{
       clock: clock_seq,
       ref: ref_seq,
       expect: expected_offsets
