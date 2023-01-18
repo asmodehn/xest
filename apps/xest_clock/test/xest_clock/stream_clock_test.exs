@@ -263,4 +263,6 @@ defmodule XestClock.StreamClockTest do
       end
     end
   end
+
+  # TODO : add test of streamclock inside a Server (see stream.ticker test comments)
 end
