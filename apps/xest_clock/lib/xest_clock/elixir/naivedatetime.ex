@@ -35,10 +35,8 @@ defmodule XestClock.NaiveDateTime do
 
   def utc_now(Calendar.ISO) do
     {:ok, {year, month, day}, {hour, minute, second}, microsecond} =
-      Calendar.ISO.from_unix(
-        System.system_time(System.Extra.native_time_unit()),
-        System.Extra.native_time_unit()
-      )
+      System.system_time(System.native_time_unit())
+      |> Calendar.ISO.from_unix(System.native_time_unit())
 
     %NaiveDateTime{
       year: year,

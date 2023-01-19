@@ -20,7 +20,7 @@ defmodule XestClock.StreamClockTest do
     end
   end
 
-  describe "XestClock.Clock" do
+  describe "XestClock.StreamClock" do
     test "stream/2 refuses :native or unknown time units" do
       assert_raise(ArgumentError, fn ->
         XestClock.StreamClock.new(:local, :native)
@@ -264,5 +264,78 @@ defmodule XestClock.StreamClockTest do
     end
   end
 
-  # TODO : add test of streamclock inside a Server (see stream.ticker test comments)
+  describe "Xestclock.StreamClock in a GenServer" do
+    setup [:test_stream, :stepper_setup]
+
+    defp test_stream(%{usecase: usecase}) do
+      case usecase do
+        :streamclock ->
+          %{
+            test_stream:
+              StreamClock.new(
+                :testclock,
+                :millisecond,
+                [1, 2, 3, 4, 5],
+                10
+              )
+          }
+      end
+    end
+
+    defp stepper_setup(%{test_stream: test_stream}) do
+      # We use start_supervised! from ExUnit to manage gen_stage
+      # and not with the gen_stage :link option
+      streamstpr = start_supervised!({StreamStepper, test_stream})
+      %{streamstpr: streamstpr}
+    end
+
+    @tag usecase: :streamclock
+    test "with StreamClock return proper Timestamp on tick()", %{streamstpr: streamstpr} do
+      _before = Process.info(streamstpr)
+
+      assert StreamStepper.tick(streamstpr) == %XestClock.Timestamp{
+               origin: :testclock,
+               ts: 11,
+               unit: :millisecond
+             }
+
+      _first = Process.info(streamstpr)
+
+      # Note the memory does NOT stay constant for a clock because of extra operations.
+      # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
+
+      assert StreamStepper.tick(streamstpr) == %XestClock.Timestamp{
+               origin: :testclock,
+               ts: 12,
+               unit: :millisecond
+             }
+
+      _second = Process.info(streamstpr)
+
+      # Note the memory does NOT stay constant for a clockbecuase of extra operations.
+      # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
+
+      assert StreamStepper.tick(streamstpr) == %XestClock.Timestamp{
+               origin: :testclock,
+               ts: 13,
+               unit: :millisecond
+             }
+
+      assert StreamStepper.tick(streamstpr) == %XestClock.Timestamp{
+               origin: :testclock,
+               ts: 14,
+               unit: :millisecond
+             }
+
+      assert StreamStepper.tick(streamstpr) == %XestClock.Timestamp{
+               origin: :testclock,
+               ts: 15,
+               unit: :millisecond
+             }
+
+      # TODO : seems we should return the last one instead of nil ??
+      assert StreamStepper.tick(streamstpr) == nil
+      # Note : the Process is still there (in case more data gets written into the stream...)
+    end
+  end
 end

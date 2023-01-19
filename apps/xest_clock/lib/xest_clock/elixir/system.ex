@@ -9,6 +9,10 @@ defmodule XestClock.System do
 
     Note: os_time is unknowable from here, we work between the distributed VM and remote servers,
       not part of the managed cluster, and potentially with clocks that are not in sync.
+
+  Note also how all time unit are explicit and is a required input from hte user.
+    If the :native unit should be used, a function to compute it dynamically should be called.
+  This is the way it is done in DateTime and NaiveDateTime in this package...
   """
 
   alias XestClock.System.Extra
@@ -30,12 +34,23 @@ defmodule XestClock.System do
     @callback time_offset(time_unit()) :: integer()
   end
 
+  defmodule ExtraBehaviour do
+    @moduledoc """
+        A small behaviour to allow mocks of native_time_unit.
+
+    """
+
+    @type time_unit :: XestClock.System.time_unit()
+
+    @callback native_time_unit() :: System.time_unit()
+  end
+
   @doc """
       A slightly different implementation of system_time/1, using monotonic_time/1
 
       This system_time/1 is **not monotonic**, given we add time_offset.
 
-      Rsults should be *similar* to the original Elixir's System.system_time/1,
+      Results should be *similar* to the original Elixir's System.system_time/1,
       however not strictly equal. Therefore testing this is tricky and left to the user
       at least until we figure out a way to do it...
 
@@ -94,4 +109,20 @@ defmodule XestClock.System do
 
   @doc false
   defp impl, do: Application.get_env(:xest_clock, :system_module, System)
+
+  @doc """
+    Function to retrieve dynamically the native time_unit.
+    This is useful to keep DateTime and NaiveDateTime apis close to elixir.
+  """
+  @behaviour ExtraBehaviour
+
+  @impl ExtraBehaviour
+  def native_time_unit() do
+    # always resolve native unit via Extra, but it is at least mockable in tests
+    extra_impl().native_time_unit()
+  end
+
+  @doc false
+  defp extra_impl,
+    do: Application.get_env(:xest_clock, :system_extra_module, XestClock.System.Extra)
 end

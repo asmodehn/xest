@@ -50,6 +50,9 @@ defmodule XestClock.MixProject do
       # Dev libs
       {:gen_stage, "~> 1.0", only: [:test]},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      # TODO : use typecheck in dev and test, not prod.
+      # might not help much with stream or processes, but will help detecting api / functional issues
+      # along with simple property testing for code structure
 
       # Test libs
       {:hammox, "~> 0.4", only: [:test, :dev]},

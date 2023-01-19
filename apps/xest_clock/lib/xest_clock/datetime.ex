@@ -7,6 +7,8 @@ defmodule XestClock.DateTime do
   # This has been transferred from xest where it was a module mostly standalone.
   # TODO : integrate this better with the concepts here... how much of it is still useful ?
 
+  # TODO : new version of this is in XestClock.NewWrapper.DateTime. It should replace this eventually.
+
   defmodule Behaviour do
     # This is mandatory to use in Algebraic types
     @callback new :: DateTime.t()
