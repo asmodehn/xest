@@ -1,7 +1,10 @@
-Mix.install([
-  {:req, "~> 0.3"},
-  {:xest_clock, path: "../xest_clock"}
-])
+Mix.install(
+  [
+    {:req, "~> 0.3"},
+    {:xest_clock, path: "../xest_clock"}
+  ],
+  consolidate_protocols: true
+)
 
 defmodule WorldClockAPI do
   @moduledoc """
@@ -33,8 +36,8 @@ defmodule WorldClockAPI do
   ## Callbacks
   @impl true
   def handle_remote_unix_time(unit) do
-    # Note: unixtime is not monotonic.
-    # But the internal clock stream will enforce it.
+    # Note: unixtime on worldtime api might not be monotonic...
+    # But the internal clock stream will enforce it !
     response =
       Req.get!("http://worldtimeapi.org/api/timezone/Etc/UTC", cache: false) |> IO.inspect()
 
@@ -53,7 +56,12 @@ end
 {:ok, worldclock_pid} = WorldClockAPI.start_link(:second)
 
 # TODO : periodic permanent output...
-# IO.puts(
+
+# for ticks <- WorldClockAPI.ticks(worldclock_pid, 5) do
+# IO.puts(ticks)
+# end
+
 unixtime = List.first(WorldClockAPI.ticks(worldclock_pid, 1))
-IO.inspect(XestClock.NewWrapper.DateTime.from_unix!(unixtime.ts, unixtime.unit))
-# )
+IO.puts(unixtime)
+
+# IO.inspect(XestClock.NewWrapper.DateTime.from_unix!(unixtime.ts, unixtime.unit))

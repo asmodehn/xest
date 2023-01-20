@@ -25,8 +25,7 @@ $ elixir example/worldclockapi.exs
 - [X] Clock as a Stream of Timestamps (internally integers for optimization)
 - [X] Clock with offset, used to simulate remote clocks locally.
 - [X] NaiveDateTime integration
-- [X] Clock -> StreamClock
-- [ ] XestClock -> Clock
+- [X] Clock -> StreamClock, XestClock -> Clock
 - [ ] Ticker to hold a Clock struct (map with possibly multiple streamclocks) to match usual "clock" semantics
 - [ ] Some familiar interface ("use" / protocol, etc.) to use Ticker from a xest_connector
 
