@@ -12,6 +12,14 @@ Usually the timezone is unspecified (unix time), but could be somewhat deduced..
 
 The goal is for this library to be the only one dealing with time concerns, to free other apps from this burden.
 
+
+## Demo
+
+```bash
+$ elixir example/worldclockapi.exs
+```
+
+
 ## Roadmap
 
 - [X] Clock as a Stream of Timestamps (internally integers for optimization)

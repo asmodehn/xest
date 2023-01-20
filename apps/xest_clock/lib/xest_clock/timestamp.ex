@@ -69,3 +69,26 @@ defmodule XestClock.Timestamp do
     end
   end
 end
+
+defimpl String.Chars, for: XestClock.Timestamp do
+  def to_string(%XestClock.Timestamp{
+        origin: origin,
+        ts: ts,
+        unit: unit
+      }) do
+    # TODO: maybe have a more systematic / global way to manage time unit ??
+    # to something that is immediately parseable ? some sigil ??
+    # some existing physical unit library ?
+
+    unit =
+      case unit do
+        :second -> "s"
+        :millisecond -> "ms"
+        :microsecond -> "μs"
+        :nanosecond -> "ns"
+        pps -> " @ #{pps} Hz}"
+      end
+
+    "{#{origin}: #{ts} #{unit}}"
+  end
+end

@@ -48,5 +48,13 @@ defmodule XestClock.Timestamp.Test do
                ts: 123_000 + 123
              }
     end
+
+    test "implements String.Chars protocol to be able to output it directly" do
+      ts = Timestamp.new(:test_origin, :millisecond, 123)
+
+      str = String.Chars.to_string(ts)
+      IO.puts(ts)
+      assert str == "{test_origin: 123 ms}"
+    end
   end
 end
