@@ -6,9 +6,13 @@ defmodule XestClock.StreamClock do
 
   """
 
-  alias XestClock.Monotone
+  # TODO : this should probably be called just "Stream"
+
+  # intentionally hiding Elixir.System
+  alias XestClock.System
+
+  alias XestClock.Stream.Monotone
   alias XestClock.Timestamp
-  alias XestClock.Timeunit
 
   @enforce_keys [:unit, :stream, :origin]
   defstruct unit: nil,
@@ -30,7 +34,7 @@ defmodule XestClock.StreamClock do
         }
 
   def new(:local, unit) do
-    nu = Timeunit.normalize(unit)
+    nu = System.Extra.normalize_time_unit(unit)
 
     new(
       :local,
@@ -63,21 +67,15 @@ defmodule XestClock.StreamClock do
   iex> call_clock = XestClock.StreamClock.new(:call_clock, :millisecond, Stream.repeatedly(fn -> 42 end))
   iex(1)> call_clock |> Enum.take(3) |> Enum.to_list()
 
-    The specific local clock is accessible via new(:local, :millisecond)
-
-  iex> local_clock = XestClock.StreamClock.new(:local, :millisecond)
-  iex(1)> local_clock |> Enum.take(1) |> Enum.to_list()
-
   Note : to be able to get one tick at a time from the clock (from the stream),
   you ll probably need an agent or some gen_server to keep state around...
-
 
   Note: The stream returns nil only before it has been initialized. If after a while, no new tick is in the stream, it will return the last known tick value.
     This keeps the weak monotone semantics, simplify the usage, while keeping the nil value in case internal errors were detected, and streamclock needs to be reinitialized.
   """
   @spec new(atom(), System.time_unit(), Enumerable.t(), integer) :: Enumerable.t()
   def new(origin, unit, tickstream, offset \\ 0) do
-    nu = Timeunit.normalize(unit)
+    nu = System.Extra.normalize_time_unit(unit)
 
     %__MODULE__{
       origin: origin,
@@ -169,7 +167,7 @@ defmodule XestClock.StreamClock do
       clockstream
       | stream:
           clockstream.stream
-          |> Stream.map(fn ts -> Timeunit.convert(ts, clockstream.unit, unit) end),
+          |> Stream.map(fn ts -> System.convert_time_unit(ts, clockstream.unit, unit) end),
         unit: unit
     }
   end

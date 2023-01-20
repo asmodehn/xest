@@ -14,6 +14,10 @@ defmodule XestClock.DateTime.Test do
     # saving XestClock.DateTime implementation
     previous_datetime = Application.get_env(:xest_clock, :datetime_module)
     # Setup XestClock.DateTime Mock for these tests
+    Hammox.defmock(XestClock.DateTime.Mock,
+      for: XestClock.DateTime.Behaviour
+    )
+
     Application.put_env(:xest_clock, :datetime_module, XestClock.DateTime.Mock)
 
     on_exit(fn ->

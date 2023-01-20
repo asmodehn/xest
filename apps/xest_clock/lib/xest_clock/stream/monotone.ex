@@ -1,4 +1,4 @@
-defmodule XestClock.Monotone do
+defmodule XestClock.Stream.Monotone do
   @moduledoc """
     this module only deals with monotone enumerables.
 
@@ -16,7 +16,7 @@ defmodule XestClock.Monotone do
   with a duplicate of the previous value.
   Use Stream.dedup/1 if you want unique values, ie. a strictly monotonous stream.
 
-  iex> m = XestClock.Monotone.increasing([1,3,2,5,4])
+  iex> m = XestClock.Stream.Monotone.increasing([1,3,2,5,4])
   iex(1)> Enum.to_list(m)
   [1,3,3,5,5]
   iex(2)> m |> Stream.dedup() |> Enum.to_list()
@@ -35,7 +35,7 @@ defmodule XestClock.Monotone do
   with a duplicate of the previous value.
   Use Stream.dedup/1 if you want unique value, ie. a strictly monotonous stream.
 
-  iex> m = XestClock.Monotone.decreasing([4,5,2,3,1])
+  iex> m = XestClock.Stream.Monotone.decreasing([4,5,2,3,1])
   iex(1)> Enum.to_list(m)
   [4,4,2,2,1]
   iex(2)> m |> Stream.dedup() |> Enum.to_list()

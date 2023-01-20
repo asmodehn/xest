@@ -1,8 +1,8 @@
-defmodule XestClock.Monotone.Test do
+defmodule XestClock.Stream.Monotone.Test do
   use ExUnit.Case
-  doctest XestClock.Monotone
+  doctest XestClock.Stream.Monotone
 
-  alias XestClock.Monotone
+  alias XestClock.Stream.Monotone
 
   describe "Monotone on immutable enums" do
     test "increasing/1 is monotonically increasing" do

@@ -12,13 +12,20 @@ Usually the timezone is unspecified (unix time), but could be somewhat deduced..
 
 The goal is for this library to be the only one dealing with time concerns, to free other apps from this burden.
 
+
+## Demo
+
+```bash
+$ elixir example/worldclockapi.exs
+```
+
+
 ## Roadmap
 
 - [X] Clock as a Stream of Timestamps (internally integers for optimization)
 - [X] Clock with offset, used to simulate remote clocks locally.
 - [X] NaiveDateTime integration
-- [X] Clock -> StreamClock
-- [ ] XestClock -> Clock
+- [X] Clock -> StreamClock, XestClock -> Clock
 - [ ] Ticker to hold a Clock struct (map with possibly multiple streamclocks) to match usual "clock" semantics
 - [ ] Some familiar interface ("use" / protocol, etc.) to use Ticker from a xest_connector
 
