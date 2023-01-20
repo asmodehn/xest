@@ -1,4 +1,7 @@
 defmodule StreamStepper do
+  @moduledoc """
+      A simple GenServer allowing taking one element at a time from a stream
+  """
   alias XestClock.Stream.Ticker
 
   use GenServer

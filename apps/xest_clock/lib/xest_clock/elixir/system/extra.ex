@@ -1,4 +1,9 @@
 defmodule XestClock.System.Extra do
+  @moduledoc """
+      This module holds Extra functionality that is needed by XestClock.System,
+    but not present, or not exposed in Elixir.System
+  """
+
   @behaviour XestClock.System.ExtraBehaviour
 
   @doc """

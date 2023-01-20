@@ -98,7 +98,6 @@ defmodule XestClock.Stream.TickerTest do
       assert assert_constant_memory_reductions(before, after_compute) > 0
     end
 
-    # TODO factorize with test in streamclock_test
     defp assert_constant_memory_reductions(before_reductions, after_reductions) do
       assert before_reductions[:total_heap_size] == after_reductions[:total_heap_size]
       assert before_reductions[:heap_size] == after_reductions[:heap_size]

@@ -64,7 +64,7 @@ defmodule XestClock.ServerTest do
 
       assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
                origin: XestClock.ServerTest.ExampleServer,
-               ts: 42000,
+               ts: 42_000,
                unit: :millisecond
              }
 

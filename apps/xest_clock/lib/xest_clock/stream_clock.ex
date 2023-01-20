@@ -11,7 +11,7 @@ defmodule XestClock.StreamClock do
   # intentionally hiding Elixir.System
   alias XestClock.System
 
-  alias XestClock.Monotone
+  alias XestClock.Stream.Monotone
   alias XestClock.Timestamp
 
   @enforce_keys [:unit, :stream, :origin]
