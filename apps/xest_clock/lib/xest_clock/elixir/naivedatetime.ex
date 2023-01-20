@@ -15,20 +15,7 @@ defmodule XestClock.NaiveDateTime do
 
   @type t :: NaiveDateTime.t()
 
-  defmodule OriginalBehaviour do
-    @moduledoc """
-        A small behaviour to allow mocks of some functions of interest in Elixir's `NaiveDateTime`.
-
-        `XestClock.NaiveDateTime` relies on it as well, and provides an implementation for this behaviour.
-        It acts as well as an adapter, as transparently as is necessary.
-    """
-
-    @type t :: XestClock.NaiveDateTime.t()
-
-    @callback utc_now(Calendar.calendar()) :: t
-  end
-
-  @behaviour OriginalBehaviour
+  # These are pure and simply replicate Elixir.NaiveDateTime with explicit units
 
   @spec utc_now(Calendar.calendar()) :: t
   def utc_now(calendar \\ Calendar.ISO)

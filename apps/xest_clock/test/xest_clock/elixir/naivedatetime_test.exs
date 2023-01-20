@@ -4,14 +4,10 @@ defmodule XestClock.NaiveDateTime.Test do
 
   import Hammox
 
-  use Hammox.Protect,
-    module: XestClock.NaiveDateTime,
-    behaviour: XestClock.NaiveDateTime.OriginalBehaviour
-
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
   describe "utc_now/1" do
-    # TODO: impure -> use mock and expect
+    # TODO: impure -> use System mock and expect
   end
 end

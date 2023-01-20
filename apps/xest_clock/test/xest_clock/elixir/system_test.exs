@@ -107,10 +107,6 @@ defmodule XestClock.System.Test do
 
   describe "XestClock's convert_time_unit" do
     test "behaves the same as Elixir's convert_time_unit for non-native units" do
-      # Simply enumerating all possibilities, leveraging the stub
-      Hammox.stub_with(XestClock.System.OriginalMock, XestClock.System.OriginalStub)
-      # Note : Stub does not work when setup globally, as per https://stackoverflow.com/a/69465264
-
       assert XestClock.System.convert_time_unit(1, :second, :second) ==
                System.convert_time_unit(1, :second, :second)
 

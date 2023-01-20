@@ -30,7 +30,6 @@ defmodule XestClock.System do
     @type time_unit :: XestClock.System.time_unit()
 
     @callback monotonic_time(time_unit()) :: integer()
-    @callback convert_time_unit(integer, time_unit(), time_unit()) :: integer
     @callback time_offset(time_unit()) :: integer()
   end
 
@@ -75,27 +74,6 @@ defmodule XestClock.System do
   end
 
   @doc """
-  Converts `time` from time unit `from_unit` to time unit `to_unit`.
-  The result is rounded via the floor function.
-  Note: this `convert_time_unit/3` **does not accept** `:native`, since
-  it is aimed to be used by remote clocks for which `:native` can be ambiguous.
-  """
-  def convert_time_unit(_time, _from_unit, :native),
-    do: raise(ArgumentError, message: "convert_time_unit does not support :native unit")
-
-  def convert_time_unit(_time, :native, _to_unit),
-    do: raise(ArgumentError, message: "convert_time_unit does not support :native unit")
-
-  @impl OriginalBehaviour
-  def convert_time_unit(time, from_unit, to_unit) do
-    impl().convert_time_unit(
-      time,
-      Extra.normalize_time_unit(from_unit),
-      Extra.normalize_time_unit(to_unit)
-    )
-  end
-
-  @doc """
      Used to retrieve system_time/1 from monotonic_time/1
       This is used to compute human-readable datetimes
 
@@ -125,4 +103,25 @@ defmodule XestClock.System do
   @doc false
   defp extra_impl,
     do: Application.get_env(:xest_clock, :system_extra_module, XestClock.System.Extra)
+
+  @doc """
+  Converts `time` from time unit `from_unit` to time unit `to_unit`.
+  The result is rounded via the floor function.
+  Note: this `convert_time_unit/3` **does not accept** `:native`, since
+  it is aimed to be used by remote clocks for which `:native` can be ambiguous.
+  """
+  def convert_time_unit(_time, _from_unit, :native),
+    do: raise(ArgumentError, message: "convert_time_unit does not support :native unit")
+
+  def convert_time_unit(_time, :native, _to_unit),
+    do: raise(ArgumentError, message: "convert_time_unit does not support :native unit")
+
+  def convert_time_unit(time, from_unit, to_unit) do
+    # Hardcoding elixir dependency. No need to mock this pure function.
+    Elixir.System.convert_time_unit(
+      time,
+      Extra.normalize_time_unit(from_unit),
+      Extra.normalize_time_unit(to_unit)
+    )
+  end
 end

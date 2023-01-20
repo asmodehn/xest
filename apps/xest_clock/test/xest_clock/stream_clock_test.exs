@@ -5,6 +5,11 @@ defmodule XestClock.StreamClockTest do
   alias XestClock.StreamClock
   alias XestClock.Timestamp
 
+  import Hammox
+
+  # Make sure mocks are verified when the test exits
+  setup :verify_on_exit!
+
   @doc """
   util function to always pattern match on timestamps
   """
@@ -33,11 +38,18 @@ defmodule XestClock.StreamClockTest do
 
     test "stream/2 pipes increasing timestamp for local clock" do
       for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
+        XestClock.System.OriginalMock
+        |> expect(:monotonic_time, fn ^unit -> 1 end)
+        |> expect(:monotonic_time, fn ^unit -> 2 end)
+
         clock = XestClock.StreamClock.new(:local, unit)
 
         tick_list = clock |> Enum.take(2) |> Enum.to_list()
 
-        assert Enum.sort(tick_list, :asc) == tick_list
+        assert tick_list == [
+                 %XestClock.Timestamp{origin: :local, ts: 1, unit: unit},
+                 %XestClock.Timestamp{origin: :local, ts: 2, unit: unit}
+               ]
       end
     end
 

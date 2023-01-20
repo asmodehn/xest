@@ -4,10 +4,6 @@ defmodule XestClock.NewWrapper.DateTime.Test do
 
   import Hammox
 
-  use Hammox.Protect,
-    module: XestClock.NewWrapper.DateTime,
-    behaviour: XestClock.NewWrapper.DateTime.OriginalBehaviour
-
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
@@ -25,14 +21,6 @@ defmodule XestClock.NewWrapper.DateTime.Test do
 
   describe "utc_now/1" do
     test "returns the current utc time matchin the System.monotonic_time plus System.time_offset" do
-      # Leveraging the stub
-      Hammox.stub_with(
-        XestClock.NewWrapper.DateTime.OriginalMock,
-        XestClock.NewWrapper.DateTime.OriginalStub
-      )
-
-      # Note : Stub does not work when setup globally, as per https://stackoverflow.com/a/69465264
-
       # impure, relies on System.system_time.
       # -> use mock and expect
       XestClock.System.ExtraMock

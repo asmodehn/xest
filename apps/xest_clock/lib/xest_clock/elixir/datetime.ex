@@ -14,22 +14,6 @@ defmodule XestClock.NewWrapper.DateTime do
 
   @type t :: DateTime.t()
 
-  defmodule OriginalBehaviour do
-    @moduledoc """
-        A small behaviour to allow mocks of some functions of interest in Elixir's `DateTime`.
-
-        `XestClock.DateTime` relies on it as well, and provides an implementation for this behaviour.
-        It acts as well as an adapter, as transparently as is necessary.
-    """
-
-    @type t :: XestClock.DateTime.t()
-
-    @callback from_unix(integer, System.time_unit(), Calendar.calendar()) ::
-                {:ok, t} | {:error, atom}
-    @callback from_unix!(integer, System.time_unit(), Calendar.calendar()) :: t
-    @callback to_naive(Calendar.datetime()) :: NaiveDateTime.t()
-  end
-
   @doc """
   Reimplementation of `DateTime.utc_now/1` on top of `System.system_time/1` and `DateTime.from_unix/3`
 
@@ -44,23 +28,17 @@ defmodule XestClock.NewWrapper.DateTime do
     |> from_unix!(System.native_time_unit(), calendar)
   end
 
-  @behaviour OriginalBehaviour
+  # These are pure and simply wrap Elixir.DateTime without the need for a mock
 
-  @impl OriginalBehaviour
   def from_unix(integer, unit \\ :second, calendar \\ Calendar.ISO) when is_integer(integer) do
-    impl().from_unix(integer, System.Extra.normalize_time_unit(unit), calendar)
+    Elixir.DateTime.from_unix(integer, System.Extra.normalize_time_unit(unit), calendar)
   end
 
-  @impl OriginalBehaviour
   def from_unix!(integer, unit \\ :second, calendar \\ Calendar.ISO) do
-    impl().from_unix!(integer, System.Extra.normalize_time_unit(unit), calendar)
+    Elixir.DateTime.from_unix!(integer, System.Extra.normalize_time_unit(unit), calendar)
   end
 
-  @impl OriginalBehaviour
   def to_naive(calendar_datetime) do
-    impl().to_naive(calendar_datetime)
+    Elixir.DateTime.to_naive(calendar_datetime)
   end
-
-  @doc false
-  defp impl, do: Application.get_env(:xest_clock, :datetime_module, DateTime)
 end

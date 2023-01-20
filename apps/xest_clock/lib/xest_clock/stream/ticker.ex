@@ -3,6 +3,9 @@ defmodule XestClock.Stream.Ticker do
   Builds a ticker from a stream.
   Meaning calling next() on it will return n elements at a time.
   """
+
+  # TODO : rename to "Continuation"
+
   @spec new(Enumerable.t()) :: Enumerable.continuation()
   def new(stream) do
     &Enumerable.reduce(stream, &1, fn

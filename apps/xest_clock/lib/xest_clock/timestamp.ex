@@ -8,7 +8,8 @@ defmodule XestClock.Timestamp do
   and managing the place of measurement is left to the client code.
   """
 
-  alias XestClock.Timeunit
+  # intentionally hiding Elixir.System
+  alias XestClock.System
 
   @enforce_keys [:origin, :unit, :ts]
   defstruct ts: nil,
@@ -24,7 +25,7 @@ defmodule XestClock.Timestamp do
 
   @spec new(atom(), System.time_unit(), integer()) :: t()
   def new(origin, unit, ts) do
-    nu = Timeunit.normalize(unit)
+    nu = System.Extra.normalize_time_unit(unit)
 
     %__MODULE__{
       # TODO : should be an already known atom...
@@ -43,12 +44,12 @@ defmodule XestClock.Timestamp do
         new(tsa.origin, tsa.unit, tsa.ts - tsb.ts)
 
       # if conversion needed to tsb unit
-      Timeunit.sup(tsb.unit, tsa.unit) ->
-        new(tsa.origin, tsb.unit, Timeunit.convert(tsa.ts, tsa.unit, tsb.unit) - tsb.ts)
+      System.Extra.time_unit_sup(tsb.unit, tsa.unit) ->
+        new(tsa.origin, tsb.unit, System.convert_time_unit(tsa.ts, tsa.unit, tsb.unit) - tsb.ts)
 
       # otherwise (tsa unit)
       true ->
-        new(tsa.origin, tsa.unit, tsa.ts - Timeunit.convert(tsb.ts, tsb.unit, tsa.unit))
+        new(tsa.origin, tsa.unit, tsa.ts - System.convert_time_unit(tsb.ts, tsb.unit, tsa.unit))
     end
   end
 
@@ -59,12 +60,12 @@ defmodule XestClock.Timestamp do
         new(tsa.origin, tsa.unit, tsa.ts + tsb.ts)
 
       # if conversion needed to tsb unit
-      Timeunit.sup(tsb.unit, tsa.unit) ->
-        new(tsa.origin, tsb.unit, Timeunit.convert(tsa.ts, tsa.unit, tsb.unit) + tsb.ts)
+      System.Extra.time_unit_sup(tsb.unit, tsa.unit) ->
+        new(tsa.origin, tsb.unit, System.convert_time_unit(tsa.ts, tsa.unit, tsb.unit) + tsb.ts)
 
       # otherwise (tsa unit)
       true ->
-        new(tsa.origin, tsa.unit, tsa.ts + Timeunit.convert(tsb.ts, tsb.unit, tsa.unit))
+        new(tsa.origin, tsa.unit, tsa.ts + System.convert_time_unit(tsb.ts, tsb.unit, tsa.unit))
     end
   end
 end

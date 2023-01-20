@@ -11,6 +11,8 @@ defmodule XestClock.Monotone do
   This means the elements of the stream must be comparable with >= <= and ==
   """
 
+  # TODO : this should probably be moved into Stream submodule...
+
   @doc """
   A Monotonously increasing stream. Replace values that would invalidate the monotonicity
   with a duplicate of the previous value.
