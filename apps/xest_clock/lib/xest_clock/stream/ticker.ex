@@ -3,7 +3,8 @@ defmodule XestClock.Stream.Ticker do
       Holds functions helpful to manage stream and continuations...
   """
 
-  # TODO : rename to "Continuation"
+  # TODO : rename to "Continuation" ? "Reducer" ?Stepper? Something else ??
+
   @doc """
   Builds a ticker from a stream.
   Meaning calling next() on it will return n elements at a time.

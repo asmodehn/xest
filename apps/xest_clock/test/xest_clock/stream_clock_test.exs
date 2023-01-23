@@ -26,7 +26,7 @@ defmodule XestClock.StreamClockTest do
   end
 
   describe "XestClock.StreamClock" do
-    test "stream/2 refuses :native or unknown time units" do
+    test "new/2 refuses :native or unknown time units" do
       assert_raise(ArgumentError, fn ->
         XestClock.StreamClock.new(:local, :native)
       end)
@@ -36,7 +36,7 @@ defmodule XestClock.StreamClockTest do
       end)
     end
 
-    test "stream/2 pipes increasing timestamp for local clock" do
+    test "stream pipes increasing timestamp for clock" do
       for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
         XestClock.System.OriginalMock
         |> expect(:monotonic_time, fn ^unit -> 1 end)
@@ -53,7 +53,7 @@ defmodule XestClock.StreamClockTest do
       end
     end
 
-    test "stream/3 stops at the first integer that is not greater than the current one" do
+    test "stream repeats the last integer if the current one is not greater" do
       clock = XestClock.StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
       assert clock |> Enum.to_list() |> ts_retrieve(:testclock, :second) == [
@@ -65,7 +65,10 @@ defmodule XestClock.StreamClockTest do
              ]
     end
 
-    test "stream/3 returns increasing timestamp for clock using agent update as read function" do
+    test "stream doesnt tick faster than the unit" do
+    end
+
+    test "stream returns increasing timestamp for clock using agent update as read function" do
       #  A simple test ticker agent, that ticks everytime it is called
       {:ok, clock_agent} =
         start_supervised(

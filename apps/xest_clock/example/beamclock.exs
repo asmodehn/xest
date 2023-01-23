@@ -6,9 +6,17 @@ Mix.install(
   consolidate_protocols: true
 )
 
-defmodule WorldClockAPI do
+defmodule BeamClock do
   @moduledoc """
-    A module providing a local proxy of (part of) worldclockapi.org via `XestClock.Server`
+    The Clock of the BEAM, as if it wer a clock on a remote system...
+  This is not an example of how to do things, but rather an usecase to validate the API design.
+
+  In theory, a user intersting in a clock should be able to use a remote clock or a local on in the same way.
+  The only difference is that we can optimise the access to the local one,
+    which is the default we have grown accustomed to in most "local-first" systems.
+
+  `XestClock` proposes an API that works for both local and remote clocks, and is closer to purity,
+    therefore more suitable for usage by distributed apps.
   """
 
   use XestClock.Server
@@ -35,25 +43,14 @@ defmodule WorldClockAPI do
 
   ## Callbacks
   @impl true
-  def handle_remote_unix_time(unit, local_cache) do
-    # Note: unixtime on worldtime api might not be monotonic...
-    # But the internal clock stream will enforce it !
-    response =
-      Req.get!("http://worldtimeapi.org/api/timezone/Etc/UTC", cache: false) |> IO.inspect()
-
-    unixtime = response.body["unixtime"]
-
-    case unit do
-      :second -> unixtime
-      :millisecond -> unixtime * 1_000
-      :microsecond -> unixtime * 1_000_000
-      :nanosecond -> unixtime * 1_000_000_000
-      pps -> div(unixtime * pps, 1000)
-    end
+  def handle_remote_unix_time(unit) do
+    # TODO : monotonic time.
+    # TODO : find a nice way to deal with the offset...
+    XestClock.System.system_time(unit)
   end
 end
 
-{:ok, worldclock_pid} = WorldClockAPI.start_link(:second)
+{:ok, beamclock_pid} = BeamClock.start_link(:second)
 
 # TODO : periodic permanent output...
 
@@ -61,7 +58,7 @@ end
 # IO.puts(ticks)
 # end
 
-unixtime = List.first(WorldClockAPI.ticks(worldclock_pid, 1))
+unixtime = List.first(BeamClock.ticks(beamclock_pid, 1))
 IO.puts(unixtime)
 
 # IO.inspect(XestClock.NewWrapper.DateTime.from_unix!(unixtime.ts, unixtime.unit))

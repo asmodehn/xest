@@ -17,3 +17,11 @@ Application.put_env(:xest_clock, :system_module, XestClock.System.OriginalMock)
 
 # Note this is only for tests.
 # No configuration change on the user side is expected to set the System module.
+
+# System configuration for an optional mock, when setting local time is required.
+Hammox.defmock(XestClock.Process.OriginalMock, for: XestClock.Process.OriginalBehaviour)
+
+Application.put_env(:xest_clock, :process_module, XestClock.Process.OriginalMock)
+
+# Note this is only for tests.
+# No configuration change on the user side is expected to set the System module.

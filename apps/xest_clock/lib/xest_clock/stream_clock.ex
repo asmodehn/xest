@@ -85,6 +85,8 @@ defmodule XestClock.StreamClock do
         # guaranteeing (weak) monotonicity
         # Less surprising for the user than a strict monotonicity dropping elements.
         |> Monotone.increasing(),
+      #      call_rate: TimeInterval,  # TODO  # side-effecty, but maybe better in stream itself ?
+      #      tick_rate: TimeInterval, # TODO: the rate at which it ticks (proactively)
       offset: Timestamp.new(origin, nu, offset)
     }
   end
@@ -158,6 +160,9 @@ defmodule XestClock.StreamClock do
       # delegating continuing reduce to the generic Enumerable implementation of reduce
       |> Enumerable.reduce({:cont, acc}, fun)
     end
+
+    # TODO : timed reducer based on unit ??
+    # We dont want the enumeration to be faster than the unit...
   end
 
   @spec convert(t(), System.time_unit()) :: t()

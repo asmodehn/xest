@@ -54,6 +54,9 @@ defmodule XestClock.Server do
       @doc false
       @impl GenServer
       def handle_call({:ticks, demand}, _from, {stream, continuation}) do
+        # cache on the client side (it is impure, so better keep it on the outside)
+        # REALLY ???
+
         # Ref: https://hexdocs.pm/gen_stage/GenStage.html#c:handle_call/3
         # we immediately return the result of the computation,
         # TODO: but we also set it to be dispatch as an event (other subscribers ?),

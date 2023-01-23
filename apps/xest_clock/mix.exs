@@ -14,7 +14,15 @@ defmodule XestClock.MixProject do
       elixirc_options: [warnings_as_errors: true],
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-
+      # see https://hexdocs.pm/dialyxir/readme.html for options
+      dialyzer: [
+        flags: [
+          "-Wunmatched_returns",
+          :error_handling,
+          #          :race_conditions,
+          :underspecs
+        ]
+      ],
       # Docs
       name: "XestClock",
       source_url: "https://github.com/asmodehn/xest",
@@ -50,6 +58,7 @@ defmodule XestClock.MixProject do
       # Dev libs
       {:gen_stage, "~> 1.0", only: [:test]},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       # TODO : use typecheck in dev and test, not prod.
       # might not help much with stream or processes, but will help detecting api / functional issues
       # along with simple property testing for code structure

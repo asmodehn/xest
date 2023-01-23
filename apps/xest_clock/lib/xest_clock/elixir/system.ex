@@ -17,7 +17,7 @@ defmodule XestClock.System do
 
   alias XestClock.System.Extra
 
-  @type time_unit :: System.time_unit()
+  @type time_unit :: Elixir.System.time_unit()
 
   defmodule OriginalBehaviour do
     @moduledoc """
@@ -29,8 +29,8 @@ defmodule XestClock.System do
 
     @type time_unit :: XestClock.System.time_unit()
 
-    @callback monotonic_time(time_unit()) :: integer()
-    @callback time_offset(time_unit()) :: integer()
+    @callback monotonic_time(time_unit) :: integer
+    @callback time_offset(time_unit) :: integer
   end
 
   defmodule ExtraBehaviour do
