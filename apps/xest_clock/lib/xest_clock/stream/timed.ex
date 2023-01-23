@@ -3,71 +3,10 @@ defmodule XestClock.Stream.Timed do
     A module to deal with stream that have a time constraint
   """
 
+  # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
 
-  defmodule LocalStamp do
-    @enforce_keys [:unit, :monotonic, :vm_offset]
-    defstruct unit: nil,
-              monotonic: nil,
-              vm_offset: nil
-
-    @typedoc "LocalStamp struct"
-    @type t() :: %__MODULE__{
-            unit: System.time_unit(),
-            monotonic: integer(),
-            vm_offset: integer()
-          }
-
-    def now(unit) do
-      %LocalStamp{
-        unit: unit,
-        monotonic: System.monotonic_time(unit),
-        vm_offset: System.time_offset(unit)
-      }
-    end
-
-    # return type ? the offset doesnt have much meaning, but we need the unit...
-    @spec diff(t(), t()) :: t()
-    def diff(%LocalStamp{} = a, %LocalStamp{} = b) do
-      if System.convert_time_unit(1, a.unit, b.unit) < 1 do
-        # invert conversion to avoid losing precision
-        %LocalStamp{
-          monotonic: a.monotonic - System.convert_time_unit(b.monotonic, b.unit, a.unit),
-          unit: a.unit,
-          vm_offset: nil
-          # div(a.vm_offset + System.convert_time_unit(b.vm_offset, b.unit, a.unit), 2)
-        }
-
-        #            # TMP averaging the offset as a first approximation for derivation,
-        ##            until we have a need for something more solid...
-        ## This is currently fine, since for simple duration semantics the offset is unused.
-      else
-        %LocalStamp{
-          monotonic: System.convert_time_unit(a.monotonic, a.unit, b.unit) - b.monotonic,
-          unit: b.unit,
-          vm_offset: nil
-
-          # div(System.convert_time_unit(a.vm_offset, a.unit, b.unit) + b.vm_offset, 2)
-        }
-
-        #            # TMP averaging the offset as a first approximation for derivation,
-        ##            until we have a need for something more solid...
-        ## This is currently fine, since for simple duration semantics the offset is unused.
-      end
-    end
-
-    #        def since(%LocalStamp{unit: unit, monotonic: monotonic, vm_offset: vm_offset}) do
-    #          %LocalStamp {
-    #          unit: unit,
-    #          monotonic: System.monotonic_time(unit) - monotonic,
-    #          vm_offset: (System.time_offset(unit) + vm_offset) / 2
-    #            # TMP averaging the offset as a first approximation for derivation,
-    ##            until we have a need for something more solid...
-    ## This is currently fine, since for simple duration semantics the offset is unused.
-    #          }
-
-    #        end
-  end
+  alias XestClock.Stream.Timed.LocalStamp
 
   @spec timed(Enumerable.t(), System.time_unit()) :: Enumerable.t()
   def timed(enum, precision \\ System.native_time_unit())
