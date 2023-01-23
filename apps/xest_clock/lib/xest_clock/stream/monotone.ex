@@ -54,11 +54,6 @@ defmodule XestClock.Stream.Monotone do
   # UMI = erlang:unique_integer([monotonic]),
   # EventTag = {Time, UMI}
 
-  # TODO : with time_offset
-  # If you are interested in the Erlang system time at the time when the event occurred you can also save the time offset before or after saving the events using erlang:time_offset/0. Erlang monotonic time added with the time offset corresponds to Erlang system time.
-  #
-  # If you are executing in a mode where time offset may change and you want to be able to get the actual Erlang system time when the event occurred you can save the time offset as a third element in the tuple (the least significant element when comparing 3-tuples).
-
   @doc """
   offset requires the elements to support the + operator with the offset value.
     It doesn't enforce monotonicity, but will preserve it, by construction.

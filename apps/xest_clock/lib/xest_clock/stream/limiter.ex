@@ -4,6 +4,8 @@ defmodule XestClock.Stream.Limiter do
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.Process
 
+  alias XestClock.Stream.Timed
+
   @doc """
       A stream operator to prevent going upstream to pick more elements,
       based on a rate (time_unit)
@@ -20,35 +22,27 @@ defmodule XestClock.Stream.Limiter do
   end
 
   def limiter(enum, rate) when is_integer(rate) do
-    # Note: unit is defined before computation in stream, and the same for all elements.
-    best_unit =
-      cond do
-        rate <= 1 -> :second
-        rate <= 1_000 -> :millisecond
-        rate <= 1_000_000 -> :microsecond
-        rate <= 1_000_000_000 -> :nanosecond
-      end
-
     Stream.transform(enum, nil, fn
-      i, nil ->
-        {[i], {i, System.monotonic_time(best_unit)}}
+      {i, %Timed.LocalStamp{} = lts}, nil ->
+        # we save lst as acc to be checked by next element
+        {[{i, lts}], lts}
 
-      i, {_, ts} ->
-        now = System.monotonic_time(best_unit)
+      {i, %Timed.LocalStamp{} = new_lts}, %Timed.LocalStamp{} = last_lts ->
+        elapsed = Timed.LocalStamp.diff(new_lts, last_lts)
 
-        delta_ms = System.convert_time_unit(now - ts, best_unit, :millisecond)
+        delta_ms = System.convert_time_unit(elapsed.monotonic, elapsed.unit, :millisecond)
+        # otherwise, this is expected to return 0
         period_ms = div(1_000, rate)
 
         # if the current time is far enough from previous ts
         to_wait = period_ms - delta_ms
         # timeout always in milliseconds !
 
-        if to_wait >= 0 do
-          Process.sleep(to_wait)
-        end
+        # SIDE_EFFECT !
+        if to_wait > 0, do: Process.sleep(to_wait)
 
-        # take the new element and timestamp it
-        {[i], {i, now}}
+        # return the new element and store its timestamp
+        {[{i, new_lts}], new_lts}
     end)
   end
 end
