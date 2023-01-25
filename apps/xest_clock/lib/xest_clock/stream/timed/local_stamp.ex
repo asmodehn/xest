@@ -51,16 +51,4 @@ defmodule XestClock.Stream.Timed.LocalStamp do
       ## This is currently fine, since for simple duration semantics the offset is unused.
     end
   end
-
-  #        def since(%LocalStamp{unit: unit, monotonic: monotonic, vm_offset: vm_offset}) do
-  #          %LocalStamp {
-  #          unit: unit,
-  #          monotonic: System.monotonic_time(unit) - monotonic,
-  #          vm_offset: (System.time_offset(unit) + vm_offset) / 2
-  #            # TMP averaging the offset as a first approximation for derivation,
-  ##            until we have a need for something more solid...
-  ## This is currently fine, since for simple duration semantics the offset is unused.
-  #          }
-
-  #        end
 end

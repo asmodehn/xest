@@ -1,6 +1,9 @@
 defmodule XestClock.Stream.Timed do
   @moduledoc """
-    A module to deal with stream that have a time constraint
+    A module to deal with stream that have a time constraint.
+
+    Note all the times here should be **local**, as it doesnt make sense
+      to use approximative remote measurements inside a stream.
   """
 
   # hiding Elixir.System to make sure we do not inadvertently use it

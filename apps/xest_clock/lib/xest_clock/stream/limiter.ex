@@ -5,6 +5,7 @@ defmodule XestClock.Stream.Limiter do
   alias XestClock.Process
 
   alias XestClock.Stream.Timed
+  # TODO : this should probably be part of timed ... as a timed stream is required...
 
   @doc """
       A stream operator to prevent going upstream to pick more elements,
