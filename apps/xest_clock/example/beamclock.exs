@@ -9,7 +9,7 @@ Mix.install(
 
 defmodule BeamClock do
   @moduledoc """
-    The Clock of the BEAM, as if it wer a clock on a remote system...
+    The Clock of the BEAM, as if it were a clock on a remote system...
   This is not an example of how to do things, but rather an usecase to validate the API design.
 
   In theory, a user interested in a clock should be able to use a remote clock or a local on in the same way.
@@ -47,23 +47,9 @@ defmodule BeamClock do
   def handle_remote_unix_time(unit) do
     # TODO : monotonic time.
     # TODO : find a nice way to deal with the offset...
-    XestClock.System.monotonic_time(unit)
+    t = XestClock.System.monotonic_time(unit)
   end
 end
-
-#
-#
-## TODO : periodic permanent output...
-#
-## for ticks <- WorldClockAPI.ticks(worldclock_pid, 5) do
-## IO.puts(ticks)
-## end
-#
-# unixtime = List.first(BeamClock.ticks(beamclock_pid, 1))
-# IO.puts(unixtime)
-#
-## IO.inspect(XestClock.NewWrapper.DateTime.from_unix!(unixtime.ts, unixtime.unit))
-#
 
 defmodule BeamClockApp do
   @behaviour Ratatouille.App

@@ -54,19 +54,6 @@ defmodule WorldClockAPI do
   end
 end
 
-{:ok, worldclock_pid} = WorldClockAPI.start_link(:second)
-
-# TODO : periodic permanent output...
-
-# for ticks <- WorldClockAPI.ticks(worldclock_pid, 5) do
-# IO.puts(ticks)
-# end
-
-unixtime = List.first(WorldClockAPI.ticks(worldclock_pid, 1))
-IO.puts(unixtime)
-
-# IO.inspect(XestClock.NewWrapper.DateTime.from_unix!(unixtime.ts, unixtime.unit))
-
 defmodule WorldClockApp do
   @behaviour Ratatouille.App
 

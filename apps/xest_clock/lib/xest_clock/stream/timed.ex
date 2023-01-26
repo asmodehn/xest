@@ -33,8 +33,14 @@ defmodule XestClock.Stream.Timed do
         precision <= 1_000_000_000 -> :nanosecond
       end
 
-    Enum.map(enum, fn
-      elem -> {elem, LocalStamp.now(best_unit)}
+    Stream.transform(enum, nil, fn
+      i, nil ->
+        now = LocalStamp.now(best_unit)
+        {[{i, now}], now}
+
+      i, %LocalStamp{} = lts ->
+        now = LocalStamp.now(best_unit) |> LocalStamp.with_previous(lts)
+        {[{i, now}], now}
     end)
   end
 

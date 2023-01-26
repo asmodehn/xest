@@ -146,6 +146,7 @@ defmodule XestClock.StreamClock do
     def reduce(clock, {:cont, acc}, fun) do
       clock.stream
       |> Stream.map(fn cs ->
+        # TODO : maybe move this in new() for clarity ??
         Timestamp.plus(
           # build a timestamp from the clock tick
           %XestClock.Timestamp{
