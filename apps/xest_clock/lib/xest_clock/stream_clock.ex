@@ -12,22 +12,18 @@ defmodule XestClock.StreamClock do
   alias XestClock.System
 
   alias XestClock.Stream.Monotone
+  alias XestClock.TimeValue
   alias XestClock.Timestamp
 
-  @enforce_keys [:unit, :stream, :origin]
-  defstruct unit: nil,
-            stream: nil,
+  @enforce_keys [:stream, :origin]
+  defstruct stream: nil,
             # TODO: get rid of this ? makes sens only when comparing many of them...
             origin: nil,
-            offset: %Timestamp{
-              origin: :testremote,
-              unit: :second,
-              ts: 0
-            }
+            # TODO : change to a time value... or maybe get rid of it entirely ?
+            offset: Timestamp.new(:testremote, :second, 0)
 
   @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
-          unit: System.time_unit(),
           stream: Enumerable.t(),
           origin: atom,
           offset: Timestamp.t()
@@ -49,16 +45,40 @@ defmodule XestClock.StreamClock do
   @doc """
     A stream representing the timeflow, ie a clock.
 
-  The calling code can pass an enumerable, for deterministic testing for example:
+  The calling code can pass an enumerable, which is useful for deterministic testing.
 
-  iex> enum_clock = XestClock.StreamClock.new(:enum_clock, :millisecond, [1,2,3,4,5])
+  The value should be monotonic, and is taken as a measurement of time.
+  Derivatives are calculated on it (offset and skew) to help with various runtime requirements regarding clocks.
+
+  For example:
+
+  iex> enum_clock = XestClock.StreamClock.new(:enum_clock, :millisecond, [1,2,3])
   iex(1)> Enum.to_list(enum_clock)
   [
-  %XestClock.Timestamp{origin: :enum_clock, ts: 1, unit: :millisecond},
-  %XestClock.Timestamp{origin: :enum_clock, ts: 2, unit: :millisecond},
-  %XestClock.Timestamp{origin: :enum_clock, ts: 3, unit: :millisecond},
-  %XestClock.Timestamp{origin: :enum_clock, ts: 4, unit: :millisecond},
-  %XestClock.Timestamp{origin: :enum_clock, ts: 5, unit: :millisecond}
+  %XestClock.Timestamp{
+      origin: :enum_clock,
+      ts: %XestClock.TimeValue{
+          monotonic: 1,
+          offset: nil,
+          skew: nil,
+          unit: :millisecond
+  }},
+  %XestClock.Timestamp{
+      origin: :enum_clock,
+      ts: %XestClock.TimeValue{
+          monotonic: 2,
+          offset: 1,
+          skew: nil,
+          unit: :millisecond
+      }},
+  %XestClock.Timestamp{
+      origin: :enum_clock,
+      ts: %XestClock.TimeValue{
+          monotonic: 3,
+          offset: 1,
+          skew: 0,
+          unit: :millisecond
+  }}
   ]
 
   A stream is also an enumerable, and can be formed from a function called repeatedly.
@@ -79,53 +99,69 @@ defmodule XestClock.StreamClock do
 
     %__MODULE__{
       origin: origin,
-      unit: nu,
       stream:
         tickstream
         # guaranteeing (weak) monotonicity
         # Less surprising for the user than a strict monotonicity dropping elements.
-        |> Monotone.increasing(),
-      #      call_rate: TimeInterval,  # TODO  # side-effecty, but maybe better in stream itself ?
-      #      tick_rate: TimeInterval, # TODO: the rate at which it ticks (proactively)
+        |> Monotone.increasing()
+        # TODO : add limiter... and proxy, in stream !
+        |> as_timevalue(nu),
+
+      # REMINDER: consuming the clock.stream directly should be "naive" (no idea of origin-from users point of view).
+      # This is the point of the clock. so the internal stream is only naive time values...
       offset: Timestamp.new(origin, nu, offset)
     }
   end
 
-  @doc """
-      add_offset adds an offset to the clock
-  """
-  @spec add_offset(t(), Timestamp.t()) :: t()
-  def add_offset(%__MODULE__{} = clock, %Timestamp{} = offset) do
-    %{
-      clock
-      | # Note : order matter in plus() regarding origin in Timestamp...
-        offset: Timestamp.plus(offset, clock.offset)
-    }
-  end
+  defp as_timevalue(enum, unit) do
+    Stream.transform(enum, nil, fn
+      i, nil ->
+        now = TimeValue.new(unit, i)
+        # keep the current value in accumulator to compute derivatives later
+        {[now], now}
 
-  @spec offset(t(), t()) :: Timestamp.t()
-  def offset(%__MODULE__{} = clockstream, %__MODULE__{} = otherclock) do
-    # Here we need timestamp for the unit, to be able to compare integers...
-
-    Stream.zip(otherclock, clockstream)
-    |> Stream.map(fn {a, b} ->
-      Timestamp.diff(a, b)
+      i, %TimeValue{} = ltv ->
+        #        IO.inspect(ltv)
+        now = TimeValue.new(unit, i) |> TimeValue.with_derivatives_from(ltv)
+        {[now], now}
     end)
-    |> Enum.at(0)
-
-    # Note : we return only one element, as returning a stream might not make much sense ??
-    # Later skew and more can be evaluated more cleverly, but just a set of values will be returned here,
-    # not a stream.
   end
 
-  @doc """
-    follow determines the offset with the followed clock and adds it to the current clock
-  """
-  @spec follow(t(), t()) :: t()
-  def follow(%__MODULE__{} = clock, %__MODULE__{} = followed) do
-    clock
-    |> add_offset(offset(clock, followed))
-  end
+  #  @doc """
+  #      add_offset adds an offset to the clock
+  #  """
+  #  @spec add_offset(t(), Timestamp.t()) :: t()
+  #  def add_offset(%__MODULE__{} = clock, %Timestamp{} = offset) do
+  #    %{
+  #      clock
+  #      | # Note : order matter in plus() regarding origin in Timestamp...
+  #        offset: Timestamp.plus(offset, clock.offset)
+  #    }
+  #  end
+
+  #  @spec offset(t(), t()) :: Timestamp.t()
+  #  def offset(%__MODULE__{} = clockstream, %__MODULE__{} = otherclock) do
+  #    # Here we need timestamp for the unit, to be able to compare integers...
+  #
+  #    Stream.zip(otherclock, clockstream)
+  #    |> Stream.map(fn {a, b} ->
+  #      Timestamp.diff(a, b)
+  #    end)
+  #    |> Enum.at(0)
+  #
+  #    # Note : we return only one element, as returning a stream might not make much sense ??
+  #    # Later skew and more can be evaluated more cleverly, but just a set of values will be returned here,
+  #    # not a stream.
+  #  end
+
+  #  @doc """
+  #    follow determines the offset with the followed clock and adds it to the current clock
+  #  """
+  #  @spec follow(t(), t()) :: t()
+  #  def follow(%__MODULE__{} = clock, %__MODULE__{} = followed) do
+  #    clock
+  #    |> add_offset(offset(clock, followed))
+  #  end
 
   @doc """
     Implements the enumerable protocol for a clock, so that it can be used as a `Stream`.
@@ -145,21 +181,14 @@ defmodule XestClock.StreamClock do
     # reducing a streamclock produces timestamps
     def reduce(clock, {:cont, acc}, fun) do
       clock.stream
-      |> Stream.map(fn cs ->
-        # TODO : maybe move this in new() for clarity ??
-        Timestamp.plus(
-          # build a timestamp from the clock tick
-          %XestClock.Timestamp{
-            origin: clock.origin,
-            unit: clock.unit,
-            ts: cs
-          },
-          # add the offset
-          clock.offset
-        )
-      end)
+      # as timestamp, only when we consume from the clock itself.
+      |> as_timestamp(clock.origin)
       # delegating continuing reduce to the generic Enumerable implementation of reduce
       |> Enumerable.reduce({:cont, acc}, fun)
+    end
+
+    defp as_timestamp(enum, origin) do
+      Stream.map(enum, fn elem -> %Timestamp{origin: origin, ts: elem} end)
     end
 
     # TODO : timed reducer based on unit ??
@@ -173,8 +202,7 @@ defmodule XestClock.StreamClock do
       clockstream
       | stream:
           clockstream.stream
-          |> Stream.map(fn ts -> System.convert_time_unit(ts, clockstream.unit, unit) end),
-        unit: unit
+          |> Stream.map(fn ts -> System.convert_time_unit(ts.monotonic, ts.unit, unit) end)
     }
   end
 
@@ -187,20 +215,8 @@ defmodule XestClock.StreamClock do
   @spec to_datetime(XestClock.StreamClock.t(), (System.time_unit() -> integer)) :: Enumerable.t()
   def to_datetime(%__MODULE__{} = clock, monotone_time_offset \\ &System.time_offset/1) do
     clock
-    |> Stream.map(fn ts ->
-      tstamp =
-        Timestamp.plus(
-          # take the clock tick as a timestamp
-          ts,
-          Timestamp.new(
-            # add the local monotone_time VM offset
-            :time_offset,
-            clock.unit,
-            monotone_time_offset.(clock.unit)
-          )
-        )
-
-      DateTime.from_unix!(tstamp.ts, tstamp.unit)
+    |> Stream.map(fn %TimeValue{monotonic: mt, unit: unit} ->
+      DateTime.from_unix!(mt + monotone_time_offset.(unit), unit)
     end)
   end
 end

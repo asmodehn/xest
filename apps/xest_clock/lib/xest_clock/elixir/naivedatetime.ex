@@ -15,7 +15,7 @@ defmodule XestClock.NaiveDateTime do
 
   @type t :: NaiveDateTime.t()
 
-  # These are pure and simply replicate Elixir.NaiveDateTime with explicit units
+  # These simply replicate Elixir.NaiveDateTime with explicit units
 
   @spec utc_now(Calendar.calendar()) :: t
   def utc_now(calendar \\ Calendar.ISO)

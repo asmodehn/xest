@@ -15,6 +15,8 @@ defmodule XestClock.Clock do
   Note : XestClock.Ticker module can be used to get one tick at a time from the clock struct.
   """
 
+  # TODO : replace with a clock (stream of time values) without any information about origin.
+
   alias XestClock.StreamClock
 
   @typedoc "A naive clock, callable (impure) function returning a NaiveDateTime"
@@ -43,28 +45,28 @@ defmodule XestClock.Clock do
     Map.put(xc, origin, StreamClock.new(origin, unit, tickstream))
   end
 
-  @spec with_proxy(t(), StreamClock.t()) :: t()
-  def with_proxy(%{local: local_clock} = xc, %StreamClock{} = remote) do
-    offset = StreamClock.offset(local_clock, remote)
-    Map.put(xc, remote.origin, local_clock |> StreamClock.add_offset(offset))
-  end
-
-  @spec with_proxy(t(), StreamClock.t(), atom()) :: t()
-  def with_proxy(xc, %StreamClock{} = remote, reference_key) do
-    # Note: reference key must already be in xc map
-    # so we can discover it, and add it as the tick stream for the proxy.
-    # Note THe original clock is ONLY USED to compute OFFSET !
-    offset = StreamClock.offset(xc[reference_key], remote)
-
-    Map.put(
-      xc,
-      remote.origin,
-      xc[reference_key]
-      # we need to replace the origin in the clock
-      |> Map.put(:origin, remote.origin)
-      |> StreamClock.add_offset(offset)
-    )
-  end
+  #  @spec with_proxy(t(), StreamClock.t()) :: t()
+  #  def with_proxy(%{local: local_clock} = xc, %StreamClock{} = remote) do
+  #    offset = StreamClock.offset(local_clock, remote)
+  #    Map.put(xc, remote.origin, local_clock |> StreamClock.add_offset(offset))
+  #  end
+  #
+  #  @spec with_proxy(t(), StreamClock.t(), atom()) :: t()
+  #  def with_proxy(xc, %StreamClock{} = remote, reference_key) do
+  #    # Note: reference key must already be in xc map
+  #    # so we can discover it, and add it as the tick stream for the proxy.
+  #    # Note THe original clock is ONLY USED to compute OFFSET !
+  #    offset = StreamClock.offset(xc[reference_key], remote)
+  #
+  #    Map.put(
+  #      xc,
+  #      remote.origin,
+  #      xc[reference_key]
+  #      # we need to replace the origin in the clock
+  #      |> Map.put(:origin, remote.origin)
+  #      |> StreamClock.add_offset(offset)
+  #    )
+  #  end
 
   @doc """
       convert a remote clock to a datetime, that we can locally compare with datetime.utc_now().

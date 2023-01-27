@@ -2,61 +2,45 @@ defmodule XestClock.Timeinterval.Test do
   use ExUnit.Case
   doctest XestClock.Timeinterval
 
-  alias XestClock.Timestamp
+  alias XestClock.TimeValue
   alias XestClock.Timeinterval
 
   describe "Clock.Timeinterval" do
     setup do
-      tsb = %Timestamp{origin: :somewhere, unit: :millisecond, ts: 12_345}
-      tsa = %Timestamp{origin: :somewhere, unit: :millisecond, ts: 12_346}
+      tsb = %TimeValue{
+        unit: :millisecond,
+        monotonic: 12_345
+      }
+
+      tsa = %TimeValue{
+        unit: :millisecond,
+        monotonic: 12_346
+      }
+
       %{before: tsb, after: tsa}
-    end
-
-    test "build/2 rejects timestamps with different origins", %{before: tsb, after: tsa} do
-      assert_raise(ArgumentError, fn ->
-        Timeinterval.build(
-          %Timestamp{
-            origin: :somewhere_else,
-            unit: :millisecond,
-            ts: 897_654
-          },
-          tsa
-        )
-      end)
-
-      assert_raise(ArgumentError, fn ->
-        Timeinterval.build(tsb, %Timestamp{
-          origin: :somewhere_else,
-          unit: :millisecond,
-          ts: 897_654
-        })
-      end)
     end
 
     test "build/2 rejects timestamps with different units", %{before: tsb, after: tsa} do
       assert_raise(ArgumentError, fn ->
         Timeinterval.build(
-          %Timestamp{
-            origin: :somewhere_else,
+          %TimeValue{
             unit: :microsecond,
-            ts: 897_654
+            monotonic: 897_654
           },
           tsa
         )
       end)
 
       assert_raise(ArgumentError, fn ->
-        Timeinterval.build(tsb, %Timestamp{
-          origin: :somewhere_else,
+        Timeinterval.build(tsb, %TimeValue{
           unit: :microsecond,
-          ts: 897_654
+          monotonic: 897_654
         })
       end)
     end
 
     test "build/2 accepts timestamps in order", %{before: tsb, after: tsa} do
       assert Timeinterval.build(tsb, tsa) == %Timeinterval{
-               origin: :somewhere,
                unit: :millisecond,
                interval: %Interval.Integer{
                  left: {:inclusive, 12_345},
@@ -67,7 +51,6 @@ defmodule XestClock.Timeinterval.Test do
 
     test "build/2 accepts timestamps in reverse order", %{before: tsb, after: tsa} do
       assert Timeinterval.build(tsa, tsb) == %Timeinterval{
-               origin: :somewhere,
                unit: :millisecond,
                interval: %Interval.Integer{
                  left: {:inclusive, 12_345},

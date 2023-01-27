@@ -12,53 +12,56 @@ defmodule XestClock.Timeinterval do
   and managing the place of measurement is left to the client code.
   """
 
-  alias XestClock.Timestamp
+  alias XestClock.TimeValue
 
   # Note : The interval represented is a time interval -> continuous
   # EVEN IF the encoding interval is discrete (integer)
   # TODO : check https://github.com/kipcole9/tempo
 
-  @enforce_keys [:origin, :unit, :interval]
+  @enforce_keys [:unit, :interval]
   defstruct interval: nil,
-            unit: nil,
-            origin: nil
+            unit: nil
 
   @typedoc "Timeinterval struct"
   @type t() :: %__MODULE__{
           interval: Interval.t(),
-          unit: System.time_unit(),
-          origin: atom()
+          unit: System.time_unit()
         }
 
   @doc """
   Builds a time interval from two timestamps.
     right and left are determined by comparing the two timestamps
   """
-  def build(%Timestamp{} = ts1, %Timestamp{} = ts2) do
+  def build(%TimeValue{} = ts1, %TimeValue{} = ts2) do
     cond do
-      ts1.origin != ts2.origin ->
-        raise(ArgumentError, message: "time bounds origin mismatch")
-
       ts1.unit != ts2.unit ->
         raise(ArgumentError, message: "time bounds unit mismatch ")
 
-      ts1.ts == ts2.ts ->
+      ts1.monotonic == ts2.monotonic ->
         raise(ArgumentError, message: "time bounds identical. interval would be empty...")
 
-      ts1.ts < ts2.ts ->
+      ts1.monotonic < ts2.monotonic ->
         %__MODULE__{
-          origin: ts1.origin,
           unit: ts1.unit,
           interval:
-            Interval.new(module: Interval.Integer, left: ts1.ts, right: ts2.ts, bounds: "[)")
+            Interval.new(
+              module: Interval.Integer,
+              left: ts1.monotonic,
+              right: ts2.monotonic,
+              bounds: "[)"
+            )
         }
 
-      ts1.ts > ts2.ts ->
+      ts1.monotonic > ts2.monotonic ->
         %__MODULE__{
-          origin: ts1.origin,
           unit: ts1.unit,
           interval:
-            Interval.new(module: Interval.Integer, left: ts2.ts, right: ts1.ts, bounds: "[)")
+            Interval.new(
+              module: Interval.Integer,
+              left: ts2.monotonic,
+              right: ts1.monotonic,
+              bounds: "[)"
+            )
         }
     end
   end

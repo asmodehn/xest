@@ -11,15 +11,15 @@ defmodule XestClock.Timestamp do
   # intentionally hiding Elixir.System
   alias XestClock.System
 
-  @enforce_keys [:origin, :unit, :ts]
+  alias XestClock.TimeValue
+
+  @enforce_keys [:origin, :ts]
   defstruct ts: nil,
-            unit: nil,
             origin: nil
 
   @typedoc "XestClock.Timestamp struct"
   @type t() :: %__MODULE__{
-          ts: integer(),
-          unit: System.time_unit(),
+          ts: TimeValue.t(),
           origin: atom()
         }
 
@@ -30,51 +30,57 @@ defmodule XestClock.Timestamp do
     %__MODULE__{
       # TODO : should be an already known atom...
       origin: origin,
-      unit: nu,
       # TODO : after getting rid of origin, this becomes just a time value...
-      ts: ts
+      ts: TimeValue.new(nu, ts)
     }
   end
 
-  # Note :we are currently abusing timestamp to denote timevalues...
-  def diff(%__MODULE__{} = tsa, %__MODULE__{} = tsb) do
-    cond do
-      # if equality, just diff
-      tsa.unit == tsb.unit ->
-        new(tsa.origin, tsa.unit, tsa.ts - tsb.ts)
-
-      # if conversion needed to tsb unit
-      System.Extra.time_unit_sup(tsb.unit, tsa.unit) ->
-        new(tsa.origin, tsb.unit, System.convert_time_unit(tsa.ts, tsa.unit, tsb.unit) - tsb.ts)
-
-      # otherwise (tsa unit)
-      true ->
-        new(tsa.origin, tsa.unit, tsa.ts - System.convert_time_unit(tsb.ts, tsb.unit, tsa.unit))
-    end
+  def with_previous(%__MODULE__{} = recent, %__MODULE__{} = past) do
+    %{recent | ts: recent.ts |> TimeValue.with_derivatives_from(past.ts)}
   end
 
-  def plus(%__MODULE__{} = tsa, %__MODULE__{} = tsb) do
-    cond do
-      # if equality just add
-      tsa.unit == tsb.unit ->
-        new(tsa.origin, tsa.unit, tsa.ts + tsb.ts)
-
-      # if conversion needed to tsb unit
-      System.Extra.time_unit_sup(tsb.unit, tsa.unit) ->
-        new(tsa.origin, tsb.unit, System.convert_time_unit(tsa.ts, tsa.unit, tsb.unit) + tsb.ts)
-
-      # otherwise (tsa unit)
-      true ->
-        new(tsa.origin, tsa.unit, tsa.ts + System.convert_time_unit(tsb.ts, tsb.unit, tsa.unit))
-    end
-  end
+  #
+  #  # Note :we are currently abusing timestamp to denote timevalues...
+  #  def diff(%__MODULE__{} = tsa, %__MODULE__{} = tsb) do
+  #    cond do
+  #      # if equality, just diff
+  #      tsa.unit == tsb.unit ->
+  #        new(tsa.origin, tsa.unit, tsa.ts - tsb.ts)
+  #
+  #      # if conversion needed to tsb unit
+  #      System.Extra.time_unit_sup(tsb.unit, tsa.unit) ->
+  #        new(tsa.origin, tsb.unit, System.convert_time_unit(tsa.ts, tsa.unit, tsb.unit) - tsb.ts)
+  #
+  #      # otherwise (tsa unit)
+  #      true ->
+  #        new(tsa.origin, tsa.unit, tsa.ts - System.convert_time_unit(tsb.ts, tsb.unit, tsa.unit))
+  #    end
+  #  end
+  #
+  #  def plus(%__MODULE__{} = tsa, %__MODULE__{} = tsb) do
+  #    cond do
+  #      # if equality just add
+  #      tsa.unit == tsb.unit ->
+  #        new(tsa.origin, tsa.unit, tsa.ts + tsb.ts)
+  #
+  #      # if conversion needed to tsb unit
+  #      System.Extra.time_unit_sup(tsb.unit, tsa.unit) ->
+  #        new(tsa.origin, tsb.unit, System.convert_time_unit(tsa.ts, tsa.unit, tsb.unit) + tsb.ts)
+  #
+  #      # otherwise (tsa unit)
+  #      true ->
+  #        new(tsa.origin, tsa.unit, tsa.ts + System.convert_time_unit(tsb.ts, tsb.unit, tsa.unit))
+  #    end
+  #  end
 end
 
 defimpl String.Chars, for: XestClock.Timestamp do
   def to_string(%XestClock.Timestamp{
         origin: origin,
-        ts: ts,
-        unit: unit
+        ts: %XestClock.TimeValue{
+          monotonic: ts,
+          unit: unit
+        }
       }) do
     # TODO: maybe have a more systematic / global way to manage time unit ??
     # to something that is immediately parseable ? some sigil ??

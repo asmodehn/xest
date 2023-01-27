@@ -45,8 +45,8 @@ defmodule XestClock.TimeValue.Test do
                monotonic: 42,
                # 42 - 33
                offset: 9,
-               # (9 - 7) / (42 - 33)
-               skew: 0.2222222222222222
+               # 9 - 7
+               skew: 2
              }
     end
   end

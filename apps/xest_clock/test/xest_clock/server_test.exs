@@ -54,8 +54,7 @@ defmodule XestClock.ServerTest do
 
       assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
                origin: XestClock.ServerTest.ExampleServer,
-               ts: 42,
-               unit: :second
+               ts: %XestClock.TimeValue{monotonic: 42, offset: nil, skew: nil, unit: :second}
              }
 
       stop_supervised!(:example_sec)
@@ -64,8 +63,12 @@ defmodule XestClock.ServerTest do
 
       assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
                origin: XestClock.ServerTest.ExampleServer,
-               ts: 42_000,
-               unit: :millisecond
+               ts: %XestClock.TimeValue{
+                 monotonic: 42000,
+                 offset: nil,
+                 skew: nil,
+                 unit: :millisecond
+               }
              }
 
       stop_supervised!(:example_millisec)
@@ -74,8 +77,12 @@ defmodule XestClock.ServerTest do
 
       assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
                origin: XestClock.ServerTest.ExampleServer,
-               ts: 42_000_000,
-               unit: :microsecond
+               ts: %XestClock.TimeValue{
+                 monotonic: 42_000_000,
+                 offset: nil,
+                 skew: nil,
+                 unit: :microsecond
+               }
              }
 
       stop_supervised!(:example_microsec)
@@ -84,8 +91,12 @@ defmodule XestClock.ServerTest do
 
       assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
                origin: XestClock.ServerTest.ExampleServer,
-               ts: 42_000_000_000,
-               unit: :nanosecond
+               ts: %XestClock.TimeValue{
+                 monotonic: 42_000_000_000,
+                 offset: nil,
+                 skew: nil,
+                 unit: :nanosecond
+               }
              }
 
       stop_supervised!(:example_nanosec)
