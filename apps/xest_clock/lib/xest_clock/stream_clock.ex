@@ -12,6 +12,7 @@ defmodule XestClock.StreamClock do
   alias XestClock.System
 
   alias XestClock.Stream.Monotone
+  alias XestClock.Stream.Timed
   alias XestClock.TimeValue
   alias XestClock.Timestamp
 
@@ -29,6 +30,7 @@ defmodule XestClock.StreamClock do
           offset: Timestamp.t()
         }
 
+  # TODO : get rid of it. we abuse design here. it was just aimed to be an example...
   def new(:local, unit) do
     nu = System.Extra.normalize_time_unit(unit)
 
@@ -50,10 +52,12 @@ defmodule XestClock.StreamClock do
   The value should be monotonic, and is taken as a measurement of time.
   Derivatives are calculated on it (offset and skew) to help with various runtime requirements regarding clocks.
 
-  For example:
+  For example, after using stub code for system to side-step the mocks for tests:
 
-  iex> enum_clock = XestClock.StreamClock.new(:enum_clock, :millisecond, [1,2,3])
-  iex(1)> Enum.to_list(enum_clock)
+  iex> Hammox.stub_with(XestClock.System.OriginalMock, XestClock.System.OriginalStub)
+  iex(1)> Hammox.stub_with(XestClock.System.ExtraMock, XestClock.System.ExtraStub)
+  iex(2)> enum_clock = XestClock.StreamClock.new(:enum_clock, :millisecond, [1,2,3])
+  iex(3)> Enum.to_list(enum_clock)
   [
   %XestClock.Timestamp{
       origin: :enum_clock,
@@ -84,8 +88,10 @@ defmodule XestClock.StreamClock do
   A stream is also an enumerable, and can be formed from a function called repeatedly.
     Note a constant clock is monotonous, and therefore valid.
 
-  iex> call_clock = XestClock.StreamClock.new(:call_clock, :millisecond, Stream.repeatedly(fn -> 42 end))
-  iex(1)> call_clock |> Enum.take(3) |> Enum.to_list()
+  iex> Hammox.stub_with(XestClock.System.OriginalMock, XestClock.System.OriginalStub)
+  iex(1)> Hammox.stub_with(XestClock.System.ExtraMock, XestClock.System.ExtraStub)
+  iex(2)> call_clock = XestClock.StreamClock.new(:call_clock, :millisecond, Stream.repeatedly(fn -> 42 end))
+  iex(3)> call_clock |> Enum.take(3) |> Enum.to_list()
 
   Note : to be able to get one tick at a time from the clock (from the stream),
   you ll probably need an agent or some gen_server to keep state around...
@@ -105,7 +111,12 @@ defmodule XestClock.StreamClock do
         # Less surprising for the user than a strict monotonicity dropping elements.
         |> Monotone.increasing()
         # TODO : add limiter... and proxy, in stream !
-        |> as_timevalue(nu),
+        # from an int to a timevalue
+        |> as_timevalue(nu)
+        # add current local time for relative computations
+        |> Timed.timed()
+        # remove current local time
+        |> Timed.untimed(),
 
       # REMINDER: consuming the clock.stream directly should be "naive" (no idea of origin-from users point of view).
       # This is the point of the clock. so the internal stream is only naive time values...

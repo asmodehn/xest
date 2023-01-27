@@ -3,6 +3,8 @@ defmodule XestClock.ServerTest do
   use ExUnit.Case, async: false
   doctest XestClock.Server
 
+  import Hammox
+
   defmodule ExampleServer do
     use XestClock.Server
     # use will setup the correct streamclock for leveraging the `handle_remote_unix_time` callback
@@ -14,6 +16,23 @@ defmodule XestClock.ServerTest do
     @impl true
     def start_link(unit, opts \\ []) when is_list(opts) do
       XestClock.Server.start_link(__MODULE__, unit, opts)
+    end
+
+    @impl true
+    def init(state) do
+      # mocks expectations are needed since clock also tracks local time internally
+      XestClock.System.ExtraMock
+      |> expect(:native_time_unit, fn -> :nanosecond end)
+
+      XestClock.System.OriginalMock
+      |> expect(:monotonic_time, fn _ -> 42 end)
+      |> expect(:time_offset, fn _ -> 0 end)
+
+      # This is not of interest in tests, which is why it is quickly done here internally.
+      # Otherwise see allowances to do it from another process:
+      # https://hexdocs.pm/mox/Mox.html#module-explicit-allowances
+
+      XestClock.Server.init(state, &handle_remote_unix_time/1)
     end
 
     def tick(pid \\ __MODULE__) do
@@ -40,12 +59,16 @@ defmodule XestClock.ServerTest do
   end
 
   describe "XestClock.Server" do
-    setup %{unit: unit} do
-      # We use start_supervised! from ExUnit to manage gen_stage
-      # and not with the gen_stage :link option
-      example_srv = start_supervised!({ExampleServer, unit})
-      %{example_srv: example_srv}
-    end
+    #    setup %{unit: unit} do
+    #        # mocks expectations are needed since clock also tracks local time internally
+    #        XestClock.System.ExtraMock
+    #        |> expect(:native_time_unit, fn -> unit  end)
+    #
+    #      # We use start_supervised! from ExUnit to manage gen_stage
+    #      # and not with the gen_stage :link option
+    #      example_srv = start_supervised!({ExampleServer, unit})
+    #      %{example_srv: example_srv}
+    #    end
 
     @tag unit: :second
     @tag unit: :millisecond

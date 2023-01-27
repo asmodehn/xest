@@ -8,16 +8,22 @@ defmodule XestClock.Server do
   # TODO : better type for continuation ?
   @type internal_state :: {XestClock.StreamClock.t(), continuation :: any()}
 
-  # the actual callback needed by the server
+  #  # the actual callback needed by the server
+  #    @callback init({atom(), System.time_unit()}) ::
+  #              {:ok, state}
+  #              | {:ok, state, timeout | :hibernate | {:continue, continue_arg :: term}}
+  #              | :ignore
+  #              | {:stop, reason :: any}
+  #            when state: any
   @callback handle_remote_unix_time(System.time_unit()) :: integer()
 
   # callbacks to nudge the user towards code clarity with an explicit interface
+  # good or bad idae ???
   @callback start_link(atom, System.time_unit()) :: GenServer.on_start()
   @callback ticks(pid(), integer()) :: [XestClock.Timestamp.t()]
 
-  @optional_callbacks [
-    # TODO : see GenServer to add appropriate behaviours one may want to (re)define...
-  ]
+  #  @optional_callbacks init: 1
+  # TODO : see GenServer to add appropriate behaviours one may want to (re)define...
 
   @doc false
   defmacro __using__(opts) do
@@ -32,21 +38,13 @@ defmodule XestClock.Server do
 
       # we define the init matching the callback
       @doc false
-      @impl GenServer
+      @impl true
       def init({origin, unit}) do
-        # here we leverage streamclock, although we keep a usual server interface...
-        streamclock =
-          XestClock.StreamClock.new(
-            origin,
-            unit,
-            Stream.repeatedly(
-              # getting remote time via callback
-              fn -> handle_remote_unix_time(unit) end
-            )
-          )
-
-        {:ok, {streamclock, XestClock.Stream.Ticker.new(streamclock)}}
+        #  default init behaviour (overridable)
+        XestClock.Server.init({origin, unit}, &handle_remote_unix_time/1)
       end
+
+      defoverridable init: 1
 
       # TODO : :ticks to more specific atom (library style)...
       # IDEA : stamp for passive, ticks for proactive ticking
@@ -88,6 +86,21 @@ defmodule XestClock.Server do
 
       defoverridable handle_remote_unix_time: 1
     end
+  end
+
+  def init({origin, unit}, remote_unit_time_handler) do
+    # here we leverage streamclock, although we keep a usual server interface...
+    streamclock =
+      XestClock.StreamClock.new(
+        origin,
+        unit,
+        Stream.repeatedly(
+          # getting remote time via callback (should have been setup by __using__ macro)
+          fn -> remote_unit_time_handler.(unit) end
+        )
+      )
+
+    {:ok, {streamclock, XestClock.Stream.Ticker.new(streamclock)}}
   end
 
   # we define a default start_link matching the default child_spec of genserver

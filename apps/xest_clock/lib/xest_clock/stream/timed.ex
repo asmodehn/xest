@@ -45,7 +45,7 @@ defmodule XestClock.Stream.Timed do
   end
 
   def untimed(enum) do
-    Enum.map(enum, fn
+    Stream.map(enum, fn
       {original_elem, %LocalStamp{}} -> original_elem
     end)
   end
