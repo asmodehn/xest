@@ -13,6 +13,7 @@ defmodule XestClock.StreamClock do
 
   alias XestClock.Stream.Monotone
   alias XestClock.Stream.Timed
+  alias XestClock.Stream.Limiter
   alias XestClock.TimeValue
   alias XestClock.Timestamp
 
@@ -114,7 +115,12 @@ defmodule XestClock.StreamClock do
         # from an int to a timevalue
         |> as_timevalue(nu)
         # add current local time for relative computations
+        # TODO : extract this timed stream into a specific type to simplify stream computations
+        # There should be a naive clock, and a clock with origin (to add proxy/timestamp behavior...)
         |> Timed.timed()
+        # TODO : limiter : requests should not be faster than precision unit
+        # TODO : analyse current time vs received time to determine if we *should* request another, or just emulate (proxy)...
+        |> Limiter.limiter(nu)
         # remove current local time
         |> Timed.untimed(),
 

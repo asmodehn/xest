@@ -24,7 +24,7 @@ defmodule XestClock.Stream.Limiter do
   end
 
   def limiter(enum, rate) when is_integer(rate) do
-    Enum.map(enum, fn
+    Stream.map(enum, fn
       {untimed_elem, %Timed.LocalStamp{monotonic: %TimeValue{offset: offset}} = lts}
       when not is_nil(offset) ->
         # this is expected to return 0 if rate is too high

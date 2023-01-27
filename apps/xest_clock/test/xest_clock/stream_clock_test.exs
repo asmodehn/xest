@@ -68,6 +68,13 @@ defmodule XestClock.StreamClockTest do
 
         clock = StreamClock.new(:local, unit)
 
+        # Note : since we tick faster than unit here, we need to mock sleep.
+        # but only when we are slower than milliseconds otherwise sleep(ms) is useless
+        if unit == :second do
+          XestClock.Process.OriginalMock
+          |> expect(:sleep, fn _ -> :ok end)
+        end
+
         tick_list = clock |> Enum.take(2) |> Enum.to_list()
 
         assert tick_list == [
@@ -91,6 +98,10 @@ defmodule XestClock.StreamClockTest do
       |> expect(:monotonic_time, fn :nanosecond -> 5 end)
 
       clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
+
+      XestClock.Process.OriginalMock
+      # Note : since we tick faster than unit here, we need to mock sleep.
+      |> expect(:sleep, 4, fn _ -> :ok end)
 
       assert clock |> Enum.to_list() == [
                %Timestamp{
@@ -217,6 +228,10 @@ defmodule XestClock.StreamClockTest do
 
       clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
+      XestClock.Process.OriginalMock
+      # Note : since we tick faster than unit here, we need to mock sleep.
+      |> expect(:sleep, 4, fn _ -> :ok end)
+
       assert clock |> Enum.to_list() ==
                [
                  %Timestamp{
@@ -257,6 +272,10 @@ defmodule XestClock.StreamClockTest do
       |> expect(:monotonic_time, fn :nanosecond -> 5 end)
 
       clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
+
+      XestClock.Process.OriginalMock
+      # Note : since we tick faster than unit here, we need to mock sleep.
+      |> expect(:sleep, 4, fn _ -> :ok end)
 
       assert StreamClock.convert(clock, :millisecond)
              |> Enum.to_list() == [
