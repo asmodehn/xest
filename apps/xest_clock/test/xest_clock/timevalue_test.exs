@@ -50,4 +50,7 @@ defmodule XestClock.TimeValue.Test do
              }
     end
   end
+
+  # TODO  test string.Chars protocol
+  # TODO test inspect protocol
 end

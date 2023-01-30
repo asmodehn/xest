@@ -111,7 +111,6 @@ defmodule XestClock.StreamClock do
         # guaranteeing (weak) monotonicity
         # Less surprising for the user than a strict monotonicity dropping elements.
         |> Monotone.increasing()
-        # TODO : add limiter... and proxy, in stream !
         # from an int to a timevalue
         |> as_timevalue(nu)
         # add current local time for relative computations
@@ -121,6 +120,7 @@ defmodule XestClock.StreamClock do
         # TODO : limiter : requests should not be faster than precision unit
         # TODO : analyse current time vs received time to determine if we *should* request another, or just emulate (proxy)...
         |> Limiter.limiter(nu)
+        # TODO : add proxy, in stream !
         # remove current local time
         |> Timed.untimed(),
 
