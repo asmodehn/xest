@@ -61,7 +61,7 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
       |> expect(:monotonic_time, fn :millisecond -> 3 end)
       # called a forth time to generate the timestamp of the estimation
       # weakly monotonic !
-      |> expect(:monotonic_time, fn unit -> 3 end)
+      |> expect(:monotonic_time, fn _unit -> 3 end)
 
       proxy =
         [
@@ -153,12 +153,12 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
       |> expect(:time_offset, 3, fn _ -> 0 end)
       # called a forth time to generate the timestamp of the estimation
       |> expect(:time_offset, fn _ -> 0 end)
-      |> expect(:monotonic_time, fn unit -> 100 end)
-      |> expect(:monotonic_time, fn unit -> 300 end)
+      |> expect(:monotonic_time, fn _unit -> 100 end)
+      |> expect(:monotonic_time, fn _unit -> 300 end)
       # TODO : get rid of this !
-      |> expect(:monotonic_time, fn unit -> 500 end)
+      |> expect(:monotonic_time, fn _unit -> 500 end)
       # called a forth? time to generate the timestamp of the estimation
-      |> expect(:monotonic_time, fn unit -> 500 end)
+      |> expect(:monotonic_time, fn _unit -> 500 end)
 
       proxy =
         [100, 300, 500]

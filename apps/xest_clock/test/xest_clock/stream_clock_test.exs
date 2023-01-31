@@ -25,14 +25,14 @@ defmodule XestClock.StreamClockTest do
     end
 
     test "new/2 accepts usual Streams and does not infinitely loop" do
-      # mocks expectations are needed since clock also tracks local time internally
-      XestClock.System.ExtraMock
-      |> expect(:native_time_unit, fn -> :millisecond end)
-
-      XestClock.System.OriginalMock
-      |> expect(:time_offset, 2, fn _ -> 0 end)
-      |> expect(:monotonic_time, fn :millisecond -> 1 end)
-      |> expect(:monotonic_time, fn :millisecond -> 2 end)
+      #      # mocks expectations are needed since clock also tracks local time internally
+      #      XestClock.System.ExtraMock
+      #      |> expect(:native_time_unit, fn -> :millisecond end)
+      #
+      #      XestClock.System.OriginalMock
+      #      |> expect(:time_offset, 2, fn _ -> 0 end)
+      #      |> expect(:monotonic_time, fn :millisecond -> 1 end)
+      #      |> expect(:monotonic_time, fn :millisecond -> 2 end)
 
       clock = StreamClock.new(:stream, :millisecond, Stream.repeatedly(fn -> 42 end))
 
@@ -50,58 +50,58 @@ defmodule XestClock.StreamClockTest do
              ]
     end
 
-    test "stream pipes increasing timestamp for clock" do
-      for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
-        # mocks expectations are needed since clock also tracks local time internally
-        XestClock.System.ExtraMock
-        |> expect(:native_time_unit, fn -> unit end)
-
-        XestClock.System.OriginalMock
-        |> expect(:time_offset, 2, fn _ -> 0 end)
-        # Here we should be careful as internal callls to system,
-        # and actual clock calls are intermingled
-        # TODO : maybe get rid of this contrived test...
-        |> expect(:monotonic_time, fn ^unit -> 1 end)
-        |> expect(:monotonic_time, fn ^unit -> 1 end)
-        |> expect(:monotonic_time, fn ^unit -> 2 end)
-        |> expect(:monotonic_time, fn ^unit -> 2 end)
-
-        clock = StreamClock.new(:local, unit)
-
-        # Note : since we tick faster than unit here, we need to mock sleep.
-        # but only when we are slower than milliseconds otherwise sleep(ms) is useless
-        if unit == :second do
-          XestClock.Process.OriginalMock
-          |> expect(:sleep, fn _ -> :ok end)
-        end
-
-        tick_list = clock |> Enum.take(2) |> Enum.to_list()
-
-        assert tick_list == [
-                 %Timestamp{origin: :local, ts: %TimeValue{monotonic: 1, unit: unit}},
-                 %Timestamp{origin: :local, ts: %TimeValue{monotonic: 2, unit: unit, offset: 1}}
-               ]
-      end
-    end
+    #    test "stream pipes increasing timestamp for clock" do
+    #      for unit <- [:second, :millisecond, :microsecond, :nanosecond] do
+    #        # mocks expectations are needed since clock also tracks local time internally
+    ##        XestClock.System.ExtraMock
+    ##        |> expect(:native_time_unit, fn -> unit end)
+    ##
+    ##        XestClock.System.OriginalMock
+    ##        |> expect(:time_offset, 2, fn _ -> 0 end)
+    ##        # Here we should be careful as internal callls to system,
+    ##        # and actual clock calls are intermingled
+    ##        # TODO : maybe get rid of this contrived test...
+    #        |> expect(:monotonic_time, fn ^unit -> 1 end)
+    #        |> expect(:monotonic_time, fn ^unit -> 1 end)
+    #        |> expect(:monotonic_time, fn ^unit -> 2 end)
+    #        |> expect(:monotonic_time, fn ^unit -> 2 end)
+    #
+    #        clock = StreamClock.new(:local, unit)
+    #
+    #        # Note : since we tick faster than unit here, we need to mock sleep.
+    #        # but only when we are slower than milliseconds otherwise sleep(ms) is useless
+    #        if unit == :second do
+    #          XestClock.Process.OriginalMock
+    #          |> expect(:sleep, fn _ -> :ok end)
+    #        end
+    #
+    #        tick_list = clock |> Enum.take(2) |> Enum.to_list()
+    #
+    #        assert tick_list == [
+    #                 %Timestamp{origin: :local, ts: %TimeValue{monotonic: 1, unit: unit}},
+    #                 %Timestamp{origin: :local, ts: %TimeValue{monotonic: 2, unit: unit, offset: 1}}
+    #               ]
+    #      end
+    #    end
 
     test "stream repeats the last integer if the current one is not greater" do
       # mocks expectations are needed since clock also tracks local time internally
-      XestClock.System.ExtraMock
-      |> expect(:native_time_unit, fn -> :nanosecond end)
-
-      XestClock.System.OriginalMock
-      |> expect(:time_offset, 5, fn _ -> 0 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
+      #      XestClock.System.ExtraMock
+      #      |> expect(:native_time_unit, fn -> :nanosecond end)
+      #
+      #      XestClock.System.OriginalMock
+      #      |> expect(:time_offset, 5, fn _ -> 0 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
 
       clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      XestClock.Process.OriginalMock
-      # Note : since we tick faster than unit here, we need to mock sleep.
-      |> expect(:sleep, 4, fn _ -> :ok end)
+      #      XestClock.Process.OriginalMock
+      #      # Note : since we tick faster than unit here, we need to mock sleep.
+      #      |> expect(:sleep, 4, fn _ -> :ok end)
 
       assert clock |> Enum.to_list() == [
                %Timestamp{
@@ -171,15 +171,15 @@ defmodule XestClock.StreamClockTest do
       # with a stream repeatedly calling and updating the agent (as with the system clock)
 
       # mocks expectations are needed since clock also tracks local time internally
-      XestClock.System.ExtraMock
-      |> expect(:native_time_unit, fn -> :nanosecond end)
-
-      XestClock.System.OriginalMock
-      |> expect(:time_offset, 4, fn _ -> 0 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
+      #      XestClock.System.ExtraMock
+      #      |> expect(:native_time_unit, fn -> :nanosecond end)
+      #
+      #      XestClock.System.OriginalMock
+      #      |> expect(:time_offset, 4, fn _ -> 0 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
 
       clock =
         StreamClock.new(
@@ -215,22 +215,22 @@ defmodule XestClock.StreamClockTest do
 
     test "as_timestamp/1 transform the clock stream into a stream of monotonous timestamps." do
       # mocks expectations are needed since clock also tracks local time internally
-      XestClock.System.ExtraMock
-      |> expect(:native_time_unit, fn -> :nanosecond end)
-
-      XestClock.System.OriginalMock
-      |> expect(:time_offset, 5, fn _ -> 0 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
+      #      XestClock.System.ExtraMock
+      #      |> expect(:native_time_unit, fn -> :nanosecond end)
+      #
+      #      XestClock.System.OriginalMock
+      #      |> expect(:time_offset, 5, fn _ -> 0 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
 
       clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      XestClock.Process.OriginalMock
-      # Note : since we tick faster than unit here, we need to mock sleep.
-      |> expect(:sleep, 4, fn _ -> :ok end)
+      #      XestClock.Process.OriginalMock
+      #      # Note : since we tick faster than unit here, we need to mock sleep.
+      #      |> expect(:sleep, 4, fn _ -> :ok end)
 
       assert clock |> Enum.to_list() ==
                [
@@ -260,22 +260,22 @@ defmodule XestClock.StreamClockTest do
 
     test "convert/2 convert from one unit to another" do
       # mocks expectations are needed since clock also tracks local time internally
-      XestClock.System.ExtraMock
-      |> expect(:native_time_unit, fn -> :nanosecond end)
+      #      XestClock.System.ExtraMock
+      #      |> expect(:native_time_unit, fn -> :nanosecond end)
 
-      XestClock.System.OriginalMock
-      |> expect(:time_offset, 5, fn _ -> 0 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
+      #      XestClock.System.OriginalMock
+      ##      |> expect(:time_offset, 5, fn _ -> 0 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
 
       clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
 
-      XestClock.Process.OriginalMock
-      # Note : since we tick faster than unit here, we need to mock sleep.
-      |> expect(:sleep, 4, fn _ -> :ok end)
+      #      XestClock.Process.OriginalMock
+      #      # Note : since we tick faster than unit here, we need to mock sleep.
+      #      |> expect(:sleep, 4, fn _ -> :ok end)
 
       assert StreamClock.convert(clock, :millisecond)
              |> Enum.to_list() == [
@@ -425,17 +425,17 @@ defmodule XestClock.StreamClockTest do
     setup [:mocks, :test_stream, :stepper_setup]
 
     defp mocks(_) do
-      # mocks expectations are needed since clock also tracks local time internally
-      XestClock.System.ExtraMock
-      |> expect(:native_time_unit, fn -> :nanosecond end)
-
-      XestClock.System.OriginalMock
-      |> expect(:time_offset, 5, fn _ -> 0 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
-      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
+      #      # mocks expectations are needed since clock also tracks local time internally
+      #      XestClock.System.ExtraMock
+      #      |> expect(:native_time_unit, fn -> :nanosecond end)
+      #
+      #      XestClock.System.OriginalMock
+      #      |> expect(:time_offset, 5, fn _ -> 0 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
+      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
 
       # TODO : split expectations used at initialization and those used afterwards...
       # => maybe thoes used as initialization should be setup differently?

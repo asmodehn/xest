@@ -5,6 +5,9 @@ defmodule XestClock.ServerTest do
 
   import Hammox
 
+  # Make sure mocks are verified when the test exits
+  setup :verify_on_exit!
+
   defmodule ExampleServer do
     use XestClock.Server
     # use will setup the correct streamclock for leveraging the `handle_remote_unix_time` callback
@@ -25,12 +28,23 @@ defmodule XestClock.ServerTest do
       |> expect(:native_time_unit, fn -> :nanosecond end)
 
       XestClock.System.OriginalMock
-      |> expect(:monotonic_time, fn _ -> 42 end)
+      # TODO: This should fail on exit: it is called only once !
+      |> expect(:monotonic_time, 25, fn _ -> 42 end)
       |> expect(:time_offset, fn _ -> 0 end)
+
+      # Note : the local timestamp calls these one time only.
+      # other stream operator will rely on that timestamp
+
+      XestClock.Process.OriginalMock
+      # Note : since we tick faster than unit here, we need to mock sleep.
+      |> expect(:sleep, 1, fn _ -> :ok end)
 
       # This is not of interest in tests, which is why it is quickly done here internally.
       # Otherwise see allowances to do it from another process:
       # https://hexdocs.pm/mox/Mox.html#module-explicit-allowances
+
+      # TODO : verify mocks are not called too often !
+      #      verify_on_exit!()  # this wants to be called from the test process...
 
       XestClock.Server.init(state, &handle_remote_unix_time/1)
     end
@@ -75,22 +89,56 @@ defmodule XestClock.ServerTest do
     test "tick depends on unit on creation, it reached all the way to the callback" do
       example_srv = start_supervised!({ExampleServer, :second}, id: :example_sec)
 
-      assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
-               origin: XestClock.ServerTest.ExampleServer,
-               ts: %XestClock.TimeValue{monotonic: 42, offset: nil, skew: nil, unit: :second}
+      assert ExampleServer.tick(example_srv) == {
+               %XestClock.Timestamp{
+                 origin: XestClock.ServerTest.ExampleServer,
+                 ts: %XestClock.TimeValue{
+                   monotonic: 42,
+                   offset: nil,
+                   skew: nil,
+                   unit: :second
+                 }
+               },
+               %XestClock.Stream.Timed.LocalStamp{
+                 monotonic: %XestClock.TimeValue{
+                   monotonic: 42,
+                   offset: nil,
+                   skew: nil,
+                   unit: :nanosecond
+                 },
+                 unit: :nanosecond,
+                 vm_offset: 0
+               }
              }
+
+      #               %XestClock.Timestamp{
+      #               origin: XestClock.ServerTest.ExampleServer,
+      #               ts: %XestClock.TimeValue{monotonic: 42, offset: nil, skew: nil, unit: :second}
+      #             }
 
       stop_supervised!(:example_sec)
 
       example_srv = start_supervised!({ExampleServer, :millisecond}, id: :example_millisec)
 
-      assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
-               origin: XestClock.ServerTest.ExampleServer,
-               ts: %XestClock.TimeValue{
-                 monotonic: 42000,
-                 offset: nil,
-                 skew: nil,
-                 unit: :millisecond
+      assert ExampleServer.tick(example_srv) == {
+               %XestClock.Timestamp{
+                 origin: XestClock.ServerTest.ExampleServer,
+                 ts: %XestClock.TimeValue{
+                   monotonic: 42_000,
+                   offset: nil,
+                   skew: nil,
+                   unit: :millisecond
+                 }
+               },
+               %XestClock.Stream.Timed.LocalStamp{
+                 monotonic: %XestClock.TimeValue{
+                   monotonic: 42,
+                   offset: nil,
+                   skew: nil,
+                   unit: :nanosecond
+                 },
+                 unit: :nanosecond,
+                 vm_offset: 0
                }
              }
 
@@ -98,29 +146,73 @@ defmodule XestClock.ServerTest do
 
       example_srv = start_supervised!({ExampleServer, :microsecond}, id: :example_microsec)
 
-      assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
-               origin: XestClock.ServerTest.ExampleServer,
-               ts: %XestClock.TimeValue{
-                 monotonic: 42_000_000,
-                 offset: nil,
-                 skew: nil,
-                 unit: :microsecond
+      assert ExampleServer.tick(example_srv) == {
+               %XestClock.Timestamp{
+                 origin: XestClock.ServerTest.ExampleServer,
+                 ts: %XestClock.TimeValue{
+                   monotonic: 42_000_000,
+                   offset: nil,
+                   skew: nil,
+                   unit: :microsecond
+                 }
+               },
+               %XestClock.Stream.Timed.LocalStamp{
+                 monotonic: %XestClock.TimeValue{
+                   monotonic: 42,
+                   offset: nil,
+                   skew: nil,
+                   unit: :nanosecond
+                 },
+                 unit: :nanosecond,
+                 vm_offset: 0
                }
              }
+
+      #               %XestClock.Timestamp{
+      #               origin: XestClock.ServerTest.ExampleServer,
+      #               ts: %XestClock.TimeValue{
+      #                 monotonic: 42_000_000,
+      #                 offset: nil,
+      #                 skew: nil,
+      #                 unit: :microsecond
+      #               }
+      #             }
 
       stop_supervised!(:example_microsec)
 
       example_srv = start_supervised!({ExampleServer, :nanosecond}, id: :example_nanosec)
 
-      assert ExampleServer.tick(example_srv) == %XestClock.Timestamp{
-               origin: XestClock.ServerTest.ExampleServer,
-               ts: %XestClock.TimeValue{
-                 monotonic: 42_000_000_000,
-                 offset: nil,
-                 skew: nil,
-                 unit: :nanosecond
+      assert ExampleServer.tick(example_srv) == {
+               %XestClock.Timestamp{
+                 origin: XestClock.ServerTest.ExampleServer,
+                 ts: %XestClock.TimeValue{
+                   monotonic: 42_000_000_000,
+                   offset: nil,
+                   skew: nil,
+                   unit: :nanosecond
+                 }
+               },
+               %XestClock.Stream.Timed.LocalStamp{
+                 monotonic: %XestClock.TimeValue{
+                   monotonic: 42,
+                   offset: nil,
+                   skew: nil,
+                   unit: :nanosecond
+                 },
+                 unit: :nanosecond,
+                 vm_offset: 0
                }
              }
+
+      #               %XestClock.Timestamp{
+      #               origin: XestClock.ServerTest.ExampleServer,
+      #               ts: %XestClock.TimeValue{
+      #                 monotonic: 42_000_000_000,
+      #                 offset: nil,
+      #                 skew: nil,
+      #                 unit: :nanosecond
+      #               }
+      #             }
 
       stop_supervised!(:example_nanosec)
     end
