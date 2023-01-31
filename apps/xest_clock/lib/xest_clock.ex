@@ -23,4 +23,68 @@ defmodule XestClock do
   so that you can rely on it being always present, even when there is bad network weather conditions.
   Calling XestClock.Server.start_link yourself, you will have to explicitly pass the Stream you want the Server to work with.
   """
+
+  #  alias XestClock.StreamClock
+  #
+  #  @doc """
+  #    A StreamClock for a remote clock.
+  #
+  #    Note this internally proxy the clock, so that remote requests are actually done
+  #    only when necessary to minimise estimation error
+  #
+  #    Therefore this is a stream based on localclock, with offset adjustment
+  #    based on remote measurements
+  #  """
+  #  def new(unit, origin \\ System) do
+  #    clock = XestClock.new(origin, unit,
+  #      Stream.repeatedly(
+  #        # getting local time  monotonically
+  #        fn -> System.monotonic_time(nu) end
+  #      ))
+  #
+  #    if origin != System do
+  #      # estimate remote from previous requests
+  #      clock |> Stream.transform(nil, fn
+  #        # last elem as accumulator (to be used for next elem computation)
+  #      ls, nil ->
+  #        IO.inspect("initialize")
+  #        remote_tv = origin.ticks(1)
+  #        {[remote_tv], remote_tv}
+  #
+  #      %Timed.LocalStamp{monotonic: %TimeValue{offset: local_offset}}, last_remote ->
+  #      when is_nil(local_offset) or is_nil(last_remote.offset) ->
+  #        # we dont have the offset, still initializing
+  #        remote_tv = origin.ticks(1)
+  #        {[remote_tv], si}
+  #
+  #
+  #      # -> not enough to estimate, we need both offset (at least two ticks of each timevalues)
+  #
+  #      si, %Timed.LocalStamp{monotonic: %TimeValue{offset: local_offset}} = local_ts ->
+  #        local_now =
+  #          Timed.LocalStamp.now(local_ts.unit) |> Timed.LocalStamp.with_previous(local_ts)
+  #
+  #        # compute previous skew
+  #        previous_skew = skew(last_remote, last_local)
+  #        # since we assume previous skew will also be current skew (relative to time passed locally)
+  #        err = local_now.offset * (previous_skew - 1)
+  #        #TODO : maybe pid controller would be better...
+  #        if err > local_offset do
+  #            remote_tv = origin.ticks(1)
+  #        else
+  #
+  #          # estimate current remote now with current local now
+  #          est = estimate_now(last_remote, local_now.monotonic)
+  #          {[est], si}  # TODO : put error in estimation timevalue
+  #        end
+  #
+  #
+  #
+  #                        end)
+  #
+  #    end
+  #
+  #
+  #
+  #  end
 end

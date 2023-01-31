@@ -38,3 +38,18 @@ defmodule XestClock.Stream.Timed.LocalStamp do
     }
   end
 end
+
+defimpl String.Chars, for: XestClock.Stream.Timed.LocalStamp do
+  def to_string(%XestClock.Stream.Timed.LocalStamp{
+        monotonic: tv,
+        unit: _unit,
+        vm_offset: vm_offset
+      }) do
+    # TODO: maybe have a more systematic / global way to manage time unit ??
+    # to something that is immediately parseable ? some sigil ??
+    # some existing physical unit library ?
+
+    # delegating to TimeValue... good or bad idea ?
+    "#{%{tv | monotonic: tv.monotonic + vm_offset}}"
+  end
+end

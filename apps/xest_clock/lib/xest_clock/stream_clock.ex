@@ -12,8 +12,6 @@ defmodule XestClock.StreamClock do
   alias XestClock.System
 
   alias XestClock.Stream.Monotone
-  alias XestClock.Stream.Timed
-  alias XestClock.Stream.Limiter
   alias XestClock.TimeValue
   alias XestClock.Timestamp
 
@@ -112,17 +110,17 @@ defmodule XestClock.StreamClock do
         # Less surprising for the user than a strict monotonicity dropping elements.
         |> Monotone.increasing()
         # from an int to a timevalue
-        |> as_timevalue(nu)
-        # add current local time for relative computations
-        # TODO : extract this timed stream into a specific type to simplify stream computations
-        # There should be a naive clock, and a clock with origin (to add proxy/timestamp behavior...)
-        |> Timed.timed()
-        # TODO : limiter : requests should not be faster than precision unit
-        # TODO : analyse current time vs received time to determine if we *should* request another, or just emulate (proxy)...
-        |> Limiter.limiter(nu)
-        # TODO : add proxy, in stream !
-        # remove current local time
-        |> Timed.untimed(),
+        |> as_timevalue(nu),
+      # add current local time for relative computations
+      # TODO : extract this timed stream into a specific type to simplify stream computations
+      # There should be a naive clock, and a clock with origin (to add proxy/timestamp behavior...)
+      #        |> Timed.timed()
+      #        # TODO : limiter : requests should not be faster than precision unit
+      #        # TODO : analyse current time vs received time to determine if we *should* request another, or just emulate (proxy)...
+      #        |> Limiter.limiter(nu)
+      #        # TODO : add proxy, in stream !
+      #        # remove current local time
+      #        |> Timed.untimed(),
 
       # REMINDER: consuming the clock.stream directly should be "naive" (no idea of origin-from users point of view).
       # This is the point of the clock. so the internal stream is only naive time values...

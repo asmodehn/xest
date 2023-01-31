@@ -100,11 +100,20 @@ defmodule WorldClockApp do
       panel(title: "Locally Computed Time") do
         table do
           table_row do
-            table_cell(content: "now")
+            table_cell(content: "remote")
+            table_cell(content: "local")
           end
 
           table_row do
-            table_cell(content: to_string(now))
+            table_cell(content: to_string(elem(now, 0) |> Map.get(:ts) |> Map.get(:monotonic)))
+
+            table_cell(
+              content: to_string(elem(now, 1) |> Map.get(:monotonic) |> Map.get(:monotonic))
+            )
+
+            # protocol String.Chars doesnt work ??
+            #            table_cell(content: to_string(now |>elem(0)))
+            #            table_cell(content: to_string(now |>elem(1)))
           end
         end
       end

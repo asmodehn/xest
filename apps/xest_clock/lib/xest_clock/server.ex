@@ -5,6 +5,9 @@ defmodule XestClock.Server do
   We attempt to keep the same semantics, so the synchronous request will immediately trigger an event to be sent to all subscribers.
   """
 
+  alias XestClock.Stream.Timed
+  alias XestClock.Stream.Limiter
+
   # TODO : better type for continuation ?
   @type internal_state :: {XestClock.StreamClock.t(), continuation :: any()}
 
@@ -88,7 +91,10 @@ defmodule XestClock.Server do
     end
   end
 
-  def init({origin, unit}, remote_unit_time_handler) do
+  def init({origin, unit}, remote_unit_time_handler, rate_limit \\ nil) do
+    # time_unit also function as a rate (parts per second)
+    rate_limit = if is_nil(rate_limit), do: unit, else: rate_limit
+
     # here we leverage streamclock, although we keep a usual server interface...
     streamclock =
       XestClock.StreamClock.new(
@@ -99,6 +105,11 @@ defmodule XestClock.Server do
           fn -> remote_unit_time_handler.(unit) end
         )
       )
+      # Note these apply to the whole streamclock to stamp each event...
+      |> Timed.timed()
+      # requests should not be faster than rate_limit
+      # Note: this will sleep if necessary, in server process, when the stream will be traversed.
+      |> Limiter.limiter(rate_limit)
 
     {:ok, {streamclock, XestClock.Stream.Ticker.new(streamclock)}}
   end
