@@ -44,6 +44,14 @@ defmodule XestClock.ServerTest do
                  },
                  unit: :nanosecond,
                  vm_offset: 0
+               },
+               %XestClock.Stream.Timed.LocalDelta{
+                 offset: %XestClock.Time.Value{
+                   offset: nil,
+                   unit: :second,
+                   value: 42
+                 },
+                 skew: nil
                }
              }
 
@@ -73,6 +81,14 @@ defmodule XestClock.ServerTest do
                  },
                  unit: :nanosecond,
                  vm_offset: 0
+               },
+               %XestClock.Stream.Timed.LocalDelta{
+                 offset: %XestClock.Time.Value{
+                   offset: nil,
+                   unit: :millisecond,
+                   value: 42000
+                 },
+                 skew: nil
                }
              }
 
@@ -97,6 +113,14 @@ defmodule XestClock.ServerTest do
                  },
                  unit: :nanosecond,
                  vm_offset: 0
+               },
+               %XestClock.Stream.Timed.LocalDelta{
+                 offset: %XestClock.Time.Value{
+                   offset: nil,
+                   unit: :microsecond,
+                   value: 42_000_000
+                 },
+                 skew: nil
                }
              }
 
@@ -131,6 +155,14 @@ defmodule XestClock.ServerTest do
                  },
                  unit: :nanosecond,
                  vm_offset: 0
+               },
+               %XestClock.Stream.Timed.LocalDelta{
+                 offset: %XestClock.Time.Value{
+                   offset: nil,
+                   unit: :nanosecond,
+                   value: 41_999_999_958
+                 },
+                 skew: nil
                }
              }
 

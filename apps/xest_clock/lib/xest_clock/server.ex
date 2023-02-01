@@ -112,6 +112,12 @@ defmodule XestClock.Server do
       # requests should not be faster than rate_limit
       # Note: this will sleep if necessary, in server process, when the stream will be traversed.
       |> Limiter.limiter(rate_limit)
+      # we compute local delta here in place where we have easy access to element in the stream
+      |> Timed.LocalDelta.compute()
+
+    # GOAL : At this stage the stream at one element has all information
+    # related to previous elements for a client to be able
+    # to build his own estimation of the remote clock
 
     {:ok, {streamclock, XestClock.Stream.Ticker.new(streamclock)}}
   end

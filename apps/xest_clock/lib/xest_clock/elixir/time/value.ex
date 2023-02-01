@@ -14,7 +14,6 @@ defmodule XestClock.Time.Value do
             # first order derivative, the difference of two monotonic values.
             offset: nil
 
-  # TODO :skew seems useless, lets get rid of it..
   # TODO: offset is useful but could probably be transferred inside the stream operators, where it is used
   # TODO: we should add a precision / error interval
   # => measurements, although late, will have interval in connection time scale,
@@ -49,6 +48,17 @@ defmodule XestClock.Time.Value do
 
   @spec convert(t(), System.time_unit()) :: t()
   def convert(%__MODULE__{} = tv, unit) when tv.unit == unit, do: tv
+
+  def convert(%__MODULE__{} = tv, unit) when is_nil(tv.offset) do
+    new(
+      unit,
+      System.convert_time_unit(
+        tv.value,
+        tv.unit,
+        unit
+      )
+    )
+  end
 
   def convert(%__MODULE__{} = tv, unit) do
     %{

@@ -37,61 +37,62 @@ defmodule XestClock do
   """
   def new(unit, System), do: StreamClock.new(XestClock.System, unit)
 
-  #    def new(unit, origin) when is_atom(origin) do
-  #    {:ok, pid} = origin.start_link(unit)
-  #    new(unit,origin, pid)
+  #
+  #      def new(unit, origin) when is_atom(origin) do
+  #      {:ok, pid} = origin.start_link(unit)
+  #        new(unit, pid)
   #      end
   #
-  #      # TODO : better way to manage pid (Registry ? What about restarts ?)
-  #    def new(unit, origin, pid) do
-  #      clock = StreamClock.new(origin, unit, Stream.repeatedly(fn
-  #                          -> origin.tick(pid)
-  #      end))
+  #      def new(unit, origin) when is_pid(origin) do
   #
-  #      # TODO :split this into useful stream operators...
-  #      # estimate remote from previous requests
-  #      clock |> Stream.transform(nil, fn
-  #        # last elem as accumulator (to be used for next elem computation)
-  #      %Timed.LocalStamp{} = local_now, nil ->
-  #        IO.inspect("initialize")
-  #        # Note : we need 2 ticks from the server to start estimating remote time
-  #        [_, t2] = origin.ticks(2)
+  #        remote = StreamClock.new(origin, unit, Stream.repeatedly(fn
+  #                            -> origin.tick(pid)
+  #        end))
   #
-  #        {
-  #          %Timestamp{ts: %TimeValue{} = last_remote},
-  #          %Timed.LocalStamp{monotonic: %TimeValue{} = last_local}
-  #        } = t2
+  #        # TODO :split this into useful stream operators...
+  #        # estimate remote from previous requests
+  #        clock |> Stream.transform(nil, fn
+  #          # last elem as accumulator (to be used for next elem computation)
+  #        %Timed.LocalStamp{} = local_now, nil ->
+  #          IO.inspect("initialize")
+  #          # Note : we need 2 ticks from the server to start estimating remote time
+  #          [_, t2] = origin.ticks(2)
   #
-  #        # estimate current remote now with current local now
-  #        est = Timed.Proxy.estimate_now(last_remote, local_now.monotonic)
-  #        {[est], t2}
+  #          {
+  #            %Timestamp{ts: %TimeValue{} = last_remote},
+  #            %Timed.LocalStamp{monotonic: %TimeValue{} = last_local}
+  #          } = t2
   #
-  #      # -> not enough to estimate, we need both offset (at least two ticks of each timevalues)
-  #
-  #      %Timed.LocalStamp{} = local_now,
-  #      {%Timestamp{ts: %TimeValue{} = last_remote},
-  #        %Timed.LocalStamp{monotonic: %TimeValue{} = last_local}} = last_remote_tick ->
-  #
-  #        # compute previous skew
-  #        previous_skew = Timed.Proxy.skew(last_remote, last_local)
-  #        # since we assume previous skew will also be current skew (relative to time passed locally)
-  #        delta_since_request = (local_now.monotonic - last_local.monotonic)
-  #        err = delta_since_request * (previous_skew - 1)
-  #
-  #        #TODO : maybe pid controller would be better...
-  #        # TODO : accuracy limit, better option ?
-  #        if err > delta_since_request do
-  #            remote_tv = origin.ticks(1)
-  #            {[remote_tv], remote_tv}
-  #        else
   #          # estimate current remote now with current local now
   #          est = Timed.Proxy.estimate_now(last_remote, local_now.monotonic)
-  #          {[est], last_remote_tick}  # TODO : put error in estimation timevalue
-  #        end
+  #          {[est], t2}
   #
-  #      end)
-  #        # TODO :enforce monotonicity after estimation
-  #        # TODO: handle unit conversion.
+  #        # -> not enough to estimate, we need both offset (at least two ticks of each timevalues)
   #
-  #    end
+  #        %Timed.LocalStamp{} = local_now,
+  #        {%Timestamp{ts: %TimeValue{} = last_remote},
+  #          %Timed.LocalStamp{monotonic: %TimeValue{} = last_local}} = last_remote_tick ->
+  #
+  #          # compute previous skew
+  #          previous_skew = Timed.Proxy.skew(last_remote, last_local)
+  #          # since we assume previous skew will also be current skew (relative to time passed locally)
+  #          delta_since_request = (local_now.monotonic - last_local.monotonic)
+  #          err = delta_since_request * (previous_skew - 1)
+  #
+  #          #TODO : maybe pid controller would be better...
+  #          # TODO : accuracy limit, better option ?
+  #          if err > delta_since_request do
+  #              remote_tv = origin.ticks(1)
+  #              {[remote_tv], remote_tv}
+  #          else
+  #            # estimate current remote now with current local now
+  #            est = Timed.Proxy.estimate_now(last_remote, local_now.monotonic)
+  #            {[est], last_remote_tick}  # TODO : put error in estimation timevalue
+  #          end
+  #
+  #        end)
+  #          # TODO :enforce monotonicity after estimation
+  #          # TODO: handle unit conversion.
+  #
+  #      end
 end
