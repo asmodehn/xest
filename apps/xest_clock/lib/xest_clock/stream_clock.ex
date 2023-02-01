@@ -30,11 +30,12 @@ defmodule XestClock.StreamClock do
         }
 
   # TODO : get rid of it. we abuse design here. it was just aimed to be an example...
-  def new(:local, unit) do
+  def new(System, unit) do
     nu = System.Extra.normalize_time_unit(unit)
 
+    # Note we switch to use XestClock.System to be able to mock in tests.
     new(
-      :local,
+      XestClock.System,
       nu,
       Stream.repeatedly(
         # getting local time  monotonically

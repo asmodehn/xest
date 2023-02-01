@@ -45,6 +45,8 @@ defmodule XestClock.Server do
       def init({origin, unit}) do
         #  default init behaviour (overridable)
         XestClock.Server.init({origin, unit}, &handle_remote_unix_time/1)
+
+        # TODO : maybe allow client to pass his local clock that will be used for estimation later on ?
       end
 
       defoverridable init: 1
@@ -119,7 +121,7 @@ defmodule XestClock.Server do
     GenServer.start_link(module, {module, unit}, opts)
   end
 
-  @spec ticks(pid(), integer()) :: [XestClock.Timestamp.t()]
+  @spec ticks(pid(), integer()) :: [{XestClock.Timestamp.t(), XestClock.LocalStamp.t()}]
   def ticks(pid \\ __MODULE__, demand) do
     GenServer.call(pid, {:ticks, demand})
   end

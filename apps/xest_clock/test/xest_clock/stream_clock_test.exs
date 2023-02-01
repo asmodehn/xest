@@ -15,12 +15,12 @@ defmodule XestClock.StreamClockTest do
 
   describe "XestClock.StreamClock" do
     test "new/2 refuses :native or unknown time units" do
-      assert_raise(ArgumentError, fn ->
-        StreamClock.new(:local, :native)
+      assert_raise(FunctionClauseError, fn ->
+        StreamClock.new(System, :native)
       end)
 
-      assert_raise(ArgumentError, fn ->
-        StreamClock.new(:local, :unknown_time_unit)
+      assert_raise(FunctionClauseError, fn ->
+        StreamClock.new(System, :unknown_time_unit)
       end)
     end
 
