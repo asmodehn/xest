@@ -12,21 +12,20 @@ defmodule XestClock.StreamClock do
   alias XestClock.System
 
   alias XestClock.Stream.Monotone
-  alias XestClock.TimeValue
-  alias XestClock.Timestamp
+  alias XestClock.Time
 
   @enforce_keys [:stream, :origin]
   defstruct stream: nil,
             # TODO: get rid of this ? makes sens only when comparing many of them...
             origin: nil,
             # TODO : change to a time value... or maybe get rid of it entirely ?
-            offset: Timestamp.new(:testremote, :second, 0)
+            offset: Time.Stamp.new(:testremote, :second, 0)
 
   @typedoc "XestClock.Clock struct"
   @type t() :: %__MODULE__{
           stream: Enumerable.t(),
           origin: atom,
-          offset: Timestamp.t()
+          offset: Time.Stamp.t()
         }
 
   # TODO : get rid of it. we abuse design here. it was just aimed to be an example...
@@ -59,26 +58,26 @@ defmodule XestClock.StreamClock do
   iex(2)> enum_clock = XestClock.StreamClock.new(:enum_clock, :millisecond, [1,2,3])
   iex(3)> Enum.to_list(enum_clock)
   [
-  %XestClock.Timestamp{
+  %XestClock.Time.Stamp{
       origin: :enum_clock,
-      ts: %XestClock.TimeValue{
-          monotonic: 1,
+      ts: %XestClock.Time.Value{
+          value: 1,
           offset: nil,
           skew: nil,
           unit: :millisecond
   }},
-  %XestClock.Timestamp{
+  %XestClock.Time.Stamp{
       origin: :enum_clock,
-      ts: %XestClock.TimeValue{
-          monotonic: 2,
+      ts: %XestClock.Time.Value{
+          value: 2,
           offset: 1,
           skew: nil,
           unit: :millisecond
       }},
-  %XestClock.Timestamp{
+  %XestClock.Time.Stamp{
       origin: :enum_clock,
-      ts: %XestClock.TimeValue{
-          monotonic: 3,
+      ts: %XestClock.Time.Value{
+          value: 3,
           offset: 1,
           skew: 0,
           unit: :millisecond
@@ -125,20 +124,20 @@ defmodule XestClock.StreamClock do
 
       # REMINDER: consuming the clock.stream directly should be "naive" (no idea of origin-from users point of view).
       # This is the point of the clock. so the internal stream is only naive time values...
-      offset: Timestamp.new(origin, nu, offset)
+      offset: Time.Stamp.new(origin, nu, offset)
     }
   end
 
   defp as_timevalue(enum, unit) do
     Stream.transform(enum, nil, fn
       i, nil ->
-        now = TimeValue.new(unit, i)
+        now = Time.Value.new(unit, i)
         # keep the current value in accumulator to compute derivatives later
         {[now], now}
 
-      i, %TimeValue{} = ltv ->
+      i, %Time.Value{} = ltv ->
         #        IO.inspect(ltv)
-        now = TimeValue.new(unit, i) |> TimeValue.with_derivatives_from(ltv)
+        now = Time.Value.new(unit, i) |> XestClock.TimeValue.with_derivatives_from(ltv)
         {[now], now}
     end)
   end
@@ -204,7 +203,7 @@ defmodule XestClock.StreamClock do
     end
 
     defp as_timestamp(enum, origin) do
-      Stream.map(enum, fn elem -> %Timestamp{origin: origin, ts: elem} end)
+      Stream.map(enum, fn elem -> %Time.Stamp{origin: origin, ts: elem} end)
     end
 
     # TODO : timed reducer based on unit ??
@@ -218,7 +217,7 @@ defmodule XestClock.StreamClock do
       clockstream
       | stream:
           clockstream.stream
-          |> Stream.map(fn ts -> System.convert_time_unit(ts.monotonic, ts.unit, unit) end)
+          |> Stream.map(fn ts -> System.convert_time_unit(ts.value, ts.unit, unit) end)
     }
   end
 
@@ -231,7 +230,7 @@ defmodule XestClock.StreamClock do
   @spec to_datetime(XestClock.StreamClock.t(), (System.time_unit() -> integer)) :: Enumerable.t()
   def to_datetime(%__MODULE__{} = clock, monotone_time_offset \\ &System.time_offset/1) do
     clock
-    |> Stream.map(fn %TimeValue{monotonic: mt, unit: unit} ->
+    |> Stream.map(fn %Time.Value{value: mt, unit: unit} ->
       DateTime.from_unix!(mt + monotone_time_offset.(unit), unit)
     end)
   end

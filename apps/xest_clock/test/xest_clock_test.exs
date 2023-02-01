@@ -15,10 +15,10 @@ defmodule XestClockTest do
       |> expect(:monotonic_time, fn :millisecond -> 1 end)
 
       assert local |> Enum.take(1) == [
-               %XestClock.Timestamp{
+               %XestClock.Time.Stamp{
                  origin: XestClock.System,
-                 ts: %XestClock.TimeValue{
-                   monotonic: 1,
+                 ts: %XestClock.Time.Value{
+                   value: 1,
                    offset: nil,
                    skew: nil,
                    unit: :millisecond

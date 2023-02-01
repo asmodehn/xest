@@ -4,7 +4,7 @@ defmodule XestClock.Stream.Limiter do
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.Process
 
-  alias XestClock.TimeValue
+  alias XestClock.Time
   alias XestClock.Stream.Timed
   # TODO : this should probably be part of timed ... as a timed stream is required...
 
@@ -25,7 +25,7 @@ defmodule XestClock.Stream.Limiter do
 
   def limiter(enum, rate) when is_integer(rate) do
     Stream.map(enum, fn
-      {untimed_elem, %Timed.LocalStamp{monotonic: %TimeValue{offset: offset}} = lts}
+      {untimed_elem, %Timed.LocalStamp{monotonic: %Time.Value{offset: offset}} = lts}
       when not is_nil(offset) ->
         # this is expected to return 0 if rate is too high
         period_ms = div(1_000, rate)

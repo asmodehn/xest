@@ -1,41 +1,9 @@
 defmodule XestClock.TimeValue do
-  # hiding Elixir.System to make sure we do not inadvertently use it
-  alias XestClock.System
-
-  @enforce_keys [:unit, :monotonic]
-  defstruct unit: nil,
-            monotonic: nil,
-            # first order derivative, the difference of two monotonic values.
-            offset: nil,
-            # the first order derivative of offsets.
-            skew: nil
-
-  # TODO :skew seems useless, lets get rid of it..
-  # TODO: offset is useful but could probably be transferred inside the stream operators, where it is used
-  # TODO: we should add a precision / error interval
-  # => measurements, although late, will have interval in connection time scale,
-  # => estimation will have error interval in estimation (max current offset) time scale
-
-  @typedoc "TimeValue struct"
-  @type t() :: %__MODULE__{
-          unit: System.time_unit(),
-          monotonic: integer(),
-          offset: integer(),
-          skew: integer()
-        }
-
-  @derive {Inspect, optional: [:offset, :skew]}
-
-  def new(unit, monotonic) when is_integer(monotonic) do
-    %__MODULE__{
-      unit: System.Extra.normalize_time_unit(unit),
-      monotonic: monotonic
-    }
-  end
+  alias XestClock.Time
 
   def with_derivatives_from(
-        %__MODULE__{} = v,
-        %__MODULE__{} = previous
+        %Time.Value{} = v,
+        %Time.Value{} = previous
       )
       when is_nil(previous.offset) do
     # fallback: we only compute offset, no skew.
@@ -46,8 +14,8 @@ defmodule XestClock.TimeValue do
   end
 
   def with_derivatives_from(
-        %__MODULE__{} = v,
-        %__MODULE__{} = previous
+        %Time.Value{} = v,
+        %Time.Value{} = previous
       ) do
     new_offset = compute_offset(v, previous)
 
@@ -57,41 +25,41 @@ defmodule XestClock.TimeValue do
   end
 
   defp compute_offset(
-         %__MODULE__{monotonic: m1},
-         %__MODULE__{monotonic: m2}
+         %Time.Value{value: m1},
+         %Time.Value{value: m2}
        )
        when m1 == m2,
        do: 0
 
   defp compute_offset(
-         %__MODULE__{monotonic: monotonic, unit: unit},
-         %__MODULE__{} = previous
+         %Time.Value{value: monotonic, unit: unit},
+         %Time.Value{} = previous
        ) do
     if System.convert_time_unit(1, unit, previous.unit) < 1 do
       # invert conversion to avoid losing precision
-      monotonic - System.convert_time_unit(previous.monotonic, previous.unit, unit)
+      monotonic - System.convert_time_unit(previous.value, previous.unit, unit)
     else
-      System.convert_time_unit(monotonic, unit, previous.unit) - previous.monotonic
+      System.convert_time_unit(monotonic, unit, previous.unit) - previous.value
     end
   end
 
   defp compute_skew(
-         %__MODULE__{monotonic: m1},
-         %__MODULE__{monotonic: m2}
+         %Time.Value{value: m1},
+         %Time.Value{value: m2}
        )
        when m1 == m2,
        do: nil
 
   defp compute_skew(
-         %__MODULE__{offset: o1},
-         %__MODULE__{offset: o2}
+         %Time.Value{offset: o1},
+         %Time.Value{offset: o2}
        )
        when o1 == o2,
        do: 0
 
   defp compute_skew(
-         %__MODULE__{offset: offset} = v,
-         %__MODULE__{} = previous
+         %Time.Value{offset: offset} = v,
+         %Time.Value{} = previous
        )
        when not is_nil(offset) do
     #    offset_delta =
@@ -111,27 +79,5 @@ defmodule XestClock.TimeValue do
     #    # Note : skew is allowed to be a float, to keep some precision in time computation,
     #    # despite division by a potentially large radical.
     #    offset_delta / (v.monotonic - previous.monotonic)
-  end
-end
-
-defimpl String.Chars, for: XestClock.TimeValue do
-  def to_string(%XestClock.TimeValue{
-        monotonic: ts,
-        unit: unit
-      }) do
-    # TODO: maybe have a more systematic / global way to manage time unit ??
-    # to something that is immediately parseable ? some sigil ??
-    # some existing physical unit library ?
-
-    unit =
-      case unit do
-        :second -> "s"
-        :millisecond -> "ms"
-        :microsecond -> "μs"
-        :nanosecond -> "ns"
-        pps -> " @ #{pps} Hz}"
-      end
-
-    "#{ts} #{unit}"
   end
 end

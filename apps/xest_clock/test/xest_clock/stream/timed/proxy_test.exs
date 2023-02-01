@@ -6,20 +6,20 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
 
   alias XestClock.Stream.Timed.Proxy
   alias XestClock.Stream.Timed.LocalStamp
-  alias XestClock.TimeValue
+  alias XestClock.Time
   alias XestClock.Stream.Timed
 
   describe "skew/2" do
     test "computes the ratio between two time offsets" do
-      tv1 = %TimeValue{unit: :millisecond, monotonic: 42, offset: 44}
-      tv2 = %TimeValue{unit: :millisecond, monotonic: 51, offset: 33}
+      tv1 = %Time.Value{unit: :millisecond, value: 42, offset: 44}
+      tv2 = %Time.Value{unit: :millisecond, value: 51, offset: 33}
 
       assert Proxy.skew(tv1, tv2) == 44 / 33
     end
 
     test "handles the unit conversion between two time offsets" do
-      tv1 = %TimeValue{unit: :millisecond, monotonic: 42, offset: 44}
-      tv2 = %TimeValue{unit: :microsecond, monotonic: 51000, offset: 33000}
+      tv1 = %Time.Value{unit: :millisecond, value: 42, offset: 44}
+      tv2 = %Time.Value{unit: :microsecond, value: 51000, offset: 33000}
 
       assert Proxy.skew(tv1, tv2) == 44 / 33
     end
@@ -27,23 +27,23 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
 
   describe "estimate_now" do
     test "compute current time estimation and error" do
-      tv1 = %TimeValue{unit: :millisecond, monotonic: 42, offset: 44}
-      tv2 = %TimeValue{unit: :millisecond, monotonic: 51, offset: 33}
+      tv1 = %Time.Value{unit: :millisecond, value: 42, offset: 44}
+      tv2 = %Time.Value{unit: :millisecond, value: 51, offset: 33}
 
-      assert Proxy.estimate_now(tv1, tv2) == %TimeValue{
+      assert Proxy.estimate_now(tv1, tv2) == %Time.Value{
                unit: :millisecond,
-               monotonic: 42 + 33,
+               value: 42 + 33,
                offset: 33
              }
     end
 
     test "handles the unit conversion between two time values" do
-      tv1 = %TimeValue{unit: :millisecond, monotonic: 42, offset: 44}
-      tv2 = %TimeValue{unit: :microsecond, monotonic: 51000, offset: 33000}
+      tv1 = %Time.Value{unit: :millisecond, value: 42, offset: 44}
+      tv2 = %Time.Value{unit: :microsecond, value: 51000, offset: 33000}
 
-      assert Proxy.estimate_now(tv1, tv2) == %TimeValue{
+      assert Proxy.estimate_now(tv1, tv2) == %Time.Value{
                unit: :millisecond,
-               monotonic: 42 + 33,
+               value: 42 + 33,
                offset: 33
              }
     end
@@ -65,9 +65,9 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
 
       proxy =
         [
-          %TimeValue{unit: :millisecond, monotonic: 11},
-          %TimeValue{unit: :millisecond, monotonic: 13, offset: 2},
-          %TimeValue{unit: :millisecond, monotonic: 15, offset: 2}
+          %Time.Value{unit: :millisecond, value: 11},
+          %Time.Value{unit: :millisecond, value: 13, offset: 2},
+          %Time.Value{unit: :millisecond, value: 15, offset: 2}
         ]
         |> Stream.zip(
           Stream.repeatedly(fn -> LocalStamp.now(:millisecond) end)
@@ -82,29 +82,29 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
 
       # computed skew is greater or equal to 1:
       assert Proxy.skew(
-               %TimeValue{unit: :millisecond, monotonic: 15, offset: 2},
-               %TimeValue{unit: :millisecond, monotonic: 3, offset: 1}
+               %Time.Value{unit: :millisecond, value: 15, offset: 2},
+               %Time.Value{unit: :millisecond, value: 3, offset: 1}
              ) >= 1
 
       # meaning error is greater than local_offset
       # therefore estimation is ignored and original value is retrieved
 
       assert proxy |> Enum.take(3) == [
-               {%TimeValue{unit: :millisecond, monotonic: 11},
+               {%Time.Value{unit: :millisecond, value: 11},
                 %LocalStamp{
-                  monotonic: %TimeValue{unit: :millisecond, monotonic: 1},
+                  monotonic: %Time.Value{unit: :millisecond, value: 1},
                   unit: :millisecond,
                   vm_offset: 0
                 }},
-               {%TimeValue{unit: :millisecond, monotonic: 13, offset: 2},
+               {%Time.Value{unit: :millisecond, value: 13, offset: 2},
                 %LocalStamp{
-                  monotonic: %TimeValue{unit: :millisecond, monotonic: 2, offset: 1},
+                  monotonic: %Time.Value{unit: :millisecond, value: 2, offset: 1},
                   unit: :millisecond,
                   vm_offset: 0
                 }},
-               {%TimeValue{unit: :millisecond, monotonic: 15, offset: 2},
+               {%Time.Value{unit: :millisecond, value: 15, offset: 2},
                 %LocalStamp{
-                  monotonic: %TimeValue{unit: :millisecond, monotonic: 3, offset: 1},
+                  monotonic: %Time.Value{unit: :millisecond, value: 3, offset: 1},
                   unit: :millisecond,
                   vm_offset: 0
                 }}
@@ -119,31 +119,30 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
 
       proxy =
         [
-          {%TimeValue{unit: :millisecond, monotonic: 11},
-           %TimeValue{unit: :millisecond, monotonic: 1}},
-          {%TimeValue{unit: :millisecond, monotonic: 191, offset: 180},
-           %TimeValue{unit: :millisecond, monotonic: 200, offset: 199}},
-          {%TimeValue{unit: :millisecond, monotonic: 391, offset: 200},
-           %TimeValue{unit: :millisecond, monotonic: 400, offset: 200}}
+          {%Time.Value{unit: :millisecond, value: 11}, %Time.Value{unit: :millisecond, value: 1}},
+          {%Time.Value{unit: :millisecond, value: 191, offset: 180},
+           %Time.Value{unit: :millisecond, value: 200, offset: 199}},
+          {%Time.Value{unit: :millisecond, value: 391, offset: 200},
+           %Time.Value{unit: :millisecond, value: 400, offset: 200}}
         ]
         |> Proxy.proxy()
 
       # computed skew is less than 1:
       assert Proxy.skew(
-               %TimeValue{unit: :millisecond, monotonic: 391, offset: 200},
-               %TimeValue{unit: :millisecond, monotonic: 400, offset: 200}
+               %Time.Value{unit: :millisecond, value: 391, offset: 200},
+               %Time.Value{unit: :millisecond, value: 400, offset: 200}
              ) < 1
 
       # meaning error is lower than local_offset
       # therefore estimation is passed in stream instead of retrieving original value
 
       assert proxy |> Enum.to_list() == [
-               {%TimeValue{unit: :millisecond, monotonic: 11},
-                %TimeValue{unit: :millisecond, monotonic: 1}},
-               {%TimeValue{unit: :millisecond, monotonic: 191, offset: 180},
-                %TimeValue{unit: :millisecond, monotonic: 200, offset: 199}},
-               {%TimeValue{unit: :millisecond, monotonic: 391, offset: 200},
-                %TimeValue{unit: :millisecond, monotonic: 400, offset: 200}}
+               {%Time.Value{unit: :millisecond, value: 11},
+                %Time.Value{unit: :millisecond, value: 1}},
+               {%Time.Value{unit: :millisecond, value: 191, offset: 180},
+                %Time.Value{unit: :millisecond, value: 200, offset: 199}},
+               {%Time.Value{unit: :millisecond, value: 391, offset: 200},
+                %Time.Value{unit: :millisecond, value: 400, offset: 200}}
              ]
     end
 
@@ -163,22 +162,22 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
       proxy =
         [100, 300, 500]
         |> Stream.map(fn e ->
-          TimeValue.new(:millisecond, e)
+          Time.Value.new(:millisecond, e)
         end)
         # TODO make this more obvious by putting it in a module...
         |> Stream.transform(nil, fn
           lts, nil -> {[lts], lts}
-          lts, prev -> {[lts |> TimeValue.with_derivatives_from(prev)], lts}
+          lts, prev -> {[lts |> XestClock.TimeValue.with_derivatives_from(prev)], lts}
         end)
         # we depend on timed here ? (or maybe use simpler streams methods ?)
         |> Timed.timed(:millisecond)
         |> Proxy.proxy()
 
       assert proxy |> Enum.take(3) == [
-               {%XestClock.TimeValue{monotonic: 100, offset: nil, skew: nil, unit: :millisecond},
+               {%XestClock.Time.Value{value: 100, offset: nil, skew: nil, unit: :millisecond},
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.TimeValue{
-                    monotonic: 100,
+                  monotonic: %XestClock.Time.Value{
+                    value: 100,
                     offset: nil,
                     skew: nil,
                     unit: :millisecond
@@ -186,10 +185,10 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
                   unit: :millisecond,
                   vm_offset: 0
                 }},
-               {%XestClock.TimeValue{monotonic: 300, offset: 200, skew: nil, unit: :millisecond},
+               {%XestClock.Time.Value{value: 300, offset: 200, skew: nil, unit: :millisecond},
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.TimeValue{
-                    monotonic: 300,
+                  monotonic: %XestClock.Time.Value{
+                    value: 300,
                     offset: 200,
                     skew: nil,
                     unit: :millisecond
@@ -200,10 +199,10 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
                # estimated value will get a nil as skew (current bug, but skew will disappear from struct)
                # So here we get the estimated value.
                # TODO : fix the issue where the mock is called, even though it s not needed !!!!
-               {%XestClock.TimeValue{monotonic: 500, offset: 200, skew: nil, unit: :millisecond},
+               {%XestClock.Time.Value{value: 500, offset: 200, skew: nil, unit: :millisecond},
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.TimeValue{
-                    monotonic: 500,
+                  monotonic: %XestClock.Time.Value{
+                    value: 500,
                     offset: 200,
                     skew: 0,
                     unit: :millisecond

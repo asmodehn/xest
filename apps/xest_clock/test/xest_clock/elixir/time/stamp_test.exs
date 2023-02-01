@@ -1,17 +1,17 @@
-defmodule XestClock.Timestamp.Test do
+defmodule XestClock.Time.StampTest do
   use ExUnit.Case
-  doctest XestClock.Timestamp
+  doctest XestClock.Time.Stamp
 
-  alias XestClock.Timestamp
+  alias XestClock.Time.Stamp
 
   describe "Timestamp" do
     test "new/3" do
-      ts = Timestamp.new(:test_origin, :millisecond, 123)
+      ts = Stamp.new(:test_origin, :millisecond, 123)
 
-      assert ts == %Timestamp{
+      assert ts == %Stamp{
                origin: :test_origin,
-               ts: %XestClock.TimeValue{
-                 monotonic: 123,
+               ts: %XestClock.Time.Value{
+                 value: 123,
                  offset: nil,
                  skew: nil,
                  unit: :millisecond
@@ -54,7 +54,7 @@ defmodule XestClock.Timestamp.Test do
     #    end
 
     test "implements String.Chars protocol to be able to output it directly" do
-      ts = Timestamp.new(:test_origin, :millisecond, 123)
+      ts = Stamp.new(:test_origin, :millisecond, 123)
 
       str = String.Chars.to_string(ts)
       IO.puts(ts)

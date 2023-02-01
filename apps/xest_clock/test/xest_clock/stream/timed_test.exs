@@ -22,8 +22,8 @@ defmodule XestClock.Stream.Timed.Test do
              |> Enum.to_list() == [
                {1,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.TimeValue{
-                    monotonic: 330,
+                  monotonic: %XestClock.Time.Value{
+                    value: 330,
                     offset: nil,
                     skew: nil,
                     unit: :millisecond
@@ -33,8 +33,8 @@ defmodule XestClock.Stream.Timed.Test do
                 }},
                {2,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.TimeValue{
-                    monotonic: 420,
+                  monotonic: %XestClock.Time.Value{
+                    value: 420,
                     offset: 90,
                     skew: nil,
                     unit: :millisecond
@@ -45,8 +45,8 @@ defmodule XestClock.Stream.Timed.Test do
                {3,
                 %XestClock.Stream.Timed.LocalStamp{
                   # Note : constant offset give a skew of zero (no skew -> good clock)
-                  monotonic: %XestClock.TimeValue{
-                    monotonic: 510,
+                  monotonic: %XestClock.Time.Value{
+                    value: 510,
                     offset: 90,
                     skew: 0.0,
                     unit: :millisecond

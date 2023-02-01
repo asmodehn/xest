@@ -12,7 +12,7 @@ defmodule XestClock.Timeinterval do
   and managing the place of measurement is left to the client code.
   """
 
-  alias XestClock.TimeValue
+  alias XestClock.Time
 
   # Note : The interval represented is a time interval -> continuous
   # EVEN IF the encoding interval is discrete (integer)
@@ -32,34 +32,34 @@ defmodule XestClock.Timeinterval do
   Builds a time interval from two timestamps.
     right and left are determined by comparing the two timestamps
   """
-  def build(%TimeValue{} = ts1, %TimeValue{} = ts2) do
+  def build(%Time.Value{} = ts1, %Time.Value{} = ts2) do
     cond do
       ts1.unit != ts2.unit ->
         raise(ArgumentError, message: "time bounds unit mismatch ")
 
-      ts1.monotonic == ts2.monotonic ->
+      ts1.value == ts2.value ->
         raise(ArgumentError, message: "time bounds identical. interval would be empty...")
 
-      ts1.monotonic < ts2.monotonic ->
+      ts1.value < ts2.value ->
         %__MODULE__{
           unit: ts1.unit,
           interval:
             Interval.new(
               module: Interval.Integer,
-              left: ts1.monotonic,
-              right: ts2.monotonic,
+              left: ts1.value,
+              right: ts2.value,
               bounds: "[)"
             )
         }
 
-      ts1.monotonic > ts2.monotonic ->
+      ts1.value > ts2.value ->
         %__MODULE__{
           unit: ts1.unit,
           interval:
             Interval.new(
               module: Interval.Integer,
-              left: ts2.monotonic,
-              right: ts1.monotonic,
+              left: ts2.value,
+              right: ts1.value,
               bounds: "[)"
             )
         }

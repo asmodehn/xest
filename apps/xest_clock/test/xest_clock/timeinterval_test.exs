@@ -2,19 +2,19 @@ defmodule XestClock.Timeinterval.Test do
   use ExUnit.Case
   doctest XestClock.Timeinterval
 
-  alias XestClock.TimeValue
+  alias XestClock.Time
   alias XestClock.Timeinterval
 
   describe "Clock.Timeinterval" do
     setup do
-      tsb = %TimeValue{
+      tsb = %Time.Value{
         unit: :millisecond,
-        monotonic: 12_345
+        value: 12_345
       }
 
-      tsa = %TimeValue{
+      tsa = %Time.Value{
         unit: :millisecond,
-        monotonic: 12_346
+        value: 12_346
       }
 
       %{before: tsb, after: tsa}
@@ -23,18 +23,18 @@ defmodule XestClock.Timeinterval.Test do
     test "build/2 rejects timestamps with different units", %{before: tsb, after: tsa} do
       assert_raise(ArgumentError, fn ->
         Timeinterval.build(
-          %TimeValue{
+          %Time.Value{
             unit: :microsecond,
-            monotonic: 897_654
+            value: 897_654
           },
           tsa
         )
       end)
 
       assert_raise(ArgumentError, fn ->
-        Timeinterval.build(tsb, %TimeValue{
+        Timeinterval.build(tsb, %Time.Value{
           unit: :microsecond,
-          monotonic: 897_654
+          value: 897_654
         })
       end)
     end

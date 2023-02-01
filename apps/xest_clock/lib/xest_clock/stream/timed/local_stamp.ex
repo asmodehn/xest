@@ -1,7 +1,7 @@
 defmodule XestClock.Stream.Timed.LocalStamp do
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
-  alias XestClock.TimeValue
+  alias XestClock.Time
 
   @enforce_keys [:monotonic]
   defstruct monotonic: nil,
@@ -18,13 +18,16 @@ defmodule XestClock.Stream.Timed.LocalStamp do
   def now(unit) do
     %__MODULE__{
       unit: unit,
-      monotonic: TimeValue.new(unit, System.monotonic_time(unit)),
+      monotonic: Time.Value.new(unit, System.monotonic_time(unit)),
       vm_offset: System.time_offset(unit)
     }
   end
 
   def with_previous(%__MODULE__{} = recent, %__MODULE__{} = past) do
-    %{recent | monotonic: recent.monotonic |> TimeValue.with_derivatives_from(past.monotonic)}
+    %{
+      recent
+      | monotonic: recent.monotonic |> XestClock.TimeValue.with_derivatives_from(past.monotonic)
+    }
   end
 
   # return type ? the offset doesnt have much meaning, but we need the unit...
@@ -33,7 +36,7 @@ defmodule XestClock.Stream.Timed.LocalStamp do
     # TODO : get rid of this ?? since we have time VAlue we dont need it any longer.
     %__MODULE__{
       unit: a.unit,
-      monotonic: TimeValue.with_derivatives_from(a, b),
+      monotonic: XestClock.TimeValue.with_derivatives_from(a, b),
       vm_offset: a.vm_offset
     }
   end
@@ -50,6 +53,6 @@ defimpl String.Chars, for: XestClock.Stream.Timed.LocalStamp do
     # some existing physical unit library ?
 
     # delegating to TimeValue... good or bad idea ?
-    "#{%{tv | monotonic: tv.monotonic + vm_offset}}"
+    "#{%{tv | monotonic: tv.value + vm_offset}}"
   end
 end

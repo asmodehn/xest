@@ -7,8 +7,7 @@ defmodule XestClock.StreamClockTest do
   doctest XestClock.StreamClock
 
   alias XestClock.StreamClock
-  alias XestClock.Timestamp
-  alias XestClock.TimeValue
+  alias XestClock.Time
 
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
@@ -39,13 +38,13 @@ defmodule XestClock.StreamClockTest do
       tick_list = clock |> Enum.take(2) |> Enum.to_list()
 
       assert tick_list == [
-               %Timestamp{
+               %Time.Stamp{
                  origin: :stream,
-                 ts: %TimeValue{monotonic: 42, offset: nil, skew: nil, unit: :millisecond}
+                 ts: %Time.Value{value: 42, offset: nil, skew: nil, unit: :millisecond}
                },
-               %Timestamp{
+               %Time.Stamp{
                  origin: :stream,
-                 ts: %TimeValue{monotonic: 42, offset: 0, skew: nil, unit: :millisecond}
+                 ts: %Time.Value{value: 42, offset: 0, skew: nil, unit: :millisecond}
                }
              ]
     end
@@ -104,25 +103,25 @@ defmodule XestClock.StreamClockTest do
       #      |> expect(:sleep, 4, fn _ -> :ok end)
 
       assert clock |> Enum.to_list() == [
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 1, offset: nil, skew: nil, unit: :second}
+                 ts: %Time.Value{value: 1, offset: nil, skew: nil, unit: :second}
                },
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 2, offset: 1, skew: nil, unit: :second}
+                 ts: %Time.Value{value: 2, offset: 1, skew: nil, unit: :second}
                },
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 3, offset: 1, skew: 0, unit: :second}
+                 ts: %Time.Value{value: 3, offset: 1, skew: 0, unit: :second}
                },
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 5, offset: 2, skew: 1, unit: :second}
+                 ts: %Time.Value{value: 5, offset: 2, skew: 1, unit: :second}
                },
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 5, offset: 0, skew: nil, unit: :second}
+                 ts: %Time.Value{value: 5, offset: 0, skew: nil, unit: :second}
                }
              ]
     end
@@ -194,21 +193,21 @@ defmodule XestClock.StreamClockTest do
       # TODO : taking more should stop the agent, and end the stream... REEALLY ??
       assert clock |> Stream.take(4) |> Enum.to_list() ==
                [
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 1, offset: nil, skew: nil, unit: :nanosecond}
+                   ts: %Time.Value{value: 1, offset: nil, skew: nil, unit: :nanosecond}
                  },
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 2, offset: 1, skew: nil, unit: :nanosecond}
+                   ts: %Time.Value{value: 2, offset: 1, skew: nil, unit: :nanosecond}
                  },
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 3, offset: 1, skew: 0, unit: :nanosecond}
+                   ts: %Time.Value{value: 3, offset: 1, skew: 0, unit: :nanosecond}
                  },
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 5, offset: 2, skew: 1, unit: :nanosecond}
+                   ts: %Time.Value{value: 5, offset: 2, skew: 1, unit: :nanosecond}
                  }
                ]
     end
@@ -234,25 +233,25 @@ defmodule XestClock.StreamClockTest do
 
       assert clock |> Enum.to_list() ==
                [
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 1, offset: nil, skew: nil, unit: :second}
+                   ts: %Time.Value{value: 1, offset: nil, skew: nil, unit: :second}
                  },
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 2, offset: 1, skew: nil, unit: :second}
+                   ts: %Time.Value{value: 2, offset: 1, skew: nil, unit: :second}
                  },
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 3, offset: 1, skew: 0, unit: :second}
+                   ts: %Time.Value{value: 3, offset: 1, skew: 0, unit: :second}
                  },
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 5, offset: 2, skew: 1, unit: :second}
+                   ts: %Time.Value{value: 5, offset: 2, skew: 1, unit: :second}
                  },
-                 %Timestamp{
+                 %Time.Stamp{
                    origin: :testclock,
-                   ts: %TimeValue{monotonic: 5, offset: 0, skew: nil, unit: :second}
+                   ts: %Time.Value{value: 5, offset: 0, skew: nil, unit: :second}
                  }
                  # TODO : fix last skew here should not be nil, but negative...
                ]
@@ -279,11 +278,11 @@ defmodule XestClock.StreamClockTest do
 
       assert StreamClock.convert(clock, :millisecond)
              |> Enum.to_list() == [
-               %Timestamp{origin: :testclock, ts: 1000},
-               %Timestamp{origin: :testclock, ts: 2000},
-               %Timestamp{origin: :testclock, ts: 3000},
-               %Timestamp{origin: :testclock, ts: 5000},
-               %Timestamp{origin: :testclock, ts: 5000}
+               %Time.Stamp{origin: :testclock, ts: 1000},
+               %Time.Stamp{origin: :testclock, ts: 2000},
+               %Time.Stamp{origin: :testclock, ts: 3000},
+               %Time.Stamp{origin: :testclock, ts: 5000},
+               %Time.Stamp{origin: :testclock, ts: 5000}
              ]
     end
 
@@ -475,9 +474,9 @@ defmodule XestClock.StreamClockTest do
     test "with StreamClock return proper Timestamp on tick()", %{streamstpr: streamstpr} do
       _before = Process.info(streamstpr)
 
-      assert StreamStepper.tick(streamstpr) == %Timestamp{
+      assert StreamStepper.tick(streamstpr) == %Time.Stamp{
                origin: :testclock,
-               ts: %TimeValue{monotonic: 1, unit: :millisecond}
+               ts: %Time.Value{value: 1, unit: :millisecond}
              }
 
       _first = Process.info(streamstpr)
@@ -485,9 +484,9 @@ defmodule XestClock.StreamClockTest do
       # Note the memory does NOT stay constant for a clock because of extra operations.
       # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
 
-      assert StreamStepper.tick(streamstpr) == %Timestamp{
+      assert StreamStepper.tick(streamstpr) == %Time.Stamp{
                origin: :testclock,
-               ts: %TimeValue{monotonic: 2, offset: 1, unit: :millisecond}
+               ts: %Time.Value{value: 2, offset: 1, unit: :millisecond}
              }
 
       _second = Process.info(streamstpr)
@@ -496,17 +495,17 @@ defmodule XestClock.StreamClockTest do
       # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
 
       assert StreamStepper.ticks(streamstpr, 3) == [
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 3, offset: 1, skew: 0.0, unit: :millisecond}
+                 ts: %Time.Value{value: 3, offset: 1, skew: 0.0, unit: :millisecond}
                },
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 4, offset: 1, skew: 0.0, unit: :millisecond}
+                 ts: %Time.Value{value: 4, offset: 1, skew: 0.0, unit: :millisecond}
                },
-               %Timestamp{
+               %Time.Stamp{
                  origin: :testclock,
-                 ts: %TimeValue{monotonic: 5, offset: 1, skew: 0.0, unit: :millisecond}
+                 ts: %Time.Value{value: 5, offset: 1, skew: 0.0, unit: :millisecond}
                }
              ]
 

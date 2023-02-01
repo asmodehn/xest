@@ -5,7 +5,7 @@ defmodule XestClock.Stream.Timed.Proxy do
   #  alias XestClock.Process
 
   alias XestClock.Stream.Timed
-  alias XestClock.TimeValue
+  alias XestClock.Time
 
   #  def with_offset(enum) do
   #    Stream.transform(enum, nil fn
@@ -58,8 +58,8 @@ defmodule XestClock.Stream.Timed.Proxy do
         {[si], si}
 
       si,
-      {%TimeValue{offset: remote_offset},
-       %Timed.LocalStamp{monotonic: %TimeValue{offset: local_offset}}}
+      {%Time.Value{offset: remote_offset},
+       %Timed.LocalStamp{monotonic: %Time.Value{offset: local_offset}}}
       when is_nil(remote_offset) or is_nil(local_offset) ->
         # we dont have the offset in at least one of the args
         {[si], si}
@@ -67,8 +67,8 @@ defmodule XestClock.Stream.Timed.Proxy do
       # -> not enough to estimate, we need both offset (at least two ticks of each timevalues)
 
       si,
-      {%TimeValue{} = remote_tv,
-       %Timed.LocalStamp{monotonic: %TimeValue{offset: local_offset}} = local_ts} ->
+      {%Time.Value{} = remote_tv,
+       %Timed.LocalStamp{monotonic: %Time.Value{offset: local_offset}} = local_ts} ->
         local_now =
           Timed.LocalStamp.now(local_ts.unit) |> Timed.LocalStamp.with_previous(local_ts)
 
@@ -126,9 +126,9 @@ defmodule XestClock.Stream.Timed.Proxy do
 
   """
   def compute_estimate(
-        %TimeValue{} = last_remote,
-        %TimeValue{} = last_local,
-        %TimeValue{} = local_now
+        %Time.Value{} = last_remote,
+        %Time.Value{} = last_local,
+        %Time.Value{} = local_now
       ) do
     # estimate current remote now with current local now
     est = estimate_now(last_remote, local_now)
@@ -143,14 +143,14 @@ defmodule XestClock.Stream.Timed.Proxy do
 
   # TODO : these should probably move to timevalue...
 
-  def estimate_now(%TimeValue{} = last_remote, %TimeValue{} = local_now) do
+  def estimate_now(%Time.Value{} = last_remote, %Time.Value{} = local_now) do
     # Here we always convert local time, since we want to keep remote precision in the estimate
     converted_offset =
       System.convert_time_unit(local_now.offset, local_now.unit, last_remote.unit)
 
-    %TimeValue{
+    %Time.Value{
       unit: last_remote.unit,
-      monotonic: last_remote.monotonic + converted_offset,
+      value: last_remote.value + converted_offset,
       offset: converted_offset
     }
   end
@@ -159,8 +159,8 @@ defmodule XestClock.Stream.Timed.Proxy do
   Given how estimate_now is computed (see doc) the skew is calculated as the remote offset relatively
   to the local offset
   """
-  @spec skew(TimeValue.t(), TimeValue.t()) :: float
-  def skew(%TimeValue{} = remote, %TimeValue{} = local) do
+  @spec skew(Time.Value.t(), Time.Value.t()) :: float
+  def skew(%Time.Value{} = remote, %Time.Value{} = local) do
     if System.convert_time_unit(1, remote.unit, local.unit) < 1 do
       # invert conversion to avoid losing precision
       remote.offset / System.convert_time_unit(local.offset, local.unit, remote.unit)
