@@ -40,11 +40,11 @@ defmodule XestClock.StreamClockTest do
       assert tick_list == [
                %Time.Stamp{
                  origin: :stream,
-                 ts: %Time.Value{value: 42, offset: nil, skew: nil, unit: :millisecond}
+                 ts: %Time.Value{value: 42, offset: nil, unit: :millisecond}
                },
                %Time.Stamp{
                  origin: :stream,
-                 ts: %Time.Value{value: 42, offset: 0, skew: nil, unit: :millisecond}
+                 ts: %Time.Value{value: 42, offset: 0, unit: :millisecond}
                }
              ]
     end
@@ -105,23 +105,23 @@ defmodule XestClock.StreamClockTest do
       assert clock |> Enum.to_list() == [
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 1, offset: nil, skew: nil, unit: :second}
+                 ts: %Time.Value{value: 1, offset: nil, unit: :second}
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 2, offset: 1, skew: nil, unit: :second}
+                 ts: %Time.Value{value: 2, offset: 1, unit: :second}
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 3, offset: 1, skew: 0, unit: :second}
+                 ts: %Time.Value{value: 3, offset: 1, unit: :second}
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 5, offset: 2, skew: 1, unit: :second}
+                 ts: %Time.Value{value: 5, offset: 2, unit: :second}
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 5, offset: 0, skew: nil, unit: :second}
+                 ts: %Time.Value{value: 5, offset: 0, unit: :second}
                }
              ]
     end
@@ -195,19 +195,19 @@ defmodule XestClock.StreamClockTest do
                [
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 1, offset: nil, skew: nil, unit: :nanosecond}
+                   ts: %Time.Value{value: 1, offset: nil, unit: :nanosecond}
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 2, offset: 1, skew: nil, unit: :nanosecond}
+                   ts: %Time.Value{value: 2, offset: 1, unit: :nanosecond}
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 3, offset: 1, skew: 0, unit: :nanosecond}
+                   ts: %Time.Value{value: 3, offset: 1, unit: :nanosecond}
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 5, offset: 2, skew: 1, unit: :nanosecond}
+                   ts: %Time.Value{value: 5, offset: 2, unit: :nanosecond}
                  }
                ]
     end
@@ -235,25 +235,24 @@ defmodule XestClock.StreamClockTest do
                [
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 1, offset: nil, skew: nil, unit: :second}
+                   ts: %Time.Value{value: 1, offset: nil, unit: :second}
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 2, offset: 1, skew: nil, unit: :second}
+                   ts: %Time.Value{value: 2, offset: 1, unit: :second}
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 3, offset: 1, skew: 0, unit: :second}
+                   ts: %Time.Value{value: 3, offset: 1, unit: :second}
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 5, offset: 2, skew: 1, unit: :second}
+                   ts: %Time.Value{value: 5, offset: 2, unit: :second}
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 5, offset: 0, skew: nil, unit: :second}
+                   ts: %Time.Value{value: 5, offset: 0, unit: :second}
                  }
-                 # TODO : fix last skew here should not be nil, but negative...
                ]
     end
 
@@ -497,15 +496,15 @@ defmodule XestClock.StreamClockTest do
       assert StreamStepper.ticks(streamstpr, 3) == [
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 3, offset: 1, skew: 0.0, unit: :millisecond}
+                 ts: %Time.Value{value: 3, offset: 1, unit: :millisecond}
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 4, offset: 1, skew: 0.0, unit: :millisecond}
+                 ts: %Time.Value{value: 4, offset: 1, unit: :millisecond}
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 5, offset: 1, skew: 0.0, unit: :millisecond}
+                 ts: %Time.Value{value: 5, offset: 1, unit: :millisecond}
                }
              ]
 

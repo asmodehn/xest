@@ -63,7 +63,6 @@ defmodule XestClock.StreamClock do
       ts: %XestClock.Time.Value{
           value: 1,
           offset: nil,
-          skew: nil,
           unit: :millisecond
   }},
   %XestClock.Time.Stamp{
@@ -71,7 +70,6 @@ defmodule XestClock.StreamClock do
       ts: %XestClock.Time.Value{
           value: 2,
           offset: 1,
-          skew: nil,
           unit: :millisecond
       }},
   %XestClock.Time.Stamp{
@@ -79,7 +77,6 @@ defmodule XestClock.StreamClock do
       ts: %XestClock.Time.Value{
           value: 3,
           offset: 1,
-          skew: 0,
           unit: :millisecond
   }}
   ]
@@ -137,7 +134,7 @@ defmodule XestClock.StreamClock do
 
       i, %Time.Value{} = ltv ->
         #        IO.inspect(ltv)
-        now = Time.Value.new(unit, i) |> XestClock.TimeValue.with_derivatives_from(ltv)
+        now = Time.Value.new(unit, i) |> Time.Value.with_previous(ltv)
         {[now], now}
     end)
   end

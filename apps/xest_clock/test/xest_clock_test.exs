@@ -20,7 +20,6 @@ defmodule XestClockTest do
                  ts: %XestClock.Time.Value{
                    value: 1,
                    offset: nil,
-                   skew: nil,
                    unit: :millisecond
                  }
                }

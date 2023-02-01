@@ -26,20 +26,21 @@ defmodule XestClock.Stream.Timed.LocalStamp do
   def with_previous(%__MODULE__{} = recent, %__MODULE__{} = past) do
     %{
       recent
-      | monotonic: recent.monotonic |> XestClock.TimeValue.with_derivatives_from(past.monotonic)
+      | monotonic: recent.monotonic |> XestClock.Time.Value.with_previous(past.monotonic)
     }
   end
 
+  # UNEEDED any longer ?
   # return type ? the offset doesnt have much meaning, but we need the unit...
-  @spec diff(t(), t()) :: t()
-  def diff(%__MODULE__{} = a, %__MODULE__{} = b) do
-    # TODO : get rid of this ?? since we have time VAlue we dont need it any longer.
-    %__MODULE__{
-      unit: a.unit,
-      monotonic: XestClock.TimeValue.with_derivatives_from(a, b),
-      vm_offset: a.vm_offset
-    }
-  end
+  #  @spec diff(t(), t()) :: t()
+  #  def diff(%__MODULE__{} = a, %__MODULE__{} = b) do
+  #    # TODO : get rid of this ?? since we have time VAlue we dont need it any longer.
+  #    %__MODULE__{
+  #      unit: a.unit,
+  #      monotonic: XestClock.TimeValue.with_derivatives_from(a, b),
+  #      vm_offset: a.vm_offset
+  #    }
+  #  end
 end
 
 defimpl String.Chars, for: XestClock.Stream.Timed.LocalStamp do

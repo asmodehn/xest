@@ -33,7 +33,6 @@ defmodule XestClock.ServerTest do
                  ts: %XestClock.Time.Value{
                    value: 42,
                    offset: nil,
-                   skew: nil,
                    unit: :second
                  }
                },
@@ -41,7 +40,6 @@ defmodule XestClock.ServerTest do
                  monotonic: %XestClock.Time.Value{
                    value: 42,
                    offset: nil,
-                   skew: nil,
                    unit: :nanosecond
                  },
                  unit: :nanosecond,
@@ -64,7 +62,6 @@ defmodule XestClock.ServerTest do
                  ts: %XestClock.Time.Value{
                    value: 42_000,
                    offset: nil,
-                   skew: nil,
                    unit: :millisecond
                  }
                },
@@ -72,7 +69,6 @@ defmodule XestClock.ServerTest do
                  monotonic: %XestClock.Time.Value{
                    value: 42,
                    offset: nil,
-                   skew: nil,
                    unit: :nanosecond
                  },
                  unit: :nanosecond,
@@ -90,7 +86,6 @@ defmodule XestClock.ServerTest do
                  ts: %XestClock.Time.Value{
                    value: 42_000_000,
                    offset: nil,
-                   skew: nil,
                    unit: :microsecond
                  }
                },
@@ -98,7 +93,6 @@ defmodule XestClock.ServerTest do
                  monotonic: %XestClock.Time.Value{
                    value: 42,
                    offset: nil,
-                   skew: nil,
                    unit: :nanosecond
                  },
                  unit: :nanosecond,
@@ -126,7 +120,6 @@ defmodule XestClock.ServerTest do
                  ts: %XestClock.Time.Value{
                    value: 42_000_000_000,
                    offset: nil,
-                   skew: nil,
                    unit: :nanosecond
                  }
                },
@@ -134,7 +127,6 @@ defmodule XestClock.ServerTest do
                  monotonic: %XestClock.Time.Value{
                    value: 42,
                    offset: nil,
-                   skew: nil,
                    unit: :nanosecond
                  },
                  unit: :nanosecond,

@@ -167,30 +167,28 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
         # TODO make this more obvious by putting it in a module...
         |> Stream.transform(nil, fn
           lts, nil -> {[lts], lts}
-          lts, prev -> {[lts |> XestClock.TimeValue.with_derivatives_from(prev)], lts}
+          lts, prev -> {[lts |> XestClock.Time.Value.with_previous(prev)], lts}
         end)
         # we depend on timed here ? (or maybe use simpler streams methods ?)
         |> Timed.timed(:millisecond)
         |> Proxy.proxy()
 
       assert proxy |> Enum.take(3) == [
-               {%XestClock.Time.Value{value: 100, offset: nil, skew: nil, unit: :millisecond},
+               {%XestClock.Time.Value{value: 100, offset: nil, unit: :millisecond},
                 %XestClock.Stream.Timed.LocalStamp{
                   monotonic: %XestClock.Time.Value{
                     value: 100,
                     offset: nil,
-                    skew: nil,
                     unit: :millisecond
                   },
                   unit: :millisecond,
                   vm_offset: 0
                 }},
-               {%XestClock.Time.Value{value: 300, offset: 200, skew: nil, unit: :millisecond},
+               {%XestClock.Time.Value{value: 300, offset: 200, unit: :millisecond},
                 %XestClock.Stream.Timed.LocalStamp{
                   monotonic: %XestClock.Time.Value{
                     value: 300,
                     offset: 200,
-                    skew: nil,
                     unit: :millisecond
                   },
                   unit: :millisecond,
@@ -199,12 +197,11 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
                # estimated value will get a nil as skew (current bug, but skew will disappear from struct)
                # So here we get the estimated value.
                # TODO : fix the issue where the mock is called, even though it s not needed !!!!
-               {%XestClock.Time.Value{value: 500, offset: 200, skew: nil, unit: :millisecond},
+               {%XestClock.Time.Value{value: 500, offset: 200, unit: :millisecond},
                 %XestClock.Stream.Timed.LocalStamp{
                   monotonic: %XestClock.Time.Value{
                     value: 500,
                     offset: 200,
-                    skew: 0,
                     unit: :millisecond
                   },
                   unit: :millisecond,

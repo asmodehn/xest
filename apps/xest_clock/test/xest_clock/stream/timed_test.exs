@@ -25,7 +25,6 @@ defmodule XestClock.Stream.Timed.Test do
                   monotonic: %XestClock.Time.Value{
                     value: 330,
                     offset: nil,
-                    skew: nil,
                     unit: :millisecond
                   },
                   unit: :millisecond,
@@ -36,7 +35,6 @@ defmodule XestClock.Stream.Timed.Test do
                   monotonic: %XestClock.Time.Value{
                     value: 420,
                     offset: 90,
-                    skew: nil,
                     unit: :millisecond
                   },
                   unit: :millisecond,
@@ -48,7 +46,6 @@ defmodule XestClock.Stream.Timed.Test do
                   monotonic: %XestClock.Time.Value{
                     value: 510,
                     offset: 90,
-                    skew: 0.0,
                     unit: :millisecond
                   },
                   unit: :millisecond,

@@ -34,6 +34,11 @@ defmodule XestClock.Time.Stamp do
       ts: Time.Value.new(nu, ts)
     }
   end
+
+  def with_previous(%__MODULE__{} = current, %__MODULE__{} = previous)
+      when current.origin == previous.origin do
+    %{current | ts: current.ts |> Time.Value.with_previous(previous.ts)}
+  end
 end
 
 defimpl String.Chars, for: XestClock.Time.Stamp do
