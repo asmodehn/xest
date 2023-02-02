@@ -1,6 +1,4 @@
 defmodule ExampleServer do
-  import Hammox
-
   use XestClock.Server
   # use will setup the correct streamclock for leveraging the `handle_remote_unix_time` callback
   # the unit passed as parameter will be sent to handle_remote_unix_time
@@ -15,29 +13,6 @@ defmodule ExampleServer do
 
   @impl true
   def init(state) do
-    # mocks expectations are needed since clock also tracks local time internally
-    XestClock.System.ExtraMock
-    |> expect(:native_time_unit, fn -> :nanosecond end)
-
-    XestClock.System.OriginalMock
-    # TODO: This should fail on exit: it is called only once !
-    |> expect(:monotonic_time, 25, fn _ -> 42 end)
-    |> expect(:time_offset, fn _ -> 0 end)
-
-    # Note : the local timestamp calls these one time only.
-    # other stream operator will rely on that timestamp
-
-    XestClock.Process.OriginalMock
-    # Note : since we tick faster than unit here, we need to mock sleep.
-    |> expect(:sleep, 1, fn _ -> :ok end)
-
-    # This is not of interest in tests, which is why it is quickly done here internally.
-    # Otherwise see allowances to do it from another process:
-    # https://hexdocs.pm/mox/Mox.html#module-explicit-allowances
-
-    # TODO : verify mocks are not called too often !
-    #      verify_on_exit!()  # this wants to be called from the test process...
-
     XestClock.Server.init(state, &handle_remote_unix_time/1)
   end
 

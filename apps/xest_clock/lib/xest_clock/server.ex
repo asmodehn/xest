@@ -108,7 +108,8 @@ defmodule XestClock.Server do
         )
       )
       # Note these apply to the whole streamclock to stamp each event...
-      |> Timed.timed()
+      # specifying unit so we do not rely on the System native unit.
+      |> Timed.timed(unit)
       # requests should not be faster than rate_limit
       # Note: this will sleep if necessary, in server process, when the stream will be traversed.
       |> Limiter.limiter(rate_limit)

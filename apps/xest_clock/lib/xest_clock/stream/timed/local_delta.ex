@@ -37,7 +37,12 @@ defmodule XestClock.Stream.Timed.LocalDelta do
         %__MODULE__{} = previous
       )
       when current.offset.unit == previous.offset.unit do
-    skew = current.offset.value / previous.offset.value
+    skew =
+      if previous.offset.value == 0 do
+        nil
+      else
+        current.offset.value / previous.offset.value
+      end
 
     # TODO : is there any point to get longer skew list over time ??
     # if not, how to prove it ?
