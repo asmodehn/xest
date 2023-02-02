@@ -84,13 +84,30 @@ defmodule XestClock.Time.Value do
       # invert conversion to avoid losing precision
       %__MODULE__{
         unit: tv1.unit,
-        value: tv1.value - System.convert_time_unit(tv2.value, tv2.unit, tv1.unit)
+        value: tv1.value - convert(tv2, tv1.unit).value
         # Note: previous existing offset in tv1 and tv2 loses any meaning.
       }
     else
       %__MODULE__{
         unit: tv2.unit,
-        value: System.convert_time_unit(tv1.value, tv1.unit, tv2.unit) - tv2.value
+        value: convert(tv1, tv2.unit).value - tv2.value
+        # Note: previous existing offset in tv1 and tv2 loses any meaning.
+      }
+    end
+  end
+
+  def sum(%__MODULE__{} = tv1, %__MODULE__{} = tv2) do
+    if System.convert_time_unit(1, tv1.unit, tv2.unit) < 1 do
+      # invert conversion to avoid losing precision
+      %__MODULE__{
+        unit: tv1.unit,
+        value: tv1.value + convert(tv2, tv1.unit).value
+        # Note: previous existing offset in tv1 and tv2 loses any meaning.
+      }
+    else
+      %__MODULE__{
+        unit: tv2.unit,
+        value: convert(tv1, tv2.unit).value + tv2.value
         # Note: previous existing offset in tv1 and tv2 loses any meaning.
       }
     end
