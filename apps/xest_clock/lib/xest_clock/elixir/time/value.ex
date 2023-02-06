@@ -114,6 +114,33 @@ defmodule XestClock.Time.Value do
     end
   end
 
+  # TODO : linear map on time values ??
+  def scale(%__MODULE__{} = tv, factor) do
+    %__MODULE__{
+      unit: tv.unit,
+      value: round(tv.value * factor)
+      # Note: previous existing offset in tv1 and tv2 loses any meaning.
+    }
+  end
+
+  @spec div(t(), t()) :: float
+  def div(%__MODULE__{} = tv_num, %__MODULE__{} = _tv_den)
+      # no offset
+      when tv_num.value == 0,
+      do: 0.0
+
+  def div(%__MODULE__{} = tv_num, %__MODULE__{} = tv_den)
+      when tv_den.value != 0 do
+    IO.inspect(tv_den)
+
+    if System.convert_time_unit(1, tv_num.unit, tv_den.unit) < 1 do
+      # invert conversion to avoid losing precision
+      tv_num.value / convert(tv_den, tv_num.unit).value
+    else
+      convert(tv_num, tv_den.unit).value / tv_den.value
+    end
+  end
+
   @doc """
     Take a stream of integer, and transform it to a stream of timevalues.
     The stream may contain local timestamps.

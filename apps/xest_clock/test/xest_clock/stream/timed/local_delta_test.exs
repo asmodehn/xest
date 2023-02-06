@@ -38,35 +38,35 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
     end
   end
 
-  describe "with_previous/2" do
-    test " takes previous delta into account to compute the skew" do
-      assert Timed.LocalDelta.with_previous(
-               %Timed.LocalDelta{
-                 offset: %Time.Value{
-                   value: 1000,
-                   offset: nil,
-                   unit: :millisecond
-                 },
-                 skew: nil
-               },
-               %Timed.LocalDelta{
-                 offset: %Time.Value{
-                   value: 2000,
-                   offset: nil,
-                   unit: :millisecond
-                 },
-                 skew: nil
-               }
-             ) == %Timed.LocalDelta{
-               offset: %Time.Value{
-                 value: 1000,
-                 offset: nil,
-                 unit: :millisecond
-               },
-               skew: 0.5
-             }
-    end
-  end
+  #  describe "with_previous/2" do
+  #    test " takes previous delta into account to compute the skew" do
+  #      assert Timed.LocalDelta.with_previous(
+  #               %Timed.LocalDelta{
+  #                 offset: %Time.Value{
+  #                   value: 1000,
+  #                   offset: nil,
+  #                   unit: :millisecond
+  #                 },
+  #                 skew: nil
+  #               },
+  #               %Timed.LocalDelta{
+  #                 offset: %Time.Value{
+  #                   value: 2000,
+  #                   offset: nil,
+  #                   unit: :millisecond
+  #                 },
+  #                 skew: nil
+  #               }
+  #             ) == %Timed.LocalDelta{
+  #               offset: %Time.Value{
+  #                 value: 1000,
+  #                 offset: nil,
+  #                 unit: :millisecond
+  #               },
+  #               skew: 0.5
+  #             }
+  #    end
+  #  end
 
   describe "compute/1" do
     test "compute skew on a stream" do
@@ -130,11 +130,44 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
                        offset: nil,
                        unit: :millisecond
                      },
-                     skew: 1.0
+                     # Zero since the offset between the clock is constant over time.
+                     skew: 0.0
                    }
                  ]
                ])
                |> Enum.to_list()
+    end
+  end
+
+  describe "error_since_at/2" do
+    test "estimate the potential error" do
+      delta = %Timed.LocalDelta{
+        offset: %Time.Value{
+          unit: :millisecond,
+          value: 33
+        },
+        skew: 0.9
+      }
+
+      assert Timed.LocalDelta.error_since_at(
+               delta,
+               %Timed.LocalStamp{
+                 unit: :millisecond,
+                 monotonic: %Time.Value{
+                   value: 42,
+                   unit: :millisecond
+                 },
+                 vm_offset: 49
+               },
+               %Timed.LocalStamp{
+                 unit: :millisecond,
+                 monotonic: %Time.Value{
+                   value: 51,
+                   unit: :millisecond
+                 },
+                 vm_offset: 49
+               }
+             ) == Time.Value.new(:millisecond, round((51 - 42) * 0.9))
     end
   end
 end

@@ -20,6 +20,31 @@ defmodule XestClock.Stream.Timed.LocalStamp do
       unit: unit,
       monotonic: Time.Value.new(unit, System.monotonic_time(unit)),
       vm_offset: System.time_offset(unit)
+      # TODO : how can we force vm_offset to always be same unit as monotonic ??
+    }
+  end
+
+  @spec system_time(t()) :: Time.Value.t()
+  def system_time(%__MODULE__{} = lts) do
+    %{lts.monotonic | value: lts.monotonic.value + lts.vm_offset}
+  end
+
+  def elapsed_since(%__MODULE__{} = lts, %__MODULE__{} = previous_lts) do
+    Time.Value.diff(
+      system_time(lts),
+      system_time(previous_lts)
+    )
+  end
+
+  def convert(%__MODULE__{} = lts, unit) do
+    nu = System.Extra.normalize_time_unit(unit)
+
+    %__MODULE__{
+      unit: nu,
+      monotonic: lts.monotonic |> Time.Value.convert(nu),
+      vm_offset: Time.Value.new(lts.unit, lts.vm_offset) |> Time.Value.convert(nu)
+      # TODO : how can we force vm_offset to always be same unit as monotonic ??
+      # maybe make vm_offset also a time value ??
     }
   end
 

@@ -134,8 +134,28 @@ end
 
 # a server that tracks a remote clock internally in seconds
 {:ok, spid} = WorldClockProxy.start_link(:second)
+```
+
+a one time call, asking for a remote time (estimated) in millisecond
+
+```elixir
 # a one time call, asking for a remote time (estimated) in millisecond
 WorldClockProxy.monotonic_time(spid, :millisecond)
+```
+
+we can also ask an estimation for the error. However at first it is a bit rough
+
+```elixir
+XestClock.Server.error(spid, :millisecond)
+```
+
+When we have more ticks, we can compute the skew of the remote clock,
+and we get a more refined estimation for the error:
+
+```elixir
+# a one time call, asking for a remote time (estimated) in millisecond
+WorldClockProxy.monotonic_time(spid, :millisecond)
+XestClock.Server.error(spid, :millisecond)
 ```
 
 ## Useful Stream Operators

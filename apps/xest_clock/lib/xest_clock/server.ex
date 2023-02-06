@@ -62,7 +62,7 @@ defmodule XestClock.Server do
       # possibly out of band/without client code knowing -> events / pubsub
       @doc false
       @impl GenServer
-      def handle_call({:ticks, demand}, _from, {stream, continuation}) do
+      def handle_call({:ticks, demand}, _from, {stream, continuation, last_result}) do
         # cache on the client side (it is impure, so better keep it on the outside)
         # REALLY ???
 
@@ -73,10 +73,7 @@ defmodule XestClock.Server do
         # just as a demand of 1 would have.
         {result, new_continuation} = XestClock.Stream.Ticker.next(demand, continuation)
 
-        #            reply = {result, now}  # we have the timestamp, lets return it !
-        #            {:reply, reply, {now, stream, new_continuation}}
-        {:reply, result, {stream, new_continuation}}
-        #          end, rate)
+        {:reply, result, {stream, new_continuation, List.last(result)}}
       end
 
       # we add just one callback. this is the default signaling to the user it has not been defined
@@ -128,7 +125,7 @@ defmodule XestClock.Server do
     # related to previous elements for a client to be able
     # to build his own estimation of the remote clock
 
-    {:ok, {streamclock, XestClock.Stream.Ticker.new(streamclock)}}
+    {:ok, {streamclock, XestClock.Stream.Ticker.new(streamclock), nil}}
   end
 
   # we define a default start_link matching the default child_spec of genserver
@@ -136,16 +133,35 @@ defmodule XestClock.Server do
     GenServer.start_link(module, {module, unit}, opts)
   end
 
-  @spec ticks(pid(), integer()) :: [{XestClock.Timestamp.t(), XestClock.LocalStamp.t()}]
+  @spec ticks(pid(), integer()) :: [
+          {XestClock.Timestamp.t(), XestClock.Stream.Timed.LocalStamp.t(),
+           XestClock.Stream.Timed.LocalDelta.t()}
+        ]
   def ticks(pid \\ __MODULE__, demand) do
     GenServer.call(pid, {:ticks, demand})
+  end
+
+  @spec previous_tick(pid()) ::
+          {XestClock.Timestamp.t(), XestClock.Stream.Timed.LocalStamp.t(),
+           XestClock.Stream.Timed.LocalDelta.t()}
+  def previous_tick(pid \\ __MODULE__) do
+    {_stream, _continuation, last} = :sys.get_state(pid)
+    last
   end
 
   @doc """
   Computes monotonic time of the remote clock, by adding its offset.
   """
   def monotonic_time(pid \\ __MODULE__, unit) do
-    {_rts, _lts, dv} = List.first(ticks(pid, 1))
+    # Check if retrieving time is actually needed
+    {err, delta} = error(pid, unit)
+    # TODO : make precision :second a parameter...
+    dv =
+      if err > :second do
+        List.first(ticks(pid, 1)) |> elem(2)
+      else
+        delta
+      end
 
     XestClock.Time.Value.sum(
       Timed.LocalStamp.now(unit).monotonic,
@@ -157,7 +173,29 @@ defmodule XestClock.Server do
     # TODO : what to do with skew / error ???
   end
 
-  #  def system_time(pid \\ __MODULE__, unit) do
-  #    monotonic_time
-  #  end
+  @doc """
+    compute the current error of the server from its state.
+  """
+  @spec error(pid, System.time_unit()) :: {Time.Value.t(), Timed.LocalDelta.t()}
+  def error(pid \\ __MODULE__, unit) do
+    case previous_tick(pid) do
+      nil ->
+        # TODO : initial element of their algebraic category as default ? better way ??...
+        error = XestClock.Time.Value.new(unit, 0)
+
+        delta = %Timed.LocalDelta{
+          offset: XestClock.Time.Value.new(unit, 0),
+          skew: 0.0
+        }
+
+        {error, delta}
+
+      {_rts, lts, dv} ->
+        error =
+          Timed.LocalDelta.error_since(dv, lts)
+          |> XestClock.Time.Value.convert(unit)
+
+        {error, dv}
+    end
+  end
 end

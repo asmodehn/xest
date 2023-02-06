@@ -97,8 +97,8 @@ defmodule XestClock.ServerTest do
                      unit: unit,
                      value: 0
                    },
-                   # offset 0 : skew is not calculable  (???)
-                   skew: nil
+                   # offset 0 : skew is 0.0 even if denominator is == 0 (linear map)
+                   skew: 0.0
                  }
                }
 
