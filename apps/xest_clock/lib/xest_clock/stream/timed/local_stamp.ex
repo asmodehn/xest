@@ -23,12 +23,13 @@ defmodule XestClock.Stream.Timed.LocalStamp do
     }
   end
 
-  def with_previous(%__MODULE__{} = recent, %__MODULE__{} = past) do
-    %{
-      recent
-      | monotonic: recent.monotonic |> XestClock.Time.Value.with_previous(past.monotonic)
-    }
-  end
+  #  Lets get rid of that, the user can doit in its transform...
+  #  def with_previous(%__MODULE__{} = recent, %__MODULE__{} = past) do
+  #    %{
+  #      recent
+  #      | monotonic: recent.monotonic |> XestClock.Time.Value.with_previous(past.monotonic)
+  #    }
+  #  end
 
   # UNEEDED any longer ?
   # return type ? the offset doesnt have much meaning, but we need the unit...

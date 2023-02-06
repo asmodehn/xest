@@ -5,8 +5,14 @@ defmodule XestClock.Server do
   We attempt to keep the same semantics, so the synchronous request will immediately trigger an event to be sent to all subscribers.
   """
 
+  # hiding Elixir.System to make sure we do not inadvertently use it
+  alias XestClock.System
+  # hiding Elixir.System to make sure we do not inadvertently use it
+  alias XestClock.Process
+
   alias XestClock.Stream.Timed
-  alias XestClock.Stream.Limiter
+  #  alias XestClock.Stream.Limiter
+  #  alias XestClock.Time
 
   # TODO : better type for continuation ?
   @type internal_state :: {XestClock.StreamClock.t(), continuation :: any()}
@@ -60,12 +66,17 @@ defmodule XestClock.Server do
         # cache on the client side (it is impure, so better keep it on the outside)
         # REALLY ???
 
+        #        max_call_rate(fn ->
         # Ref: https://hexdocs.pm/gen_stage/GenStage.html#c:handle_call/3
         # we immediately return the result of the computation,
         # TODO: but we also set it to be dispatch as an event (other subscribers ?),
         # just as a demand of 1 would have.
-        {reply, new_continuation} = XestClock.Stream.Ticker.next(demand, continuation)
-        {:reply, reply, {stream, new_continuation}}
+        {result, new_continuation} = XestClock.Stream.Ticker.next(demand, continuation)
+
+        #            reply = {result, now}  # we have the timestamp, lets return it !
+        #            {:reply, reply, {now, stream, new_continuation}}
+        {:reply, result, {stream, new_continuation}}
+        #          end, rate)
       end
 
       # we add just one callback. this is the default signaling to the user it has not been defined
@@ -93,26 +104,28 @@ defmodule XestClock.Server do
     end
   end
 
-  def init({origin, unit}, remote_unit_time_handler, rate_limit \\ nil) do
+  # TODO : better interface for min_handle_remote_period...
+  def init({origin, unit}, remote_unit_time_handler, min_handle_remote_period \\ 1000) do
     # time_unit also function as a rate (parts per second)
-    rate_limit = if is_nil(rate_limit), do: unit, else: rate_limit
+    #    min_period = if is_nil(min_handle_remote_period), do: round(unit), else: min_handle_remote_period
 
     # here we leverage streamclock, although we keep a usual server interface...
     streamclock =
       XestClock.StreamClock.new(
         origin,
         unit,
-        Stream.repeatedly(
+        XestClock.Stream.repeatedly_throttled(
+          min_handle_remote_period,
           # getting remote time via callback (should have been setup by __using__ macro)
           fn -> remote_unit_time_handler.(unit) end
         )
       )
       # Note these apply to the whole streamclock to stamp each event...
       # specifying unit so we do not rely on the System native unit.
-      |> Timed.timed(unit)
+      #      |> Timed.timed(unit)
       # requests should not be faster than rate_limit
       # Note: this will sleep if necessary, in server process, when the stream will be traversed.
-      |> Limiter.limiter(rate_limit)
+      #      |> Limiter.max_rate(rate_limit)
       # we compute local delta here in place where we have easy access to element in the stream
       |> Timed.LocalDelta.compute()
 

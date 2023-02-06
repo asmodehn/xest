@@ -11,7 +11,6 @@ defmodule XestClock.StreamClock do
   # intentionally hiding Elixir.System
   alias XestClock.System
 
-  alias XestClock.Stream.Monotone
   alias XestClock.Time
 
   @enforce_keys [:stream, :origin]
@@ -36,7 +35,9 @@ defmodule XestClock.StreamClock do
     new(
       XestClock.System,
       nu,
-      Stream.repeatedly(
+      # millisecond precision. we dont need more.
+      XestClock.Stream.repeatedly_throttled(
+        1,
         # getting local time  monotonically
         fn -> System.monotonic_time(nu) end
       )
@@ -105,7 +106,7 @@ defmodule XestClock.StreamClock do
         tickstream
         # guaranteeing (weak) monotonicity
         # Less surprising for the user than a strict monotonicity dropping elements.
-        |> Monotone.increasing()
+        |> XestClock.Stream.monotone_increasing()
         # from an int to a timevalue
         |> as_timevalue(nu),
       # add current local time for relative computations
@@ -127,10 +128,20 @@ defmodule XestClock.StreamClock do
 
   defp as_timevalue(enum, unit) do
     Stream.transform(enum, nil, fn
+      {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, nil ->
+        now = Time.Value.new(unit, i)
+        # keep the current value in accumulator to compute derivatives later
+        {[{now, ts}], now}
+
       i, nil ->
         now = Time.Value.new(unit, i)
         # keep the current value in accumulator to compute derivatives later
         {[now], now}
+
+      {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, %Time.Value{} = ltv ->
+        #        IO.inspect(ltv)
+        now = Time.Value.new(unit, i) |> Time.Value.with_previous(ltv)
+        {[{now, ts}], now}
 
       i, %Time.Value{} = ltv ->
         #        IO.inspect(ltv)
@@ -200,7 +211,16 @@ defmodule XestClock.StreamClock do
     end
 
     defp as_timestamp(enum, origin) do
-      Stream.map(enum, fn elem -> %Time.Stamp{origin: origin, ts: elem} end)
+      Stream.map(enum, fn
+        {%Time.Value{} = tv, %XestClock.Stream.Timed.LocalStamp{} = lts} ->
+          {%Time.Stamp{origin: origin, ts: tv}, lts}
+
+        %Time.Value{} = tv ->
+          %Time.Stamp{origin: origin, ts: tv}
+
+        elem ->
+          %Time.Stamp{origin: origin, ts: elem}
+      end)
     end
 
     # TODO : timed reducer based on unit ??

@@ -29,11 +29,18 @@ defmodule XestClock.Time.Estimate do
     without_skew = tv.value + Time.Value.convert(ld.offset, tv.unit).value
     # with_skew = tv.value + System.convert_time_unit(ld.offset, ld.unit, tv.unit) * ld.skew
 
+    error =
+      if is_nil(ld.skew) do
+        Time.Value.convert(ld.offset, tv.unit).value
+      else
+        Time.Value.convert(ld.offset, tv.unit).value * (1.0 - ld.skew)
+      end
+
     %__MODULE__{
       unit: tv.unit,
       value: without_skew,
       # == without_skew - with_skew
-      error: Time.Value.convert(ld.offset, tv.unit).value * (1.0 - ld.skew)
+      error: error
     }
   end
 end

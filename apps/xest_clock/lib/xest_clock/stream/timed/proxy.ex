@@ -4,7 +4,7 @@ defmodule XestClock.Stream.Timed.Proxy do
   # hiding Elixir.System to make sure we do not inadvertently use it
   #  alias XestClock.Process
 
-  alias XestClock.Stream.Timed
+  #  alias XestClock.Stream.Timed
   alias XestClock.Time
 
   #  def with_offset(enum) do
@@ -50,46 +50,46 @@ defmodule XestClock.Stream.Timed.Proxy do
   #         #TODO : clauses with local timestamp instead of value...
   #    end)
 
-  def proxy(enum) do
-    Stream.transform(enum, nil, fn
-      # last elem as accumulator (to be used for next elem computation)
-      si, nil ->
-        IO.inspect("initialize")
-        {[si], si}
-
-      si,
-      {%Time.Value{offset: remote_offset},
-       %Timed.LocalStamp{monotonic: %Time.Value{offset: local_offset}}}
-      when is_nil(remote_offset) or is_nil(local_offset) ->
-        # we dont have the offset in at least one of the args
-        {[si], si}
-
-      # -> not enough to estimate, we need both offset (at least two ticks of each timevalues)
-
-      si,
-      {%Time.Value{} = remote_tv,
-       %Timed.LocalStamp{monotonic: %Time.Value{offset: local_offset}} = local_ts} ->
-        local_now =
-          Timed.LocalStamp.now(local_ts.unit) |> Timed.LocalStamp.with_previous(local_ts)
-
-        {est, err} = compute_estimate(remote_tv, local_ts.monotonic, local_now.monotonic)
-
-        # TODO : maybe a PId controller would be better ? (error could improve overtime maybe ? )
-
-        # TODO : define some accuracy target... local_offset -> accepted error depends on the local_offset ???
-        # error too large, retrieve the next remote tick...
-        if err < local_offset do
-          # keep same accumulator to compute next time
-          # and return estimation
-          {[
-             {est, local_now},
-             si
-           ], {remote_tv, local_ts}}
-        else
-          {[si], si}
-        end
-    end)
-  end
+  #  def proxy(enum) do
+  #    Stream.transform(enum, nil, fn
+  #      # last elem as accumulator (to be used for next elem computation)
+  #      si, nil ->
+  #        IO.inspect("initialize")
+  #        {[si], si}
+  #
+  #      si,
+  #      {%Time.Value{offset: remote_offset},
+  #       %Timed.LocalStamp{monotonic: %Time.Value{offset: local_offset}}}
+  #      when is_nil(remote_offset) or is_nil(local_offset) ->
+  #        # we dont have the offset in at least one of the args
+  #        {[si], si}
+  #
+  #      # -> not enough to estimate, we need both offset (at least two ticks of each timevalues)
+  #
+  #      si,
+  #      {%Time.Value{} = remote_tv,
+  #       %Timed.LocalStamp{monotonic: %Time.Value{offset: local_offset}} = local_ts} ->
+  #        local_now =
+  #          Timed.LocalStamp.now(local_ts.unit) |> Timed.LocalStamp.with_previous(local_ts)
+  #
+  #        {est, err} = compute_estimate(remote_tv, local_ts.monotonic, local_now.monotonic)
+  #
+  #        # TODO : maybe a PId controller would be better ? (error could improve overtime maybe ? )
+  #
+  #        # TODO : define some accuracy target... local_offset -> accepted error depends on the local_offset ???
+  #        # error too large, retrieve the next remote tick...
+  #        if err < local_offset do
+  #          # keep same accumulator to compute next time
+  #          # and return estimation
+  #          {[
+  #             {est, local_now},
+  #             si
+  #           ], {remote_tv, local_ts}}
+  #        else
+  #          {[si], si}
+  #        end
+  #    end)
+  #  end
 
   @doc """
     Estimates the current remote now, simply adding the local_offset to the last known remote time

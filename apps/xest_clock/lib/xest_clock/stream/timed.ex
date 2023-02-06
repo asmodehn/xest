@@ -33,14 +33,15 @@ defmodule XestClock.Stream.Timed do
         precision <= 1_000_000_000 -> :nanosecond
       end
 
-    Stream.transform(enum, nil, fn
-      i, nil ->
-        now = LocalStamp.now(best_unit)
-        {[{i, now}], now}
+    # We process the first timestamp to initialize on the call directly !
+    # This seems more intuitive than waiting for two whole requests to get offset in stream ?
+    # TODO : first_time_stamp
+    # or maybe offset should be only computed internally where needed ??
 
-      i, %LocalStamp{} = lts ->
-        now = LocalStamp.now(best_unit) |> LocalStamp.with_previous(lts)
-        {[{i, now}], now}
+    Stream.map(enum, fn
+      i ->
+        now = LocalStamp.now(best_unit)
+        {i, now}
     end)
   end
 

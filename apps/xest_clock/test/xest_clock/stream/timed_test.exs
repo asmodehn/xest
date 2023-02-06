@@ -24,7 +24,7 @@ defmodule XestClock.Stream.Timed.Test do
                 %XestClock.Stream.Timed.LocalStamp{
                   monotonic: %XestClock.Time.Value{
                     value: 330,
-                    offset: nil,
+                    #                    offset: nil,
                     unit: :millisecond
                   },
                   unit: :millisecond,
@@ -34,7 +34,7 @@ defmodule XestClock.Stream.Timed.Test do
                 %XestClock.Stream.Timed.LocalStamp{
                   monotonic: %XestClock.Time.Value{
                     value: 420,
-                    offset: 90,
+                    #                    offset: 90,
                     unit: :millisecond
                   },
                   unit: :millisecond,
@@ -45,7 +45,7 @@ defmodule XestClock.Stream.Timed.Test do
                   # Note : constant offset give a skew of zero (no skew -> good clock)
                   monotonic: %XestClock.Time.Value{
                     value: 510,
-                    offset: 90,
+                    #                    offset: 90,
                     unit: :millisecond
                   },
                   unit: :millisecond,

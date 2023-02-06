@@ -7,6 +7,8 @@ defmodule XestClock.Time.Value do
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
 
+  @derive {Inspect, optional: [:offset]}
+
   @enforce_keys [:unit, :value]
   defstruct unit: nil,
             value: nil,
@@ -29,8 +31,7 @@ defmodule XestClock.Time.Value do
           offset: integer()
         }
 
-  @derive {Inspect, optional: [:offset]}
-
+  # TODO : keep making the same mistake -> reverse params ?
   def new(unit, value) when is_integer(value) do
     %__MODULE__{
       unit: System.Extra.normalize_time_unit(unit),
