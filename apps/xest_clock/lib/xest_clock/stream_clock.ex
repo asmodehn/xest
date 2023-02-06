@@ -27,7 +27,6 @@ defmodule XestClock.StreamClock do
           offset: Time.Stamp.t()
         }
 
-  # TODO : get rid of it. we abuse design here. it was just aimed to be an example...
   def new(System, unit) do
     nu = System.Extra.normalize_time_unit(unit)
 
@@ -35,12 +34,13 @@ defmodule XestClock.StreamClock do
     new(
       XestClock.System,
       nu,
-      # millisecond precision. we dont need more.
-      XestClock.Stream.repeatedly_throttled(
-        1,
-        # getting local time  monotonically
+      # This is a local clock : no need to throttle
+      Stream.repeatedly(
+        # getting local time monotonically
         fn -> System.monotonic_time(nu) end
       )
+      #  as a time value
+      |> Time.Value.stream(nu)
     )
   end
 
@@ -61,25 +61,13 @@ defmodule XestClock.StreamClock do
   [
   %XestClock.Time.Stamp{
       origin: :enum_clock,
-      ts: %XestClock.Time.Value{
-          value: 1,
-          offset: nil,
-          unit: :millisecond
-  }},
+      ts: 1},
   %XestClock.Time.Stamp{
       origin: :enum_clock,
-      ts: %XestClock.Time.Value{
-          value: 2,
-          offset: 1,
-          unit: :millisecond
-      }},
+      ts: 2},
   %XestClock.Time.Stamp{
       origin: :enum_clock,
-      ts: %XestClock.Time.Value{
-          value: 3,
-          offset: 1,
-          unit: :millisecond
-  }}
+      ts: 3}
   ]
 
   A stream is also an enumerable, and can be formed from a function called repeatedly.
@@ -106,48 +94,14 @@ defmodule XestClock.StreamClock do
         tickstream
         # guaranteeing (weak) monotonicity
         # Less surprising for the user than a strict monotonicity dropping elements.
-        |> XestClock.Stream.monotone_increasing()
-        # from an int to a timevalue
-        |> as_timevalue(nu),
-      # add current local time for relative computations
-      # TODO : extract this timed stream into a specific type to simplify stream computations
-      # There should be a naive clock, and a clock with origin (to add proxy/timestamp behavior...)
-      #        |> Timed.timed()
-      #        # TODO : limiter : requests should not be faster than precision unit
-      #        # TODO : analyse current time vs received time to determine if we *should* request another, or just emulate (proxy)...
-      #        |> Limiter.limiter(nu)
-      #        # TODO : add proxy, in stream !
-      #        # remove current local time
-      #        |> Timed.untimed(),
+        |> XestClock.Stream.monotone_increasing(),
+      # from an int to a timevalue
+      #        |> as_timevalue(nu),
 
       # REMINDER: consuming the clock.stream directly should be "naive" (no idea of origin-from users point of view).
       # This is the point of the clock. so the internal stream is only naive time values...
       offset: Time.Stamp.new(origin, nu, offset)
     }
-  end
-
-  defp as_timevalue(enum, unit) do
-    Stream.transform(enum, nil, fn
-      {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, nil ->
-        now = Time.Value.new(unit, i)
-        # keep the current value in accumulator to compute derivatives later
-        {[{now, ts}], now}
-
-      i, nil ->
-        now = Time.Value.new(unit, i)
-        # keep the current value in accumulator to compute derivatives later
-        {[now], now}
-
-      {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, %Time.Value{} = ltv ->
-        #        IO.inspect(ltv)
-        now = Time.Value.new(unit, i) |> Time.Value.with_previous(ltv)
-        {[{now, ts}], now}
-
-      i, %Time.Value{} = ltv ->
-        #        IO.inspect(ltv)
-        now = Time.Value.new(unit, i) |> Time.Value.with_previous(ltv)
-        {[now], now}
-    end)
   end
 
   #  @doc """
@@ -186,10 +140,11 @@ defmodule XestClock.StreamClock do
   #    |> add_offset(offset(clock, followed))
   #  end
 
-  @doc """
-    Implements the enumerable protocol for a clock, so that it can be used as a `Stream`.
-  """
   defimpl Enumerable, for: __MODULE__ do
+    @moduledoc """
+      Implements the enumerable protocol for a clock, so that it can be used as a `Stream`.
+    """
+
     # early errors (duplicating stream code here to get the correct module in case of error)
     def count(_clock), do: {:error, __MODULE__}
 
@@ -205,38 +160,26 @@ defmodule XestClock.StreamClock do
     def reduce(clock, {:cont, acc}, fun) do
       clock.stream
       # as timestamp, only when we consume from the clock itself.
-      |> as_timestamp(clock.origin)
+      |> Time.Stamp.stream(clock.origin)
       # delegating continuing reduce to the generic Enumerable implementation of reduce
       |> Enumerable.reduce({:cont, acc}, fun)
-    end
-
-    defp as_timestamp(enum, origin) do
-      Stream.map(enum, fn
-        {%Time.Value{} = tv, %XestClock.Stream.Timed.LocalStamp{} = lts} ->
-          {%Time.Stamp{origin: origin, ts: tv}, lts}
-
-        %Time.Value{} = tv ->
-          %Time.Stamp{origin: origin, ts: tv}
-
-        elem ->
-          %Time.Stamp{origin: origin, ts: elem}
-      end)
     end
 
     # TODO : timed reducer based on unit ??
     # We dont want the enumeration to be faster than the unit...
   end
 
-  @spec convert(t(), System.time_unit()) :: t()
-  def convert(%__MODULE__{} = clockstream, unit) do
-    # TODO :careful with loss of precision !!
-    %{
-      clockstream
-      | stream:
-          clockstream.stream
-          |> Stream.map(fn ts -> System.convert_time_unit(ts.value, ts.unit, unit) end)
-    }
-  end
+  # Not useful ?
+  #  @spec convert(t(), System.time_unit()) :: t()
+  #  def convert(%__MODULE__{} = clockstream, unit) do
+  #    # TODO :careful with loss of precision !!
+  #    %{
+  #      clockstream
+  #      | stream:
+  #          clockstream.stream
+  #          |> Stream.map(fn ts -> System.convert_time_unit(ts.value, ts.unit, unit) end)
+  #    }
+  #  end
 
   # TODO : move that to a Datetime module specific for those APIs...
   #  find how to relate to from_unix DateTime API... maybe using a clock process ??

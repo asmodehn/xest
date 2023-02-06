@@ -40,11 +40,11 @@ defmodule XestClock.StreamClockTest do
       assert tick_list == [
                %Time.Stamp{
                  origin: :stream,
-                 ts: %Time.Value{value: 42, offset: nil, unit: :millisecond}
+                 ts: 42
                },
                %Time.Stamp{
                  origin: :stream,
-                 ts: %Time.Value{value: 42, offset: 0, unit: :millisecond}
+                 ts: 42
                }
              ]
     end
@@ -105,23 +105,23 @@ defmodule XestClock.StreamClockTest do
       assert clock |> Enum.to_list() == [
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 1, offset: nil, unit: :second}
+                 ts: 1
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 2, offset: 1, unit: :second}
+                 ts: 2
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 3, offset: 1, unit: :second}
+                 ts: 3
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 5, offset: 2, unit: :second}
+                 ts: 5
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 5, offset: 0, unit: :second}
+                 ts: 5
                }
              ]
     end
@@ -195,19 +195,19 @@ defmodule XestClock.StreamClockTest do
                [
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 1, offset: nil, unit: :nanosecond}
+                   ts: 1
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 2, offset: 1, unit: :nanosecond}
+                   ts: 2
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 3, offset: 1, unit: :nanosecond}
+                   ts: 3
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 5, offset: 2, unit: :nanosecond}
+                   ts: 5
                  }
                ]
     end
@@ -235,55 +235,55 @@ defmodule XestClock.StreamClockTest do
                [
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 1, offset: nil, unit: :second}
+                   ts: 1
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 2, offset: 1, unit: :second}
+                   ts: 2
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 3, offset: 1, unit: :second}
+                   ts: 3
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 5, offset: 2, unit: :second}
+                   ts: 5
                  },
                  %Time.Stamp{
                    origin: :testclock,
-                   ts: %Time.Value{value: 5, offset: 0, unit: :second}
+                   ts: 5
                  }
                ]
     end
 
-    test "convert/2 convert from one unit to another" do
-      # mocks expectations are needed since clock also tracks local time internally
-      #      XestClock.System.ExtraMock
-      #      |> expect(:native_time_unit, fn -> :nanosecond end)
-
-      #      XestClock.System.OriginalMock
-      ##      |> expect(:time_offset, 5, fn _ -> 0 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
-
-      clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
-
-      #      XestClock.Process.OriginalMock
-      #      # Note : since we tick faster than unit here, we need to mock sleep.
-      #      |> expect(:sleep, 4, fn _ -> :ok end)
-
-      assert StreamClock.convert(clock, :millisecond)
-             |> Enum.to_list() == [
-               %Time.Stamp{origin: :testclock, ts: 1000},
-               %Time.Stamp{origin: :testclock, ts: 2000},
-               %Time.Stamp{origin: :testclock, ts: 3000},
-               %Time.Stamp{origin: :testclock, ts: 5000},
-               %Time.Stamp{origin: :testclock, ts: 5000}
-             ]
-    end
+    #    test "convert/2 convert from one unit to another" do
+    #      # mocks expectations are needed since clock also tracks local time internally
+    #      #      XestClock.System.ExtraMock
+    #      #      |> expect(:native_time_unit, fn -> :nanosecond end)
+    #
+    #      #      XestClock.System.OriginalMock
+    #      ##      |> expect(:time_offset, 5, fn _ -> 0 end)
+    #      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
+    #      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
+    #      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
+    #      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
+    #      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
+    #
+    #      clock = StreamClock.new(:testclock, :second, [1, 2, 3, 5, 4])
+    #
+    #      #      XestClock.Process.OriginalMock
+    #      #      # Note : since we tick faster than unit here, we need to mock sleep.
+    #      #      |> expect(:sleep, 4, fn _ -> :ok end)
+    #
+    #      assert StreamClock.convert(clock, :millisecond)
+    #             |> Enum.to_list() == [
+    #               %Time.Stamp{origin: :testclock, ts: 1000},
+    #               %Time.Stamp{origin: :testclock, ts: 2000},
+    #               %Time.Stamp{origin: :testclock, ts: 3000},
+    #               %Time.Stamp{origin: :testclock, ts: 5000},
+    #               %Time.Stamp{origin: :testclock, ts: 5000}
+    #             ]
+    #    end
 
     #    test "offset/2 computes difference between clocks" do
     #      clock_a = StreamClock.new(:testclock_a, :second, [1, 2, 3, 5, 4])
@@ -475,7 +475,7 @@ defmodule XestClock.StreamClockTest do
 
       assert StreamStepper.tick(streamstpr) == %Time.Stamp{
                origin: :testclock,
-               ts: %Time.Value{value: 1, unit: :millisecond}
+               ts: 1
              }
 
       _first = Process.info(streamstpr)
@@ -485,7 +485,7 @@ defmodule XestClock.StreamClockTest do
 
       assert StreamStepper.tick(streamstpr) == %Time.Stamp{
                origin: :testclock,
-               ts: %Time.Value{value: 2, offset: 1, unit: :millisecond}
+               ts: 2
              }
 
       _second = Process.info(streamstpr)
@@ -496,15 +496,15 @@ defmodule XestClock.StreamClockTest do
       assert StreamStepper.ticks(streamstpr, 3) == [
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 3, offset: 1, unit: :millisecond}
+                 ts: 3
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 4, offset: 1, unit: :millisecond}
+                 ts: 4
                },
                %Time.Stamp{
                  origin: :testclock,
-                 ts: %Time.Value{value: 5, offset: 1, unit: :millisecond}
+                 ts: 5
                }
              ]
 

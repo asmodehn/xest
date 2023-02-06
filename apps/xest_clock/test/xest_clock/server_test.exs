@@ -10,8 +10,8 @@ defmodule XestClock.ServerTest do
 
   require ExampleServer
 
-  describe "XestClock.Server" do
-    test "tick depends on unit on creation, it reached all the way to the callback" do
+  describe "tick" do
+    test " depends on unit on creation, it reached all the way to the callback" do
       # mocks expectations are needed since clock also tracks local time internally
       #      XestClock.System.ExtraMock
       #      |> expect(:native_time_unit, 4, fn -> :nanosecond end)
@@ -83,7 +83,6 @@ defmodule XestClock.ServerTest do
                    origin: ExampleServer,
                    ts: %XestClock.Time.Value{
                      value: 42 * unit_pps.(unit),
-                     offset: 0,
                      unit: unit
                    }
                  },
@@ -95,7 +94,6 @@ defmodule XestClock.ServerTest do
                  },
                  %XestClock.Stream.Timed.LocalDelta{
                    offset: %XestClock.Time.Value{
-                     offset: nil,
                      unit: unit,
                      value: 0
                    },
@@ -106,6 +104,26 @@ defmodule XestClock.ServerTest do
 
         stop_supervised!(srv_id)
       end
+    end
+  end
+
+  describe "monotonic_time" do
+    test "returns a local estimation of the remote clock with 2 local calls only" do
+      srv_id = String.to_atom("example_monotonic")
+
+      example_srv = start_supervised!({ExampleServer, :second}, id: srv_id)
+
+      # Preparing mocks for 2 + 1 ticks...
+      # This is used for local stamp -> only in ms
+      XestClock.System.OriginalMock
+      |> expect(:monotonic_time, 2, fn
+        :millisecond -> 51_000
+      end)
+      |> expect(:time_offset, 2, fn :millisecond -> 0 end)
+      |> allow(self(), example_srv)
+
+      # getting monotonic_time of the server gives us the value received from the remote clock
+      assert ExampleServer.monotonic_time(example_srv, :millisecond) == 42_000
     end
   end
 end

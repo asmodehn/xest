@@ -113,6 +113,38 @@ defmodule XestClock.Time.Value do
       }
     end
   end
+
+  @doc """
+    Take a stream of integer, and transform it to a stream of timevalues.
+    The stream may contain local timestamps.
+  """
+  def stream(enum, unit) do
+    Stream.transform(
+      enum |> XestClock.Stream.monotone_increasing(),
+      nil,
+      fn
+        {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, nil ->
+          now = new(unit, i)
+          # keep the current value in accumulator to compute derivatives later
+          {[{now, ts}], now}
+
+        i, nil ->
+          now = new(unit, i)
+          # keep the current value in accumulator to compute derivatives later
+          {[now], now}
+
+        {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, %__MODULE__{} = ltv ->
+          #        IO.inspect(ltv)
+          now = new(unit, i) |> with_previous(ltv)
+          {[{now, ts}], now}
+
+        i, %__MODULE__{} = ltv ->
+          #        IO.inspect(ltv)
+          now = new(unit, i) |> with_previous(ltv)
+          {[now], now}
+      end
+    )
+  end
 end
 
 defimpl String.Chars, for: XestClock.Time.Value do

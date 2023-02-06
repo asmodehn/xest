@@ -24,7 +24,7 @@ defmodule XestClock.Server do
   #              | :ignore
   #              | {:stop, reason :: any}
   #            when state: any
-  @callback handle_remote_unix_time(System.time_unit()) :: integer()
+  @callback handle_remote_unix_time(System.time_unit()) :: Time.Value.t()
 
   # callbacks to nudge the user towards code clarity with an explicit interface
   # good or bad idae ???
@@ -114,18 +114,13 @@ defmodule XestClock.Server do
       XestClock.StreamClock.new(
         origin,
         unit,
+        # throttling remote requests, adding local timestamp
         XestClock.Stream.repeatedly_throttled(
           min_handle_remote_period,
           # getting remote time via callback (should have been setup by __using__ macro)
           fn -> remote_unit_time_handler.(unit) end
         )
       )
-      # Note these apply to the whole streamclock to stamp each event...
-      # specifying unit so we do not rely on the System native unit.
-      #      |> Timed.timed(unit)
-      # requests should not be faster than rate_limit
-      # Note: this will sleep if necessary, in server process, when the stream will be traversed.
-      #      |> Limiter.max_rate(rate_limit)
       # we compute local delta here in place where we have easy access to element in the stream
       |> Timed.LocalDelta.compute()
 
@@ -145,4 +140,24 @@ defmodule XestClock.Server do
   def ticks(pid \\ __MODULE__, demand) do
     GenServer.call(pid, {:ticks, demand})
   end
+
+  @doc """
+  Computes monotonic time of the remote clock, by adding its offset.
+  """
+  def monotonic_time(pid \\ __MODULE__, unit) do
+    {_rts, _lts, dv} = List.first(ticks(pid, 1))
+
+    XestClock.Time.Value.sum(
+      Timed.LocalStamp.now(unit).monotonic,
+      dv.offset
+    )
+    |> XestClock.Time.Value.convert(unit)
+    |> Map.get(:value)
+
+    # TODO : what to do with skew / error ???
+  end
+
+  #  def system_time(pid \\ __MODULE__, unit) do
+  #    monotonic_time
+  #  end
 end

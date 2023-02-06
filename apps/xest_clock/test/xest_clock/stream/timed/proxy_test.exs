@@ -2,12 +2,12 @@ defmodule XestClock.Stream.Timed.Proxy.Test do
   use ExUnit.Case
   doctest XestClock.Stream.Timed.Proxy
 
-  import Hammox
+  #  import Hammox
 
   alias XestClock.Stream.Timed.Proxy
-  alias XestClock.Stream.Timed.LocalStamp
+  #  alias XestClock.Stream.Timed.LocalStamp
   alias XestClock.Time
-  alias XestClock.Stream.Timed
+  #  alias XestClock.Stream.Timed
 
   describe "skew/2" do
     test "computes the ratio between two time offsets" do

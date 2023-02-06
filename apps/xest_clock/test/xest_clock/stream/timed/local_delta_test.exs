@@ -2,7 +2,7 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
   use ExUnit.Case
   doctest XestClock.Stream.Timed.LocalDelta
 
-  import Hammox
+  #  import Hammox
 
   alias XestClock.Time
   alias XestClock.Stream.Timed

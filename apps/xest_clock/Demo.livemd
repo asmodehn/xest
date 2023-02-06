@@ -45,14 +45,17 @@ v_sec =
 We can then imagine doing this multiple times in a row.
 This is a stream of observed ticks of the remote clock.
 
-Note we need to throttle the requests to the server, to avoid meaningless requests.
-This means we will also get a local timestamp in the stream.
+Note: we need to **throttle the requests** to the server, to avoid meaningless traffic.
+This means we will also get a local timestamp in the stream, which we can ignore on the next stream operator.
 
 ```elixir
 XestClock.Stream.repeatedly_throttled(1000, fn ->
   Req.get!("http://worldtimeapi.org/api/timezone/Etc/UTC", cache: false).body["unixtime"]
 end)
-|> Stream.map(fn {rv, _local_timestamp} ->
+|> Stream.map(fn {rv, local_timestamp} ->
+  # only display the timestamp
+  IO.inspect(local_timestamp)
+
   XestClock.Time.Value.new(:second, rv)
   |> XestClock.Time.Value.convert(:second)
 end)
@@ -61,7 +64,7 @@ end)
 
 ## Remote Clock Stream with limiter
 
-Now lets put this in a module for reusability.
+If we put this in a module, we can now simply access the remote clock via a stream of successive ticks.
 
 ```elixir
 defmodule WorldClock do
@@ -91,12 +94,50 @@ WorldClock.stream(:second) |> Enum.take(3)
 
 ## The Server
 
-```elixir
+We can now build a local "image" of the remote clock, with `XestClock.Server`.
+This allow us to simulate a clock locally.
 
+Notice how `XestClock.Server` provides the monotonic_time/2 impure function to retrieve the time.
+
+```elixir
+defmodule WorldClockProxy do
+  use XestClock.Server
+
+  # Client Code
+  @impl true
+  def start_link(unit, opts \\ []) when is_list(opts) do
+    XestClock.Server.start_link(__MODULE__, unit, opts)
+  end
+
+  @impl true
+  def init(state) do
+    XestClock.Server.init(state, &handle_remote_unix_time/1)
+  end
+
+  def monotonic_time(pid \\ __MODULE__, unit) do
+    XestClock.Server.monotonic_time(pid, unit)
+  end
+
+  @impl true
+  def ticks(pid \\ __MODULE__, demand) do
+    XestClock.Server.ticks(pid, demand)
+  end
+
+  @impl true
+  def handle_remote_unix_time(unit) do
+    XestClock.Time.Value.new(:second, WorldClock.unixtime())
+    # we need to convert to whatever unit is expected in stream
+    |> XestClock.Time.Value.convert(unit)
+    |> IO.inspect()
+  end
+end
+
+# a server that tracks a remote clock internally in seconds
+{:ok, spid} = WorldClockProxy.start_link(:second)
+# a one time call, asking for a remote time (estimated) in millisecond
+WorldClockProxy.monotonic_time(spid, :millisecond)
 ```
 
 ## Useful Stream Operators
-
-## The Proxy
 
 ## XestClock API

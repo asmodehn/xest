@@ -25,16 +25,14 @@ defmodule ExampleServer do
     XestClock.Server.ticks(pid, demand)
   end
 
+  def monotonic_time(pid \\ __MODULE__, unit) do
+    XestClock.Server.monotonic_time(pid, unit)
+  end
+
   ## Callbacks
   @impl true
   def handle_remote_unix_time(unit) do
-    case unit do
-      :second -> 42
-      :millisecond -> 42_000
-      :microsecond -> 42_000_000
-      :nanosecond -> 42_000_000_000
-      # default and parts per seconds
-      pps -> 42 * pps
-    end
+    XestClock.Time.Value.new(:second, 42)
+    |> XestClock.Time.Value.convert(unit)
   end
 end
