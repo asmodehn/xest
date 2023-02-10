@@ -51,7 +51,6 @@ defmodule XestClock.ServerTest do
                    origin: ExampleServer,
                    ts: %XestClock.Time.Value{
                      value: 42 * unit_pps.(unit),
-                     offset: nil,
                      unit: unit
                    }
                  },
@@ -63,7 +62,6 @@ defmodule XestClock.ServerTest do
                  },
                  %XestClock.Stream.Timed.LocalDelta{
                    offset: %XestClock.Time.Value{
-                     offset: nil,
                      unit: unit,
                      value: 0
                    },

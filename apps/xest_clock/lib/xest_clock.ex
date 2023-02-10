@@ -26,6 +26,8 @@ defmodule XestClock do
 
   alias XestClock.StreamClock
 
+  alias XestClock.Time
+
   @doc """
     A StreamClock for a remote clock.
 
@@ -37,18 +39,47 @@ defmodule XestClock do
   """
   def new(unit, System), do: StreamClock.new(XestClock.System, unit)
 
-  #
-  #      def new(unit, origin) when is_atom(origin) do
-  #      {:ok, pid} = origin.start_link(unit)
-  #        new(unit, pid)
-  #      end
-  #
-  #      def new(unit, origin) when is_pid(origin) do
-  #
-  #        remote = StreamClock.new(origin, unit, Stream.repeatedly(fn
-  #                            -> origin.tick(pid)
-  #        end))
-  #
+  def new(unit, origin) when is_atom(origin) do
+    {:ok, pid} = origin.start_link(unit)
+    new(unit, origin, pid)
+  end
+
+  def new(unit, origin, pid) when is_atom(origin) and is_pid(pid) do
+    local = new(unit, System)
+
+    local
+    |> Stream.transform(nil, fn
+      # TODO : first investigate how to rely on known algorithm (pid controller or so)
+      # TODO : second, split this transform in multiple composable stream transformers...
+      %Time.Stamp{ts: %Time.Value{} = tv}, nil ->
+        # TODO : note this is still WIP, probably not what we want in the end...
+        {_rts, _lts, dv} = origin.tick(pid)
+
+        # compute estimate
+        est = Time.Estimate.new(tv, dv)
+
+        {[est], {dv, est}}
+
+      %Time.Stamp{ts: %Time.Value{} = tv}, {dv, previous} ->
+        # compute estimate
+        est = Time.Estimate.new(tv, dv)
+
+        # if error increase, we request again...
+        # TODO : this looks like a pid controller doesnt it ???
+        if est.error > previous.error do
+          {_rts, _lts, dv} = origin.tick(pid)
+
+          # compute estimate again
+          est = Time.Estimate.new(tv, dv)
+          # recent -> as good as possible right now
+          # => return
+          {[est], {dv, est}}
+        else
+          {[est], {dv, est}}
+        end
+    end)
+  end
+
   #        # TODO :split this into useful stream operators...
   #        # estimate remote from previous requests
   #        clock |> Stream.transform(nil, fn

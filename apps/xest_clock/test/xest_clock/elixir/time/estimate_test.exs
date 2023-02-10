@@ -12,8 +12,7 @@ defmodule XestClock.Time.Estimate.Test do
       assert Estimate.new(
                %Time.Value{
                  unit: :millisecond,
-                 value: 42,
-                 offset: nil
+                 value: 42
                },
                %Timed.LocalDelta{
                  offset: %Time.Value{

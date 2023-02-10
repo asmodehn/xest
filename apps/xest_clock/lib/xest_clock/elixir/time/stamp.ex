@@ -35,11 +35,6 @@ defmodule XestClock.Time.Stamp do
     }
   end
 
-  def with_previous(%__MODULE__{} = current, %__MODULE__{} = previous)
-      when current.origin == previous.origin do
-    %{current | ts: current.ts |> Time.Value.with_previous(previous.ts)}
-  end
-
   def stream(enum, origin) do
     Stream.map(enum, fn
       # special condition for localstamp to not embed it in (remote or not) timestamp

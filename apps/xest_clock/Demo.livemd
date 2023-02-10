@@ -3,8 +3,12 @@
 ```elixir
 Mix.install([
   {:req, "~> 0.3"},
-  {:xest_clock, path: "."}
+  {:xest_clock, path: "."},
+  {:vega_lite, "~> 0.1.6"},
+  {:kino_vega_lite, "~> 0.1.7"}
 ])
+
+alias VegaLite, as: Vl
 ```
 
 ## Introduction
@@ -150,12 +154,34 @@ XestClock.Server.error(spid, :millisecond)
 ```
 
 When we have more ticks, we can compute the skew of the remote clock,
-and we get a more refined estimation for the error:
+and we get a more refined estimation for the error.
+
+Feel free to evaluate this cell multiple time, until error is not zero:
 
 ```elixir
 # a one time call, asking for a remote time (estimated) in millisecond
 WorldClockProxy.monotonic_time(spid, :millisecond)
 XestClock.Server.error(spid, :millisecond)
+```
+
+## Let's see it in action !
+
+Kino TODO
+
+```elixir
+chart =
+  Vl.new(width: 800, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Kino.VegaLite.new()
+  |> Kino.render()
+
+for i <- 1..300 do
+  point = %{x: i / 10, y: :math.sin(i / 10)}
+  Kino.VegaLite.push(chart, point)
+  Process.sleep(25)
+end
 ```
 
 ## Useful Stream Operators

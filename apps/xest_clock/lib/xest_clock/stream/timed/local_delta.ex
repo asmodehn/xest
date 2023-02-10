@@ -89,7 +89,7 @@ defmodule XestClock.Stream.Timed.LocalDelta do
       )
       # assumes no skew -> offset constant -> no error (best effort)
       when is_nil(dv.skew),
-      do: 0.0
+      do: Time.Value.new(dv.offset.unit, 0)
 
   # TODO : maybe we should get rid of this particular nil case for skew ??
   # assumes it is 1.0 ??? 0.0 ??? offset ??? default to initial object ??

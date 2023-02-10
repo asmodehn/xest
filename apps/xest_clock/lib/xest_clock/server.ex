@@ -150,7 +150,38 @@ defmodule XestClock.Server do
   end
 
   @doc """
-  Computes monotonic time of the remote clock, by adding its offset.
+    Estimates the current remote now, simply adding the local_offset to the last known remote time
+
+     If we denote by [-1] the previous measurement:
+      remote_now = remote_now[-1] + (local_now - localnow[-1])
+     where (local_now - localnow[-1]) = local_offset (kept inthe timeVaue structure)
+
+  This comes from the intuitive newtonian assumption that time flows "at similar speed" in the remote location.
+    Note this is only true if the remote is not moving too fast relatively to the local machine.
+
+    Here we also need to estimate the error in case this is not true, or both clocks are not in sync for any reason.
+
+  Let's expose a potential slight linear skew to the remote clock (relative to the local one) and calculate the error
+
+  remote_now = (remote_now - remote_now[-1]) + remote_now[-1]
+             = (remote_now - remote_now[-1]) / (local_now - local_now[-1]) * (local_now -local_now[-1]) + remote_now[-1]
+
+  we can see (local_now - local_now[-1]) is the time elapsed and the factor (remote_now - remote_now[-1]) / (local_now - local_now[-1])
+    is the skew between the two clocks, since we do not assume them to be equal any longer.
+    This can be rewritten with local_offset = local_now - local_now[-1]:
+
+    remote_now = remote_offset / local_offset * local_offset + remote_now[-1]
+
+    remote_offset is unknown, but can be estimated in this setting, if we suppose the skew is the same as it was in the previous step,
+    since we have the previous offset difference of both remote and local in the time value struct
+      let remote_skew = remote_offset[-1] / local_offset[-1]
+          remote_now = remote_skew * local_offset + remote_now[-1]
+
+    Given our previous estimation, we can calculate the error, by removing the estimation from the previous formula:
+
+      err = remote_skew * local_offset + remote_now[-1] - remote_now[-1] - local_offset
+          = (remote_skew - 1) * local_offset
+
   """
   def monotonic_time(pid \\ __MODULE__, unit) do
     # Check if retrieving time is actually needed

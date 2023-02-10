@@ -7,14 +7,9 @@ defmodule XestClock.Time.Value do
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
 
-  @derive {Inspect, optional: [:offset]}
-
   @enforce_keys [:unit, :value]
   defstruct unit: nil,
-            value: nil,
-            # TODO : handle derivative separately
-            # first order derivative, the difference of two monotonic values.
-            offset: nil
+            value: nil
 
   # TODO: offset is useful but could probably be transferred inside the stream operators, where it is used
   # TODO: we should add a precision / error interval
@@ -24,11 +19,7 @@ defmodule XestClock.Time.Value do
   @typedoc "TimeValue struct"
   @type t() :: %__MODULE__{
           unit: System.time_unit(),
-          value: integer(),
-          # TODO : separate this out ? or call it differently ? it "offset" from last tick...
-          # ideas : "bump", "progress", "increase"
-          # TODO : maybe only have it inside stream transformers ?
-          offset: integer()
+          value: integer()
         }
 
   # TODO : keep making the same mistake -> reverse params ?
@@ -39,18 +30,10 @@ defmodule XestClock.Time.Value do
     }
   end
 
-  def with_previous(%__MODULE__{} = current, %__MODULE__{} = previous)
-      when current.unit == previous.unit do
-    %{
-      current
-      | offset: current.value - previous.value
-    }
-  end
-
   @spec convert(t(), System.time_unit()) :: t()
   def convert(%__MODULE__{} = tv, unit) when tv.unit == unit, do: tv
 
-  def convert(%__MODULE__{} = tv, unit) when is_nil(tv.offset) do
+  def convert(%__MODULE__{} = tv, unit) do
     new(
       unit,
       System.convert_time_unit(
@@ -61,38 +44,17 @@ defmodule XestClock.Time.Value do
     )
   end
 
-  def convert(%__MODULE__{} = tv, unit) do
-    %{
-      new(
-        unit,
-        System.convert_time_unit(
-          tv.value,
-          tv.unit,
-          unit
-        )
-      )
-      | offset:
-          System.convert_time_unit(
-            tv.offset,
-            tv.unit,
-            unit
-          )
-    }
-  end
-
   def diff(%__MODULE__{} = tv1, %__MODULE__{} = tv2) do
     if System.convert_time_unit(1, tv1.unit, tv2.unit) < 1 do
       # invert conversion to avoid losing precision
       %__MODULE__{
         unit: tv1.unit,
         value: tv1.value - convert(tv2, tv1.unit).value
-        # Note: previous existing offset in tv1 and tv2 loses any meaning.
       }
     else
       %__MODULE__{
         unit: tv2.unit,
         value: convert(tv1, tv2.unit).value - tv2.value
-        # Note: previous existing offset in tv1 and tv2 loses any meaning.
       }
     end
   end
@@ -103,13 +65,11 @@ defmodule XestClock.Time.Value do
       %__MODULE__{
         unit: tv1.unit,
         value: tv1.value + convert(tv2, tv1.unit).value
-        # Note: previous existing offset in tv1 and tv2 loses any meaning.
       }
     else
       %__MODULE__{
         unit: tv2.unit,
         value: convert(tv1, tv2.unit).value + tv2.value
-        # Note: previous existing offset in tv1 and tv2 loses any meaning.
       }
     end
   end
@@ -119,7 +79,6 @@ defmodule XestClock.Time.Value do
     %__MODULE__{
       unit: tv.unit,
       value: round(tv.value * factor)
-      # Note: previous existing offset in tv1 and tv2 loses any meaning.
     }
   end
 
@@ -131,8 +90,6 @@ defmodule XestClock.Time.Value do
 
   def div(%__MODULE__{} = tv_num, %__MODULE__{} = tv_den)
       when tv_den.value != 0 do
-    IO.inspect(tv_den)
-
     if System.convert_time_unit(1, tv_num.unit, tv_den.unit) < 1 do
       # invert conversion to avoid losing precision
       tv_num.value / convert(tv_den, tv_num.unit).value
@@ -146,6 +103,7 @@ defmodule XestClock.Time.Value do
     The stream may contain local timestamps.
   """
   def stream(enum, unit) do
+    # TODO : map instead ?
     Stream.transform(
       enum |> XestClock.Stream.monotone_increasing(),
       nil,
@@ -160,14 +118,14 @@ defmodule XestClock.Time.Value do
           # keep the current value in accumulator to compute derivatives later
           {[now], now}
 
-        {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, %__MODULE__{} = ltv ->
+        {i, %XestClock.Stream.Timed.LocalStamp{} = ts}, %__MODULE__{} = _ltv ->
           #        IO.inspect(ltv)
-          now = new(unit, i) |> with_previous(ltv)
+          now = new(unit, i)
           {[{now, ts}], now}
 
-        i, %__MODULE__{} = ltv ->
+        i, %__MODULE__{} = _ltv ->
           #        IO.inspect(ltv)
-          now = new(unit, i) |> with_previous(ltv)
+          now = new(unit, i)
           {[now], now}
       end
     )
@@ -189,7 +147,7 @@ defimpl String.Chars, for: XestClock.Time.Value do
         :millisecond -> "ms"
         :microsecond -> "μs"
         :nanosecond -> "ns"
-        pps -> " @ #{pps} Hz}"
+        pps -> " @ #{pps} Hz"
       end
 
     "#{ts} #{unit}"

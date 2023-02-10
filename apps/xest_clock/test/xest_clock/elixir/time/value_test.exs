@@ -16,43 +16,19 @@ defmodule XestClock.Time.Value.Test do
 
       assert Value.new(:millisecond, 42) == %Value{
                unit: :millisecond,
-               value: 42,
-               offset: nil
+               value: 42
              }
-    end
-  end
-
-  describe "with_previous/2" do
-    test " adds offset to existing value" do
-      assert Value.new(:millisecond, 42)
-             |> Value.with_previous(%Value{
-               unit: :millisecond,
-               value: 33
-             }) ==
-               %Value{
-                 unit: :millisecond,
-                 value: 42,
-                 # 42 - 33
-                 offset: 9
-               }
     end
   end
 
   describe "convert/2" do
     test "converts timevalue with offset to a different time_unit" do
-      v =
-        Value.new(:millisecond, 42)
-        |> Value.with_previous(%Value{
-          unit: :millisecond,
-          value: 33
-        })
+      v = Value.new(:millisecond, 42)
 
       assert Value.convert(v, :microsecond) ==
                %Value{
                  unit: :microsecond,
-                 value: 42_000,
-                 # 42000 - 33000
-                 offset: 9_000
+                 value: 42_000
                }
     end
   end
