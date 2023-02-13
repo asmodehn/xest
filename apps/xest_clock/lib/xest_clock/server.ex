@@ -150,6 +150,32 @@ defmodule XestClock.Server do
   end
 
   @doc """
+    compute the current error of the server from its state.
+  """
+  @spec error(pid, System.time_unit()) :: {Time.Value.t(), Timed.LocalDelta.t()}
+  def error(pid \\ __MODULE__, unit) do
+    case previous_tick(pid) do
+      nil ->
+        # TODO : initial element of their algebraic category as default ? better way ??...
+        error = XestClock.Time.Value.new(unit, 0)
+
+        delta = %Timed.LocalDelta{
+          offset: XestClock.Time.Value.new(unit, 0),
+          skew: 0.0
+        }
+
+        {error, delta}
+
+      {_rts, lts, dv} ->
+        error =
+          Timed.LocalDelta.error_since(dv, lts)
+          |> XestClock.Time.Value.convert(unit)
+
+        {error, dv}
+    end
+  end
+
+  @doc """
     Estimates the current remote now, simply adding the local_offset to the last known remote time
 
      If we denote by [-1] the previous measurement:
@@ -183,12 +209,15 @@ defmodule XestClock.Server do
           = (remote_skew - 1) * local_offset
 
   """
+  @spec monotonic_time(pid, System.time_unit()) :: integer
   def monotonic_time(pid \\ __MODULE__, unit) do
     # Check if retrieving time is actually needed
     {err, delta} = error(pid, unit)
-    # TODO : make precision :second a parameter...
+
     dv =
-      if err > :second do
+      if err > unit do
+        # here we use unit as the precision.
+        # the assumption is that we should attempt to keep the precision under the requested unit
         List.first(ticks(pid, 1)) |> elem(2)
       else
         delta
@@ -202,31 +231,5 @@ defmodule XestClock.Server do
     |> Map.get(:value)
 
     # TODO : what to do with skew / error ???
-  end
-
-  @doc """
-    compute the current error of the server from its state.
-  """
-  @spec error(pid, System.time_unit()) :: {Time.Value.t(), Timed.LocalDelta.t()}
-  def error(pid \\ __MODULE__, unit) do
-    case previous_tick(pid) do
-      nil ->
-        # TODO : initial element of their algebraic category as default ? better way ??...
-        error = XestClock.Time.Value.new(unit, 0)
-
-        delta = %Timed.LocalDelta{
-          offset: XestClock.Time.Value.new(unit, 0),
-          skew: 0.0
-        }
-
-        {error, delta}
-
-      {_rts, lts, dv} ->
-        error =
-          Timed.LocalDelta.error_since(dv, lts)
-          |> XestClock.Time.Value.convert(unit)
-
-        {error, dv}
-    end
   end
 end

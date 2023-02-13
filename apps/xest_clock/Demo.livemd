@@ -91,8 +91,6 @@ defmodule WorldClock do
   end
 end
 
-# The two first request will be immediate to establish an offset
-# The third one will come a bit after...
 WorldClock.stream(:second) |> Enum.take(3)
 ```
 
@@ -101,7 +99,7 @@ WorldClock.stream(:second) |> Enum.take(3)
 We can now build a local "image" of the remote clock, with `XestClock.Server`.
 This allow us to simulate a clock locally.
 
-Notice how `XestClock.Server` provides the monotonic_time/2 impure function to retrieve the time.
+Notice how `XestClock.Server` provides the `monotonic_time/2` impure function to retrieve the time.
 
 ```elixir
 defmodule WorldClockProxy do
@@ -136,11 +134,11 @@ defmodule WorldClockProxy do
   end
 end
 
-# a server that tracks a remote clock internally in seconds
-{:ok, spid} = WorldClockProxy.start_link(:second)
+# a server that tracks a remote clock internally in milliseconds
+{:ok, spid} = WorldClockProxy.start_link(:millisecond)
 ```
 
-a one time call, asking for a remote time (estimated) in millisecond
+a one time call, asking for a remote time (estimated) in `:millisecond`
 
 ```elixir
 # a one time call, asking for a remote time (estimated) in millisecond
@@ -177,10 +175,22 @@ chart =
   |> Kino.VegaLite.new()
   |> Kino.render()
 
-for i <- 1..300 do
-  point = %{x: i / 10, y: :math.sin(i / 10)}
+local_start = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+
+for _ <- 1..30 do
+  # This will emulate remote time and if necessary do a remote call
+  # Since the millisecond precision is almost impossible to reach via a network.
+  _mono_time = WorldClockProxy.monotonic_time(spid, :millisecond)
+
+  # we want to watch the current error on the server
+  {error, _delta} = XestClock.Server.error(spid, :millisecond)
+  now = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+
+  # Note x is only local measurement of time (nothing remote)
+  # Only y measure of error, is the difference in offset between remote estimation and local value
+  point = %{x: now.monotonic.value - local_start.monotonic.value, y: error.value}
   Kino.VegaLite.push(chart, point)
-  Process.sleep(25)
+  Process.sleep(1000)
 end
 ```
 
