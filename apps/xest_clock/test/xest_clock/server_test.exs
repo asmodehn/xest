@@ -22,10 +22,10 @@ defmodule XestClock.ServerTest do
 
         example_srv = start_supervised!({ExampleServer, unit}, id: srv_id)
 
-        # Preparing mocks for 2 + 1 ticks...
+        # Preparing mocks for 2 calls for first tick...
         # This is used for local stamp -> only in ms
         XestClock.System.OriginalMock
-        |> expect(:monotonic_time, 3, fn
+        |> expect(:monotonic_time, 2, fn
           #          :second -> 42
           :millisecond -> 42_000
           #          :microsecond -> 42_000_000
@@ -33,7 +33,7 @@ defmodule XestClock.ServerTest do
           # default and parts per seconds
           pps -> 42 * pps
         end)
-        |> expect(:time_offset, 3, fn :millisecond -> 0 end)
+        |> expect(:time_offset, 2, fn :millisecond -> 0 end)
         |> allow(self(), example_srv)
 
         # Note : the local timestamp calls these one time only.
@@ -75,6 +75,20 @@ defmodule XestClock.ServerTest do
         |> expect(:sleep, 1, fn _ -> :ok end)
         |> allow(self(), example_srv)
 
+        # Preparing mocks for 3 (because sleep) more calls for next tick...
+        # This is used for local stamp -> only in ms
+        XestClock.System.OriginalMock
+        |> expect(:monotonic_time, 3, fn
+          #          :second -> 42
+          :millisecond -> 42_000
+          #          :microsecond -> 42_000_000
+          #          :nanosecond -> 42_000_000_000
+          # default and parts per seconds
+          pps -> 42 * pps
+        end)
+        |> expect(:time_offset, 3, fn :millisecond -> 0 end)
+        |> allow(self(), example_srv)
+
         # second tick
         assert ExampleServer.tick(example_srv) == {
                  %XestClock.Time.Stamp{
@@ -106,7 +120,7 @@ defmodule XestClock.ServerTest do
   end
 
   describe "monotonic_time" do
-    test "returns a local estimation of the remote clock with 2 local calls only" do
+    test "returns a local estimation of the remote clock with 2 + 1 local time calls only" do
       srv_id = String.to_atom("example_monotonic")
 
       example_srv = start_supervised!({ExampleServer, :second}, id: srv_id)
@@ -114,10 +128,10 @@ defmodule XestClock.ServerTest do
       # Preparing mocks for 2 + 1 ticks...
       # This is used for local stamp -> only in ms
       XestClock.System.OriginalMock
-      |> expect(:monotonic_time, 2, fn
+      |> expect(:monotonic_time, 3, fn
         :millisecond -> 51_000
       end)
-      |> expect(:time_offset, 2, fn :millisecond -> 0 end)
+      |> expect(:time_offset, 3, fn :millisecond -> 0 end)
       |> allow(self(), example_srv)
 
       # getting monotonic_time of the server gives us the value received from the remote clock

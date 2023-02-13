@@ -190,8 +190,8 @@ Note since we aim to reach milliseconds precision but we cannot, it is possible 
 chart =
   Vl.new(width: 800, height: 400)
   |> Vl.mark(:line)
-  |> Vl.encode_field(:x, "local ms", type: :quantitative)
-  |> Vl.encode_field(:y, "error ms", type: :quantitative)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
   |> Kino.VegaLite.new()
   |> Kino.render()
 
@@ -210,7 +210,7 @@ for _ <- 1..30 do
   # Only y measure of error, is the difference in offset between remote estimation and local value
   point = %{x: now.monotonic.value - local_start.monotonic.value, y: error.value}
   Kino.VegaLite.push(chart, point)
-  Process.sleep(1000)
+  :ok = Process.sleep(1000)
 end
 ```
 

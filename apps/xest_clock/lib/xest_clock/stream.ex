@@ -139,12 +139,20 @@ defmodule XestClock.Stream do
   defp do_repeatedly_throttled({min_period_ms, nil}, generator_fun, {:cont, acc}, fun) do
     # Note : min_period_ms is supposed to be in millisecond.
     # no point to be more precise here.
-    now = Timed.LocalStamp.now(:millisecond)
+    bef = Timed.LocalStamp.now(:millisecond)
+    result = generator_fun.()
+    aft = Timed.LocalStamp.now(:millisecond)
 
     do_repeatedly_throttled(
-      {min_period_ms, now},
+      {min_period_ms, aft},
       generator_fun,
-      fun.({generator_fun.(), now}, acc),
+      fun.(
+        {
+          result,
+          Timed.LocalStamp.middle_stamp_estimate(bef, aft)
+        },
+        acc
+      ),
       fun
     )
   end
@@ -152,10 +160,10 @@ defmodule XestClock.Stream do
   defp do_repeatedly_throttled({min_period_ms, lts}, generator_fun, {:cont, acc}, fun) do
     # Note : min_period_ms is supposed to be in millisecond.
     # no point to be more precise here.
-    now = Timed.LocalStamp.now(:millisecond)
+    bef = Timed.LocalStamp.now(:millisecond)
 
     # offset difference
-    current_offset = Time.Value.diff(now.monotonic, lts.monotonic)
+    current_offset = Time.Value.diff(bef.monotonic, lts.monotonic)
 
     # if the current time is far enough from previous ts
     to_wait = min_period_ms - current_offset.value
@@ -163,19 +171,28 @@ defmodule XestClock.Stream do
 
     #    IO.inspect("to_wait: #{to_wait}")
 
-    now_again =
+    bef_again =
       if to_wait > 0 do
         # SIDE_EFFECT !
         Process.sleep(to_wait)
         Timed.LocalStamp.now(:millisecond)
       else
-        now
+        bef
       end
 
+    result = generator_fun.()
+    aft = Timed.LocalStamp.now(:millisecond)
+
     do_repeatedly_throttled(
-      {min_period_ms, now_again},
+      {min_period_ms, aft},
       generator_fun,
-      fun.({generator_fun.(), now_again}, acc),
+      fun.(
+        {
+          result,
+          Timed.LocalStamp.middle_stamp_estimate(bef_again, aft)
+        },
+        acc
+      ),
       fun
     )
   end

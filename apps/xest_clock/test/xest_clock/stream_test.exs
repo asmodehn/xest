@@ -43,14 +43,22 @@ defmodule XestClock.StreamTest do
     test " allows the whole stream to be generated as usual, if the pulls are slow enough" do
       XestClock.System.OriginalMock
       # we dont care about offset here
-      |> expect(:time_offset, 5, fn _ -> 0 end)
+      |> expect(:time_offset, 10, fn _ -> 0 end)
       # each pull will take 1_500 ms but we need to duplicate each call
       # as one is timed measurement, and the other for the rate.
-      |> expect(:monotonic_time, fn :millisecond -> 42_000 end)
-      |> expect(:monotonic_time, fn :millisecond -> 43_500 end)
-      |> expect(:monotonic_time, fn :millisecond -> 45_000 end)
-      |> expect(:monotonic_time, fn :millisecond -> 46_500 end)
-      |> expect(:monotonic_time, fn :millisecond -> 48_000 end)
+      # BUT since we take mid time-of-flight,
+      # monotonic_time and time_offset are called a double number of times !
+
+      |> expect(:monotonic_time, fn :millisecond -> 41_998 end)
+      |> expect(:monotonic_time, fn :millisecond -> 42_002 end)
+      |> expect(:monotonic_time, fn :millisecond -> 43_498 end)
+      |> expect(:monotonic_time, fn :millisecond -> 43_502 end)
+      |> expect(:monotonic_time, fn :millisecond -> 44_998 end)
+      |> expect(:monotonic_time, fn :millisecond -> 45_002 end)
+      |> expect(:monotonic_time, fn :millisecond -> 46_498 end)
+      |> expect(:monotonic_time, fn :millisecond -> 46_502 end)
+      |> expect(:monotonic_time, fn :millisecond -> 47_998 end)
+      |> expect(:monotonic_time, fn :millisecond -> 48_002 end)
 
       # minimal period of 100 millisecond.
       # the period of time checks is much slower (1.5 s)
@@ -92,22 +100,32 @@ defmodule XestClock.StreamTest do
     test " throttles the stream generation, if the pulls are too fast" do
       XestClock.System.OriginalMock
       # we dont care about offset here
-      |> expect(:time_offset, 6, fn _ -> 0 end)
+      |> expect(:time_offset, 11, fn _ -> 0 end)
       # each pull will take 1_500 ms but we need to duplicate each call
       # as one is timed measurement, and the other for the rate.
-      |> expect(:monotonic_time, fn :millisecond -> 42_000 end)
-      |> expect(:monotonic_time, fn :millisecond -> 43_500 end)
+      # BUT since we take mid time-of-flight,
+      # monotonic_time and time_offset are called a double number of times !
+      |> expect(:monotonic_time, fn :millisecond -> 41_998 end)
+      |> expect(:monotonic_time, fn :millisecond -> 42_002 end)
+      |> expect(:monotonic_time, fn :millisecond -> 43_498 end)
+      |> expect(:monotonic_time, fn :millisecond -> 43_502 end)
+
       # except for the third, which will be too fast, meaning the process will sleep...
       |> expect(:monotonic_time, fn :millisecond -> 44_000 end)
       # it will be called another time to correct the timestamp
-      |> expect(:monotonic_time, fn :millisecond -> 44_999 end)
+      |> expect(:monotonic_time, fn :millisecond -> 44_997 end)
+      # and once more after the request
+      |> expect(:monotonic_time, fn :millisecond -> 45_001 end)
       # but then we revert to slow enough timing
-      |> expect(:monotonic_time, fn :millisecond -> 46_500 end)
-      |> expect(:monotonic_time, fn :millisecond -> 48_000 end)
+
+      |> expect(:monotonic_time, fn :millisecond -> 46_498 end)
+      |> expect(:monotonic_time, fn :millisecond -> 46_502 end)
+      |> expect(:monotonic_time, fn :millisecond -> 47_998 end)
+      |> expect(:monotonic_time, fn :millisecond -> 48_002 end)
 
       XestClock.Process.OriginalMock
       # sleep should be called with 0.5 ms = 500 us
-      |> expect(:sleep, fn 500 -> :ok end)
+      |> expect(:sleep, fn 502 -> :ok end)
 
       # limiter : ten per second
       assert Stream.repeatedly_throttled(1000, fn -> 42 end)
@@ -126,7 +144,7 @@ defmodule XestClock.StreamTest do
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 44999},
+                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 45000},
                   unit: :millisecond,
                   vm_offset: 0
                 }},
