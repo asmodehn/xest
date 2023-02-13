@@ -77,9 +77,22 @@ defmodule XestClock.Stream do
   end
 
   defp do_repeatedly_timed(precision, generator_fun, {:cont, acc}, fun) do
-    now = Timed.LocalStamp.now(precision)
+    bef = Timed.LocalStamp.now(precision)
+    result = generator_fun.()
+    aft = Timed.LocalStamp.now(precision)
 
-    do_repeatedly_timed(precision, generator_fun, fun.({generator_fun.(), now}, acc), fun)
+    do_repeatedly_timed(
+      precision,
+      generator_fun,
+      fun.(
+        {
+          result,
+          Timed.LocalStamp.middle_stamp_estimate(bef, aft)
+        },
+        acc
+      ),
+      fun
+    )
   end
 
   @doc """

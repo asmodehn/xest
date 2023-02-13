@@ -33,7 +33,6 @@ $ livebook server --port 4000
 - [X] Clock as a Stream of Timestamps (internally integers for optimization)
 - [X] Clock with offset, used to simulate remote clocks locally.
 - [X] Clock Proxy to simulate a remote clock locally with `monotonic_time/1` client function
-- [ ] compute half time-of-flight for the request, for increase measurement precision
 - [ ] take multiple remote clock measurement in account when computing offset & skew. maybe remove outliers...
 - [ ] some clever way to improve error overtime ? PID controller of some sort (maybe reversed) ?
 

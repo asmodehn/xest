@@ -36,6 +36,20 @@ defmodule XestClock.Stream.Timed.LocalStamp do
     )
   end
 
+  def middle_stamp_estimate(%__MODULE__{} = lts_before, %__MODULE__{} = lts_after)
+      when lts_before.unit == lts_after.unit do
+    %__MODULE__{
+      unit: lts_before.unit,
+      monotonic:
+        Time.Value.sum(
+          Time.Value.scale(lts_before.monotonic, 0.5),
+          Time.Value.scale(lts_after.monotonic, 0.5)
+        ),
+      # here we suppose the vm offset only changes slowly and somehow regularly...
+      vm_offset: lts_before.vm_offset / 2 + lts_after.vm_offset / 2
+    }
+  end
+
   def convert(%__MODULE__{} = lts, unit) do
     nu = System.Extra.normalize_time_unit(unit)
 

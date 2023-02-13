@@ -13,9 +13,12 @@ defmodule XestClock.StreamTest do
   describe "repeatedly_timed/2" do
     test " adds a local timestamp to the element" do
       XestClock.System.OriginalMock
-      |> expect(:monotonic_time, fn :second -> 51_000 end)
-      |> expect(:monotonic_time, fn :second -> 51_500 end)
-      |> expect(:time_offset, 2, fn :second -> -33 end)
+      # since we take mid time-of-flight, monotonic_time and time_offset are called a double number of times !
+      |> expect(:monotonic_time, fn :second -> 50_998 end)
+      |> expect(:monotonic_time, fn :second -> 51_002 end)
+      |> expect(:monotonic_time, fn :second -> 51_499 end)
+      |> expect(:monotonic_time, fn :second -> 51_501 end)
+      |> expect(:time_offset, 4, fn :second -> -33 end)
 
       assert Stream.repeatedly_timed(:second, fn -> 42 end)
              |> Enum.take(2) == [
@@ -27,7 +30,8 @@ defmodule XestClock.StreamTest do
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :second, value: 51_500},
+                  # Note the rounding precision error...
+                  monotonic: %XestClock.Time.Value{unit: :second, value: 51_501},
                   unit: :second,
                   vm_offset: -33
                 }}

@@ -28,6 +28,8 @@ A stream of remote clock ticks can be built and operated on, to extract from it 
 
 As an example, let's take a remote clock indicating UTC time
 
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
 remote_unixtime =
   Req.get!("http://worldtimeapi.org/api/timezone/Etc/UTC", cache: false).body["unixtime"]
@@ -36,6 +38,8 @@ remote_unixtime =
 ## Time Values and conversion
 
 We can take that value and put it in a structure managing time units conversion
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 v_sec =
@@ -51,6 +55,8 @@ This is a stream of observed ticks of the remote clock.
 
 Note: we need to **throttle the requests** to the server, to avoid meaningless traffic.
 This means we will also get a local timestamp in the stream, which we can ignore on the next stream operator.
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 XestClock.Stream.repeatedly_throttled(1000, fn ->
@@ -69,6 +75,8 @@ end)
 ## Remote Clock Stream with limiter
 
 If we put this in a module, we can now simply access the remote clock via a stream of successive ticks.
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 defmodule WorldClock do
@@ -100,6 +108,8 @@ We can now build a local "image" of the remote clock, with `XestClock.Server`.
 This allow us to simulate a clock locally.
 
 Notice how `XestClock.Server` provides the `monotonic_time/2` impure function to retrieve the time.
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 defmodule WorldClockProxy do
@@ -140,12 +150,16 @@ end
 
 a one time call, asking for a remote time (estimated) in `:millisecond`
 
+<!-- livebook:{"reevaluate_automatically":true} -->
+
 ```elixir
 # a one time call, asking for a remote time (estimated) in millisecond
 WorldClockProxy.monotonic_time(spid, :millisecond)
 ```
 
 we can also ask an estimation for the error. However at first it is a bit rough
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 XestClock.Server.error(spid, :millisecond)
@@ -154,7 +168,9 @@ XestClock.Server.error(spid, :millisecond)
 When we have more ticks, we can compute the skew of the remote clock,
 and we get a more refined estimation for the error.
 
-Feel free to evaluate this cell multiple time, until error is not zero:
+Feel free to evaluate this cell multiple time if needed, skew should not be zero, since `:millisecond` precision is not reachable on a remote clock over internet:
+
+<!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 # a one time call, asking for a remote time (estimated) in millisecond
@@ -164,14 +180,18 @@ XestClock.Server.error(spid, :millisecond)
 
 ## Let's see it in action !
 
-Kino TODO
+We can build a quick diagram of the estimation errors for the proxy clock.
+
+Note since we aim to reach milliseconds precision but we cannot, it is possible the proxy server times out (waiting for a throttled request on the remote server)
+
+=> TODO : workaround ? properfix ?
 
 ```elixir
 chart =
   Vl.new(width: 800, height: 400)
   |> Vl.mark(:line)
-  |> Vl.encode_field(:x, "x", type: :quantitative)
-  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Vl.encode_field(:x, "local ms", type: :quantitative)
+  |> Vl.encode_field(:y, "error ms", type: :quantitative)
   |> Kino.VegaLite.new()
   |> Kino.render()
 
