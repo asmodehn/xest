@@ -151,25 +151,24 @@ defmodule XestClock.Server do
 
   @doc """
     compute the current error of the server from its state.
+  Note we dont pass the time_unit here, lets return the best error estimate we can get.
+    Conversion is better explicited on caller side if required.
   """
-  @spec error(pid, System.time_unit()) :: {Time.Value.t(), Timed.LocalDelta.t()}
-  def error(pid \\ __MODULE__, unit) do
+  @spec error(pid) :: {Time.Value.t(), Timed.LocalDelta.t()}
+  def error(pid \\ __MODULE__) do
     case previous_tick(pid) do
       nil ->
-        # TODO : initial element of their algebraic category as default ? better way ??...
-        error = XestClock.Time.Value.new(unit, 0)
+        error = nil
 
         delta = %Timed.LocalDelta{
-          offset: XestClock.Time.Value.new(unit, 0),
-          skew: 0.0
+          offset: nil,
+          skew: nil
         }
 
         {error, delta}
 
       {_rts, lts, dv} ->
-        error =
-          Timed.LocalDelta.error_since(dv, lts)
-          |> XestClock.Time.Value.convert(unit)
+        error = Timed.LocalDelta.error_since(dv, lts)
 
         {error, dv}
     end
@@ -212,14 +211,16 @@ defmodule XestClock.Server do
   @spec monotonic_time(pid, System.time_unit()) :: integer
   def monotonic_time(pid \\ __MODULE__, unit) do
     # Check if retrieving time is actually needed
-    {err, delta} = error(pid, unit)
+    {err, delta} = error(pid)
 
     dv =
-      if err > unit do
+      if is_nil(err) or abs(err.value) > System.convert_time_unit(1, unit, err.unit) do
+        #        IO.inspect("abs(#{err}) > #{unit}")
         # here we use unit as the precision.
         # the assumption is that we should attempt to keep the precision under the requested unit
         List.first(ticks(pid, 1)) |> elem(2)
       else
+        #        IO.inspect("(#{err}) <= #{unit}")
         delta
       end
 

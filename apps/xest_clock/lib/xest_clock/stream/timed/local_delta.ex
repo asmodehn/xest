@@ -76,6 +76,7 @@ defmodule XestClock.Stream.Timed.LocalDelta do
     end)
   end
 
+  @spec error_since(t(), Timed.LocalStamp.t()) :: Time.Value.t() | nil
   def error_since(%__MODULE__{} = dv, %Timed.LocalStamp{} = lts) do
     # take local time now
     lts_now = Timed.LocalStamp.now(lts.unit)
@@ -89,7 +90,7 @@ defmodule XestClock.Stream.Timed.LocalDelta do
       )
       # assumes no skew -> offset constant -> no error (best effort)
       when is_nil(dv.skew),
-      do: Time.Value.new(dv.offset.unit, 0)
+      do: nil
 
   # TODO : maybe we should get rid of this particular nil case for skew ??
   # assumes it is 1.0 ??? 0.0 ??? offset ??? default to initial object ??

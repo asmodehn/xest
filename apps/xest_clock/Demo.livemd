@@ -33,6 +33,13 @@ As an example, let's take a remote clock indicating UTC time
 ```elixir
 remote_unixtime =
   Req.get!("http://worldtimeapi.org/api/timezone/Etc/UTC", cache: false).body["unixtime"]
+
+# If changes to ascii:
+# |> String.split("\n")
+# |> Enum.map(&String.split(&1, ": "))
+# |> Map.new(&List.to_tuple/1)
+# |> Map.get("unixtime")
+# |> String.to_integer()
 ```
 
 ## Time Values and conversion
@@ -61,6 +68,11 @@ This means we will also get a local timestamp in the stream, which we can ignore
 ```elixir
 XestClock.Stream.repeatedly_throttled(1000, fn ->
   Req.get!("http://worldtimeapi.org/api/timezone/Etc/UTC", cache: false).body["unixtime"]
+  # |> String.split("\n")
+  # |> Enum.map(&String.split(&1, ": "))
+  # |> Map.new(&List.to_tuple/1)
+  # |> Map.get("unixtime")
+  # |> String.to_integer()
 end)
 |> Stream.map(fn {rv, local_timestamp} ->
   # only display the timestamp
@@ -85,6 +97,11 @@ defmodule WorldClock do
   def unixtime() do
     IO.inspect("CLOCK REQUEST !")
     Req.get!("http://worldtimeapi.org/api/timezone/Etc/UTC", cache: false).body["unixtime"]
+    # |> String.split("\n")
+    # |> Enum.map(&String.split(&1, ": "))
+    # |> Map.new(&List.to_tuple/1)
+    # |> Map.get("unixtime")
+    # |> String.to_integer()
   end
 
   def stream(unit) do
@@ -148,7 +165,8 @@ end
 {:ok, spid} = WorldClockProxy.start_link(:millisecond)
 ```
 
-a one time call, asking for a remote time (estimated) in `:millisecond`
+a one time call, asking for a remote time (estimated) in `:millisecond`.
+However, since the server time is in second, we clearly can see the millisecond precision estimated from local clock.
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
@@ -157,28 +175,98 @@ a one time call, asking for a remote time (estimated) in `:millisecond`
 WorldClockProxy.monotonic_time(spid, :millisecond)
 ```
 
-we can also ask an estimation for the error. However at first it is a bit rough
+we can also ask an estimation for the error. However at first we can only get a simple offset.
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
-XestClock.Server.error(spid, :millisecond)
+XestClock.Server.error(spid)
 ```
 
 When we have more ticks, we can compute the skew of the remote clock,
 and we get a more refined estimation for the error.
 
-Feel free to evaluate this cell multiple time if needed, skew should not be zero, since `:millisecond` precision is not reachable on a remote clock over internet:
+Feel free to evaluate this cell multiple time if needed, skew should not be zero, since `:millisecond` precision of the proxy genserver is not reachable on a remote clock over internet.
+
+Notice how the estimated error increase, until a next request is deemed necessary.
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
 ```elixir
 # a one time call, asking for a remote time (estimated) in millisecond
-WorldClockProxy.monotonic_time(spid, :millisecond)
-XestClock.Server.error(spid, :millisecond)
+WorldClockProxy.monotonic_time(spid, :second)
+XestClock.Server.error(spid)
 ```
 
 ## Let's see it in action !
+
+First lets get the simulated clock and plot it against the local time.
+It should be almost linear.
+
+Note that a request to the remote clock is done only when needed, and that the time remains (weakly) monotonic: the same value is reuse, but it doesn't "go back".
+
+```elixir
+chart =
+  Vl.new(width: 800, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Kino.VegaLite.new()
+  |> Kino.render()
+
+local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
+remote_start = WorldClockProxy.monotonic_time(spid, :second) |> IO.inspect()
+
+for _ <- 1..30 do
+  # This will emulate remote time and if necessary do a remote call
+  mono_time = WorldClockProxy.monotonic_time(spid, :second) |> IO.inspect()
+
+  now = XestClock.Stream.Timed.LocalStamp.now(:second)
+
+  # Note x is only local measurement of time (nothing remote)
+  # Only y measure of error, is the difference in offset between remote estimation and local value
+  point = %{x: now.monotonic.value - local_start.monotonic.value, y: mono_time - remote_start}
+  Kino.VegaLite.push(chart, point)
+  :ok = Process.sleep(1000)
+end
+```
+
+Second, let's see what we can see if we plot only the offset when we force a request at each local second (simulating the worst case)...
+This should still be fine and not pathological behaviour, as web services usually support such rate.
+
+```elixir
+chart =
+  Vl.new(width: 800, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Kino.VegaLite.new()
+  |> Kino.render()
+
+local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
+{_error_start, delta_start} = XestClock.Server.error(spid)
+
+for _ <- 1..60 do
+  # This will do a remote call
+  {_ts, _lts, _ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+
+  # we want to watch the current error on the server with millisecond precision !
+  {_error, delta} = XestClock.Server.error(spid)
+
+  # lets take now with a second precision to measure elasped time.
+  now = XestClock.Stream.Timed.LocalStamp.now(:second)
+
+  # Note x is only local measurement of time (nothing remote)
+  # Only y measure of error, is the difference in offset between remote estimation and local value
+  point = %{
+    x: now.monotonic.value - local_start.monotonic.value,
+    y: delta.offset.value - delta_start.offset.value
+  }
+
+  Kino.VegaLite.push(chart, point)
+  :ok = Process.sleep(1000)
+end
+```
 
 We can build a quick diagram of the estimation errors for the proxy clock.
 
@@ -195,7 +283,7 @@ chart =
   |> Kino.VegaLite.new()
   |> Kino.render()
 
-local_start = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
 
 for _ <- 1..30 do
   # This will emulate remote time and if necessary do a remote call
@@ -203,8 +291,8 @@ for _ <- 1..30 do
   _mono_time = WorldClockProxy.monotonic_time(spid, :millisecond)
 
   # we want to watch the current error on the server
-  {error, _delta} = XestClock.Server.error(spid, :millisecond)
-  now = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+  {error, _delta} = XestClock.Server.error(spid)
+  now = XestClock.Stream.Timed.LocalStamp.now(:second)
 
   # Note x is only local measurement of time (nothing remote)
   # Only y measure of error, is the difference in offset between remote estimation and local value
