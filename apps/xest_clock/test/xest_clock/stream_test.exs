@@ -24,14 +24,14 @@ defmodule XestClock.StreamTest do
              |> Enum.take(2) == [
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :second, value: 51_000},
+                  monotonic: 51_000,
                   unit: :second,
                   vm_offset: -33
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
                   # Note the rounding precision error...
-                  monotonic: %XestClock.Time.Value{unit: :second, value: 51_501},
+                  monotonic: 51_500,
                   unit: :second,
                   vm_offset: -33
                 }}
@@ -66,31 +66,31 @@ defmodule XestClock.StreamTest do
              |> Enum.take(5) == [
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 42000},
+                  monotonic: 42000,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 43500},
+                  monotonic: 43500,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 45000},
+                  monotonic: 45000,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 46500},
+                  monotonic: 46500,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 48000},
+                  monotonic: 48000,
                   unit: :millisecond,
                   vm_offset: 0
                 }}
@@ -113,7 +113,7 @@ defmodule XestClock.StreamTest do
       # except for the third, which will be too fast, meaning the process will sleep...
       |> expect(:monotonic_time, fn :millisecond -> 44_000 end)
       # it will be called another time to correct the timestamp
-      |> expect(:monotonic_time, fn :millisecond -> 44_997 end)
+      |> expect(:monotonic_time, fn :millisecond -> 44_999 end)
       # and once more after the request
       |> expect(:monotonic_time, fn :millisecond -> 45_001 end)
       # but then we revert to slow enough timing
@@ -132,31 +132,31 @@ defmodule XestClock.StreamTest do
              |> Enum.take(5) == [
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 42000},
+                  monotonic: 42000,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 43500},
+                  monotonic: 43500,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 45000},
+                  monotonic: 45000,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 46500},
+                  monotonic: 46500,
                   unit: :millisecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: %XestClock.Time.Value{unit: :millisecond, value: 48000},
+                  monotonic: 48000,
                   unit: :millisecond,
                   vm_offset: 0
                 }}

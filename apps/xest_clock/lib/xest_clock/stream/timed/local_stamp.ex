@@ -18,21 +18,49 @@ defmodule XestClock.Stream.Timed.LocalStamp do
   def now(unit) do
     %__MODULE__{
       unit: unit,
-      monotonic: Time.Value.new(unit, System.monotonic_time(unit)),
+      monotonic: System.monotonic_time(unit),
       vm_offset: System.time_offset(unit)
-      # TODO : how can we force vm_offset to always be same unit as monotonic ??
     }
   end
 
-  @spec system_time(t()) :: Time.Value.t()
-  def system_time(%__MODULE__{} = lts) do
-    %{lts.monotonic | value: lts.monotonic.value + lts.vm_offset}
+  @spec as_timevalue(t()) :: Time.Value.t()
+  def as_timevalue(%__MODULE__{} = lts) do
+    Time.Value.new(lts.unit, lts.monotonic + lts.vm_offset)
   end
 
-  def elapsed_since(%__MODULE__{} = lts, %__MODULE__{} = previous_lts) do
-    Time.Value.diff(
-      system_time(lts),
-      system_time(previous_lts)
+  @spec system_time(t(), System.time_unit()) :: Time.Value.t()
+  def system_time(%__MODULE__{} = lts, unit) do
+    as_timevalue(lts)
+    |> Time.Value.convert(unit)
+  end
+
+  @spec monotonic_time(t()) :: Time.Value.t()
+  def monotonic_time(%__MODULE__{} = lts) do
+    Time.Value.new(lts.unit, lts.monotonic)
+  end
+
+  @spec time_offset(t()) :: Time.Value.t()
+  def time_offset(%__MODULE__{} = lts) do
+    Time.Value.new(lts.unit, lts.vm_offset)
+  end
+
+  @spec monotonic_time(t(), System.time_unit()) :: Time.Value.t()
+  def monotonic_time(%__MODULE__{} = lts, unit) do
+    monotonic_time(lts)
+    |> Time.Value.convert(unit)
+  end
+
+  @spec time_offset(t(), System.time_unit()) :: Time.Value.t()
+  def time_offset(%__MODULE__{} = lts, unit) do
+    time_offset(lts)
+    |> Time.Value.convert(unit)
+  end
+
+  def elapsed_since(%__MODULE__{} = lts, %__MODULE__{} = previous_lts)
+      when lts.unit == previous_lts.unit do
+    Time.Value.new(
+      lts.unit,
+      lts.monotonic + lts.vm_offset - previous_lts.monotonic - previous_lts.vm_offset
     )
   end
 
@@ -40,13 +68,13 @@ defmodule XestClock.Stream.Timed.LocalStamp do
       when lts_before.unit == lts_after.unit do
     %__MODULE__{
       unit: lts_before.unit,
-      monotonic:
-        Time.Value.sum(
-          Time.Value.scale(lts_before.monotonic, 0.5),
-          Time.Value.scale(lts_after.monotonic, 0.5)
-        ),
-      # here we suppose the vm offset only changes slowly and somehow regularly...
-      vm_offset: lts_before.vm_offset / 2 + lts_after.vm_offset / 2
+      # we use floor_div here to always round downwards (no matter where 0 happens to be)
+      # monotonic constraints should be set on the stream to avoid time going backwards
+      monotonic: Integer.floor_div(lts_before.monotonic + lts_after.monotonic, 2),
+      # CAREFUL: we loose precision and introduce errors here...
+      # AND we suppose the vm offset only changes linearly...
+      vm_offset: Integer.floor_div(lts_before.vm_offset + lts_after.vm_offset, 2)
+      # BUT we are NOT interested in tracking error in local timestamps.
     }
   end
 
@@ -61,26 +89,6 @@ defmodule XestClock.Stream.Timed.LocalStamp do
       # maybe make vm_offset also a time value ??
     }
   end
-
-  #  Lets get rid of that, the user can doit in its transform...
-  #  def with_previous(%__MODULE__{} = recent, %__MODULE__{} = past) do
-  #    %{
-  #      recent
-  #      | monotonic: recent.monotonic |> XestClock.Time.Value.with_previous(past.monotonic)
-  #    }
-  #  end
-
-  # UNEEDED any longer ?
-  # return type ? the offset doesnt have much meaning, but we need the unit...
-  #  @spec diff(t(), t()) :: t()
-  #  def diff(%__MODULE__{} = a, %__MODULE__{} = b) do
-  #    # TODO : get rid of this ?? since we have time VAlue we dont need it any longer.
-  #    %__MODULE__{
-  #      unit: a.unit,
-  #      monotonic: XestClock.TimeValue.with_derivatives_from(a, b),
-  #      vm_offset: a.vm_offset
-  #    }
-  #  end
 end
 
 defimpl String.Chars, for: XestClock.Stream.Timed.LocalStamp do

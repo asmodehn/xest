@@ -163,10 +163,10 @@ defmodule XestClock.Stream do
     bef = Timed.LocalStamp.now(:millisecond)
 
     # offset difference
-    current_offset = Time.Value.diff(bef.monotonic, lts.monotonic)
+    current_offset = bef.monotonic - lts.monotonic
 
     # if the current time is far enough from previous ts
-    to_wait = min_period_ms - current_offset.value
+    to_wait = min_period_ms - current_offset
     # timeout always in milliseconds !
 
     #    IO.inspect("to_wait: #{to_wait}")

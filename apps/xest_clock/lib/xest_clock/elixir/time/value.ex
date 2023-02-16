@@ -9,24 +9,23 @@ defmodule XestClock.Time.Value do
 
   @enforce_keys [:unit, :value]
   defstruct unit: nil,
-            value: nil
-
-  # TODO: offset is useful but could probably be transferred inside the stream operators, where it is used
-  # TODO: we should add a precision / error interval
-  # => measurements, although late, will have interval in connection time scale,
-  # => estimation will have error interval in estimation (max current offset) time scale
+            value: nil,
+            error: 0
 
   @typedoc "TimeValue struct"
   @type t() :: %__MODULE__{
           unit: System.time_unit(),
-          value: integer()
+          value: integer(),
+          error: integer()
         }
 
-  # TODO : keep making the same mistake -> reverse params ?
-  def new(unit, value) when is_integer(value) do
+  # TODO : keep making the same mistake when writing -> reverse params ?
+  def new(unit, value, error \\ 0) when is_integer(value) and is_integer(error) do
     %__MODULE__{
       unit: System.Extra.normalize_time_unit(unit),
-      value: value
+      value: value,
+      # error is always positive (expressed as deviation from value)
+      error: abs(error)
     }
   end
 
@@ -40,6 +39,11 @@ defmodule XestClock.Time.Value do
         tv.value,
         tv.unit,
         unit
+      ),
+      System.convert_time_unit(
+        tv.error,
+        tv.unit,
+        unit
       )
     )
   end
@@ -47,47 +51,56 @@ defmodule XestClock.Time.Value do
   def diff(%__MODULE__{} = tv1, %__MODULE__{} = tv2) do
     if System.convert_time_unit(1, tv1.unit, tv2.unit) < 1 do
       # invert conversion to avoid losing precision
-      %__MODULE__{
-        unit: tv1.unit,
-        value: tv1.value - convert(tv2, tv1.unit).value
-      }
+      new(
+        tv1.unit,
+        tv1.value - convert(tv2, tv1.unit).value,
+        # CAREFUL: error is compounded (can go two ways, it represents an interval)!
+        tv1.error + convert(tv2, tv1.unit).error
+      )
     else
-      %__MODULE__{
-        unit: tv2.unit,
-        value: convert(tv1, tv2.unit).value - tv2.value
-      }
+      new(
+        tv2.unit,
+        convert(tv1, tv2.unit).value - tv2.value,
+        convert(tv1, tv2.unit).error + tv2.error
+      )
     end
   end
 
   def sum(%__MODULE__{} = tv1, %__MODULE__{} = tv2) do
     if System.convert_time_unit(1, tv1.unit, tv2.unit) < 1 do
       # invert conversion to avoid losing precision
-      %__MODULE__{
-        unit: tv1.unit,
-        value: tv1.value + convert(tv2, tv1.unit).value
-      }
+      new(
+        tv1.unit,
+        tv1.value + convert(tv2, tv1.unit).value,
+        tv1.error + convert(tv2, tv1.unit).error
+      )
     else
-      %__MODULE__{
-        unit: tv2.unit,
-        value: convert(tv1, tv2.unit).value + tv2.value
-      }
+      new(
+        tv2.unit,
+        convert(tv1, tv2.unit).value + tv2.value,
+        convert(tv1, tv2.unit).error + tv2.error
+      )
     end
   end
 
   # TODO : linear map on time values ??
-  def scale(%__MODULE__{} = tv, factor) do
-    %__MODULE__{
-      unit: tv.unit,
-      value: round(tv.value * factor)
-    }
+  def scale(%__MODULE__{} = tv, factor) when is_float(factor) do
+    new(
+      tv.unit,
+      round(tv.value * factor),
+      round(tv.error * factor)
+    )
+  end
+
+  def scale(%__MODULE__{} = tv, factor) when is_integer(factor) do
+    new(
+      tv.unit,
+      tv.value * factor,
+      tv.error * factor
+    )
   end
 
   @spec div(t(), t()) :: float
-  def div(%__MODULE__{} = tv_num, %__MODULE__{} = _tv_den)
-      # no offset
-      when tv_num.value == 0,
-      do: 0.0
-
   def div(%__MODULE__{} = tv_num, %__MODULE__{} = tv_den)
       when tv_den.value != 0 do
     if System.convert_time_unit(1, tv_num.unit, tv_den.unit) < 1 do

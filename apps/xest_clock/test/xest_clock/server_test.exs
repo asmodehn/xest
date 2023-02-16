@@ -56,7 +56,7 @@ defmodule XestClock.ServerTest do
                  },
                  # Local stamp is always in millisecond (sleep pecision)
                  %XestClock.Stream.Timed.LocalStamp{
-                   monotonic: %XestClock.Time.Value{unit: :millisecond, value: 42_000},
+                   monotonic: 42_000,
                    unit: :millisecond,
                    vm_offset: 0
                  },
@@ -100,7 +100,7 @@ defmodule XestClock.ServerTest do
                  },
                  # Local stamp is always in millisecond (sleep pecision)
                  %XestClock.Stream.Timed.LocalStamp{
-                   monotonic: %XestClock.Time.Value{unit: :millisecond, value: 42_000},
+                   monotonic: 42_000,
                    unit: :millisecond,
                    vm_offset: 0
                  },
@@ -109,8 +109,8 @@ defmodule XestClock.ServerTest do
                      unit: unit,
                      value: 0
                    },
-                   # offset 0 : skew is 0.0 even if denominator is == 0 (linear map)
-                   skew: 0.0
+                   # offset 0 : skew is nil (like the previous one, since it is not computable without time moving forward)
+                   skew: nil
                  }
                }
 
@@ -120,18 +120,18 @@ defmodule XestClock.ServerTest do
   end
 
   describe "monotonic_time" do
-    test "returns a local estimation of the remote clock with 2 + 1 local time calls only" do
+    test "returns a local estimation of the remote clock" do
       srv_id = String.to_atom("example_monotonic")
 
       example_srv = start_supervised!({ExampleServer, :second}, id: srv_id)
 
-      # Preparing mocks for 2 + 1 ticks...
+      # Preparing mocks for 2 + 1 + 1 ticks...
       # This is used for local stamp -> only in ms
       XestClock.System.OriginalMock
-      |> expect(:monotonic_time, 3, fn
+      |> expect(:monotonic_time, 4, fn
         :millisecond -> 51_000
       end)
-      |> expect(:time_offset, 3, fn :millisecond -> 0 end)
+      |> expect(:time_offset, 4, fn :millisecond -> 0 end)
       |> allow(self(), example_srv)
 
       # getting monotonic_time of the server gives us the value received from the remote clock
@@ -139,88 +139,27 @@ defmodule XestClock.ServerTest do
     end
   end
 
-  describe "error" do
-    test "on first tick returns data structure with nils" do
+  describe "monotonic_time_value" do
+    test "on first tick returns offset without error" do
       srv_id = String.to_atom("example_error_nil")
 
       example_srv = start_supervised!({ExampleServer, :second}, id: srv_id)
 
       # Preparing mocks for only 1 measurement ticks...
       # This is used for local stamp -> only in ms
+      # Then expect 2 more ticks for the first monotonic time request.
+      # plus one more to estimate offset error
+      # => total of 4 ticks
       XestClock.System.OriginalMock
-      |> expect(:monotonic_time, fn
+      |> expect(:monotonic_time, 4, fn
         :millisecond -> 51_000
       end)
-      |> expect(:time_offset, fn :millisecond -> 0 end)
-      |> allow(self(), example_srv)
-
-      assert XestClock.Server.error(example_srv) == {
-               nil,
-               %XestClock.Stream.Timed.LocalDelta{offset: nil, skew: nil}
-             }
-
-      # expect 2 more ticks for the first monotonic time request.
-      XestClock.System.OriginalMock
-      |> expect(:monotonic_time, 2, fn
-        :millisecond -> 51_000
-      end)
-      |> expect(:time_offset, 2, fn :millisecond -> 0 end)
-
-      # getting monotonic_time of the server gives us the value received from the remote clock
-      assert ExampleServer.monotonic_time(example_srv, :millisecond) == 42_000
-
-      # and one more for measurement
-      XestClock.System.OriginalMock
-      |> expect(:monotonic_time, fn
-        :millisecond -> 51_000
-      end)
-      |> expect(:time_offset, fn :millisecond -> 0 end)
-
-      assert XestClock.Server.error(example_srv) == {
-               nil,
-               %XestClock.Stream.Timed.LocalDelta{
-                 offset: %XestClock.Time.Value{unit: :second, value: -9},
-                 skew: nil
-               }
-             }
-    end
-
-    test "returns the estimated error as a time value of the proxy genserver" do
-      srv_id = String.to_atom("example_error")
-
-      example_srv = start_supervised!({ExampleServer, :second}, id: srv_id)
-
-      # Preparing mocks for 2 + 1 ticks...
-      # This is used for local stamp -> only in ms
-      XestClock.System.OriginalMock
-      |> expect(:monotonic_time, 3, fn
-        :millisecond -> 51_000
-      end)
-      |> expect(:time_offset, 3, fn :millisecond -> 0 end)
+      |> expect(:time_offset, 4, fn :millisecond -> 0 end)
       |> allow(self(), example_srv)
 
       # getting monotonic_time of the server gives us the value received from the remote clock
-      assert ExampleServer.monotonic_time(example_srv, :millisecond) == 42_000
-
-      # Preparing mock for one more local timestamp...
-      # This is used for local stamp -> only in ms
-      XestClock.System.OriginalMock
-      |> expect(:monotonic_time, fn
-        :millisecond -> 51_000
-      end)
-      |> expect(:time_offset, fn :millisecond -> 0 end)
-
-      # error will use the last tick request to compute the current error
-      assert XestClock.Server.error(example_srv) == {
-               # no estimated error (no skew with local clock to compute it with)
-               nil,
-               %XestClock.Stream.Timed.LocalDelta{
-                 # offset of -9 seconds = 42 (remote) - 51 (local)
-                 offset: %XestClock.Time.Value{unit: :second, value: -9},
-                 # only one remote timestamp -> no skew
-                 skew: nil
-               }
-             }
+      assert XestClock.Server.monotonic_time_value(example_srv, :millisecond) ==
+               %XestClock.Time.Value{unit: :millisecond, value: 42000, error: 0}
     end
   end
 end

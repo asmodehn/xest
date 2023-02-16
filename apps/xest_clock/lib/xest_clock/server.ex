@@ -117,6 +117,9 @@ defmodule XestClock.Server do
           # getting remote time via callback (should have been setup by __using__ macro)
           fn -> remote_unit_time_handler.(unit) end
         )
+        #        |> Stream.map(fn   # adding local timestamp error to time value error
+        #          {tv, lts} ->
+        #        end)
       )
       # we compute local delta here in place where we have easy access to element in the stream
       |> Timed.LocalDelta.compute()
@@ -149,30 +152,30 @@ defmodule XestClock.Server do
     last
   end
 
-  @doc """
-    compute the current error of the server from its state.
-  Note we dont pass the time_unit here, lets return the best error estimate we can get.
-    Conversion is better explicited on caller side if required.
-  """
-  @spec error(pid) :: {Time.Value.t(), Timed.LocalDelta.t()}
-  def error(pid \\ __MODULE__) do
-    case previous_tick(pid) do
-      nil ->
-        error = nil
-
-        delta = %Timed.LocalDelta{
-          offset: nil,
-          skew: nil
-        }
-
-        {error, delta}
-
-      {_rts, lts, dv} ->
-        error = Timed.LocalDelta.error_since(dv, lts)
-
-        {error, dv}
-    end
-  end
+  #  @doc """
+  #    compute the current error of the server from its state.
+  #  Note we dont pass the time_unit here, lets return the best error estimate we can get.
+  #    Conversion is better explicited on caller side if required.
+  #  """
+  #  @spec error(pid) :: {Time.Value.t(), Timed.LocalDelta.t()}
+  #  def error(pid \\ __MODULE__) do
+  #    case previous_tick(pid) do
+  #      nil ->
+  #        error = nil
+  #
+  #        delta = %Timed.LocalDelta{
+  #          offset: nil,
+  #          skew: nil
+  #        }
+  #
+  #        {error, delta}
+  #
+  #      {_rts, lts, dv} ->
+  #        error = Timed.LocalDelta.error_since(dv, lts)
+  #
+  #        {error, dv}
+  #    end
+  #  end
 
   @doc """
     Estimates the current remote now, simply adding the local_offset to the last known remote time
@@ -208,27 +211,46 @@ defmodule XestClock.Server do
           = (remote_skew - 1) * local_offset
 
   """
-  @spec monotonic_time(pid, System.time_unit()) :: integer
-  def monotonic_time(pid \\ __MODULE__, unit) do
-    # Check if retrieving time is actually needed
-    {err, delta} = error(pid)
 
-    dv =
-      if is_nil(err) or abs(err.value) > System.convert_time_unit(1, unit, err.unit) do
-        #        IO.inspect("abs(#{err}) > #{unit}")
-        # here we use unit as the precision.
-        # the assumption is that we should attempt to keep the precision under the requested unit
-        List.first(ticks(pid, 1)) |> elem(2)
-      else
-        #        IO.inspect("(#{err}) <= #{unit}")
-        delta
+  @spec monotonic_time_value(pid, System.time_unit(), System.time_unit()) :: Time.Value.t()
+  def monotonic_time_value(pid \\ __MODULE__, unit, precision \\ :second) do
+    # Check if retrieving time is actually needed
+    offset =
+      case previous_tick(pid) do
+        nil ->
+          # force tick
+          {_rts, lts, dv} = List.first(ticks(pid, 1))
+          %{Timed.LocalDelta.offset(dv, lts) | error: 0}
+
+        # first offset can have an error of 0, to get things going...
+        # TODO : cleaner way to handle these cases ??? with an ok tuple ?
+        {_rts, lts, dv} ->
+          offset = Timed.LocalDelta.offset(dv, lts)
+
+          if is_nil(offset.error) or
+               offset.error > System.convert_time_unit(1, precision, offset.unit) do
+            # force tick
+            # TODO : can we do something here so that the next request can come a bit later ???
+            #
+            {_rts, lts, dv} = List.first(ticks(pid, 1))
+            Timed.LocalDelta.offset(dv, lts)
+          else
+            offset
+          end
       end
+      |> IO.inspect()
 
     XestClock.Time.Value.sum(
-      Timed.LocalStamp.now(unit).monotonic,
-      dv.offset
+      Timed.LocalStamp.now(unit)
+      |> Timed.LocalStamp.as_timevalue(),
+      offset
     )
     |> XestClock.Time.Value.convert(unit)
+  end
+
+  @spec monotonic_time(pid, System.time_unit()) :: integer
+  def monotonic_time(pid \\ __MODULE__, unit) do
+    monotonic_time_value(pid, unit)
     |> Map.get(:value)
 
     # TODO : what to do with skew / error ???

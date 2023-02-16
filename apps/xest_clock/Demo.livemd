@@ -19,10 +19,10 @@ The remote clock can indicate a different time, or even tick at a different spee
 XestClock assumes the deviation (skew) of the remote clock is not permanent, and should be equal to 1.0 most of the time. Apart from that, no other assumption is made. The remote time is verified to be monotonic before being taken into account.
 
 However when sending a request for time, the network can delay the packet, the clock might be changing to summer time, etc. but our local clock must always remain as close as possible to the remote time, yet provide a meaningful time indicator (it has to be monotonic to avoid unexpected surprises once a year or so...)
+A stream of remote clock ticks can be built and operated on, to extract from it an offset to apply to the current local clock in order to estimate the time at the remote location.
 
 XestClock provides building blocks for the task of simulating an "untrusted clock" locally.
-
-A stream of remote clock ticks can be built and operated on, to extract from it an offset to apply to the current local clock in order to estimate the time at the remote location.
+It is useful when the remote clock is somewhat "high-level" / "human-usable" and doesnt expose itself via NTP.
 
 ## The remote clock
 
@@ -84,8 +84,6 @@ end)
 |> Enum.take(2)
 ```
 
-## Remote Clock Stream with limiter
-
 If we put this in a module, we can now simply access the remote clock via a stream of successive ticks.
 
 <!-- livebook:{"reevaluate_automatically":true} -->
@@ -122,9 +120,9 @@ WorldClock.stream(:second) |> Enum.take(3)
 ## The Server
 
 We can now build a local "image" of the remote clock, with `XestClock.Server`.
-This allow us to simulate a clock locally.
+This allow us to simulate the remote clock locally.
 
-Notice how `XestClock.Server` provides the `monotonic_time/2` impure function to retrieve the time.
+Notice how `XestClock.Server` provides the usual `monotonic_time/2` impure function to retrieve the time. We try to stay close to `Elixir.System` API.
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
@@ -144,7 +142,7 @@ defmodule WorldClockProxy do
   end
 
   def monotonic_time(pid \\ __MODULE__, unit) do
-    XestClock.Server.monotonic_time(pid, unit)
+    XestClock.Server.monotonic_time_value(pid, unit)
   end
 
   @impl true
@@ -157,7 +155,8 @@ defmodule WorldClockProxy do
     XestClock.Time.Value.new(:second, WorldClock.unixtime())
     # we need to convert to whatever unit is expected in stream
     |> XestClock.Time.Value.convert(unit)
-    |> IO.inspect()
+
+    # |> IO.inspect()
   end
 end
 
@@ -165,8 +164,9 @@ end
 {:ok, spid} = WorldClockProxy.start_link(:millisecond)
 ```
 
-a one time call, asking for a remote time (estimated) in `:millisecond`.
-However, since the server time is in second, we clearly can see the millisecond precision estimated from local clock.
+A one time call, asking for a remote time (estimated) in `:millisecond`.
+
+Note: if we add an `IO.inspect()` call in `WorldClockProxy.handle_remote_unix_time/1`, since the server time is received in second, we clearly can see the millisecond precision is estimated from local clock.
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
@@ -175,35 +175,18 @@ However, since the server time is in second, we clearly can see the millisecond 
 WorldClockProxy.monotonic_time(spid, :millisecond)
 ```
 
-we can also ask an estimation for the error. However at first we can only get a simple offset.
+With a few ticks, we can get different estimation for the monotonic time.
 
-<!-- livebook:{"reevaluate_automatically":true} -->
-
-```elixir
-XestClock.Server.error(spid)
-```
-
-When we have more ticks, we can compute the skew of the remote clock,
-and we get a more refined estimation for the error.
-
-Feel free to evaluate this cell multiple time if needed, skew should not be zero, since `:millisecond` precision of the proxy genserver is not reachable on a remote clock over internet.
-
-Notice how the estimated error increase, until a next request is deemed necessary.
-
-<!-- livebook:{"reevaluate_automatically":true} -->
-
-```elixir
-# a one time call, asking for a remote time (estimated) in millisecond
-WorldClockProxy.monotonic_time(spid, :second)
-XestClock.Server.error(spid)
-```
+Notice how the estimated error in the time value increase, until another request is deemed necessary.
 
 ## Let's see it in action !
 
 First lets get the simulated clock and plot it against the local time.
 It should be almost linear.
 
-Note that a request to the remote clock is done only when needed, and that the time remains (weakly) monotonic: the same value is reuse, but it doesn't "go back".
+Note that a request to the remote clock is done only when needed, and that the time remains (weakly) monotonic: the same value is reused, but it doesn't "go back".
+
+Also, since we want the monotonic time in `:second`, the error should always be zero on that scale, the proxy manages recovering from it by doing another request when needed.
 
 ```elixir
 chart =
@@ -215,7 +198,7 @@ chart =
   |> Kino.render()
 
 local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
-remote_start = WorldClockProxy.monotonic_time(spid, :second) |> IO.inspect()
+remote_start = WorldClockProxy.monotonic_time(spid, :second)
 
 for _ <- 1..30 do
   # This will emulate remote time and if necessary do a remote call
@@ -225,7 +208,11 @@ for _ <- 1..30 do
 
   # Note x is only local measurement of time (nothing remote)
   # Only y measure of error, is the difference in offset between remote estimation and local value
-  point = %{x: now.monotonic.value - local_start.monotonic.value, y: mono_time - remote_start}
+  point = %{
+    x: now.monotonic - local_start.monotonic,
+    y: mono_time.value - remote_start.value
+  }
+
   Kino.VegaLite.push(chart, point)
   :ok = Process.sleep(1000)
 end
@@ -244,14 +231,18 @@ chart =
   |> Kino.render()
 
 local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
-{_error_start, delta_start} = XestClock.Server.error(spid)
+# This will do a remote call
+{_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+
+# we want to watch the current error on the server with millisecond precision !
+offset_start = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts)
 
 for _ <- 1..60 do
   # This will do a remote call
-  {_ts, _lts, _ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+  {_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
 
   # we want to watch the current error on the server with millisecond precision !
-  {_error, delta} = XestClock.Server.error(spid)
+  offset = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts)
 
   # lets take now with a second precision to measure elasped time.
   now = XestClock.Stream.Timed.LocalStamp.now(:second)
@@ -259,8 +250,8 @@ for _ <- 1..60 do
   # Note x is only local measurement of time (nothing remote)
   # Only y measure of error, is the difference in offset between remote estimation and local value
   point = %{
-    x: now.monotonic.value - local_start.monotonic.value,
-    y: delta.offset.value - delta_start.offset.value
+    x: now.monotonic - local_start.monotonic,
+    y: offset.value - offset_start.value
   }
 
   Kino.VegaLite.push(chart, point)
@@ -268,11 +259,11 @@ for _ <- 1..60 do
 end
 ```
 
-We can build a quick diagram of the estimation errors for the proxy clock.
+We can see the offset varying linearly (it takes the original skew detected in the last two requests to estimate the current offset), and periodically (when second ticks are not aligned between local and remote) effectuates a correction.
 
-Note since we aim to reach milliseconds precision but we cannot, it is possible the proxy server times out (waiting for a throttled request on the remote server)
+## Millisecond precision ?
 
-=> TODO : workaround ? properfix ?
+We can attempt to get the clock with 100 millisecond precision...
 
 ```elixir
 chart =
@@ -283,24 +274,84 @@ chart =
   |> Kino.VegaLite.new()
   |> Kino.render()
 
-local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
+local_start = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+remote_start = WorldClockProxy.monotonic_time(spid, :millisecond)
 
 for _ <- 1..30 do
   # This will emulate remote time and if necessary do a remote call
-  # Since the millisecond precision is almost impossible to reach via a network.
-  _mono_time = WorldClockProxy.monotonic_time(spid, :millisecond)
+  mono_time = WorldClockProxy.monotonic_time(spid, :millisecond) |> IO.inspect()
 
-  # we want to watch the current error on the server
-  {error, _delta} = XestClock.Server.error(spid)
-  now = XestClock.Stream.Timed.LocalStamp.now(:second)
+  now = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
 
   # Note x is only local measurement of time (nothing remote)
   # Only y measure of error, is the difference in offset between remote estimation and local value
-  point = %{x: now.monotonic.value - local_start.monotonic.value, y: error.value}
+  point = %{
+    x: now.monotonic - local_start.monotonic,
+    y: mono_time.value - remote_start.value
+  }
+
   Kino.VegaLite.push(chart, point)
-  :ok = Process.sleep(1000)
+  :ok = Process.sleep(100)
 end
 ```
+
+And similarly visualize the offset in such usecase, when we force updates every 100 ms.
+
+```elixir
+chart =
+  Vl.new(width: 800, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Kino.VegaLite.new()
+  |> Kino.render()
+
+local_start = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+# This will do a remote call
+{_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+
+# we want to watch the current error on the server with millisecond precision !
+offset_start = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts)
+
+for _ <- 1..60 do
+  # This will do a remote call
+  {_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+
+  # we want to watch the current error on the server with millisecond precision !
+  offset = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts)
+
+  # lets take now with a second precision to measure elasped time.
+  now = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+
+  # Note x is only local measurement of time (nothing remote)
+  # Only y measure of error, is the difference in offset between remote estimation and local value
+  point = %{
+    x: now.monotonic - local_start.monotonic,
+    y: offset.value - offset_start.value
+  }
+
+  Kino.VegaLite.push(chart, point)
+  :ok = Process.sleep(100)
+end
+```
+
+Notice, how the offset changes are less regular than before. Since the remote precision is only in `:second` we cannot do much more to adjust the precision here than correct the offset faster when we happen to know there is a difference between what we estimated and the reality.
+
+## Going faster ?
+
+For increased precision, we would need more, faster, requests to the remote clock. But this is not practically feasible over the internet, it would just congest the network.
+
+A request every second is also not really ideal (network traffic !), and we know it is possible to do better (NTP works over internet !).
+
+In our usecase, we send request to another clock, so we have a sensible constraint: the skew of the remote is "not chainging too fast" => we do approximate it as a constant (which is the same as approximating the remote clock linearly).
+
+With this approximation we know it is best to send a request with a period matching the time necessary for the simulated clock to go over the remote clock precision (assumed to be its unit). This is what the Proxy does internally when calling `WorldClockProxy.monotonic_time/1`.
+
+## Proactive requests ?
+
+
+
+## Section
 
 ## Useful Stream Operators
 

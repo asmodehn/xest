@@ -17,7 +17,7 @@ defmodule XestClock.Stream.Timed.LocalDelta do
   @type t() :: %__MODULE__{
           offset: Time.Value.t(),
           # note skew is unit-less
-          skew: float()
+          skew: float() | nil
         }
 
   @doc """
@@ -25,31 +25,13 @@ defmodule XestClock.Stream.Timed.LocalDelta do
   """
   def new(%Time.Stamp{} = ts, %Timed.LocalStamp{} = lts) do
     # convert to the stamp unit (higher local precision is not meaningful for the result)
-    converted_lts = Time.Value.convert(lts.monotonic, ts.ts.unit)
+    # CAREFUL! we should only take monotonic component in account.
+    converted_monotonic_lts = Timed.LocalStamp.monotonic_time(lts, ts.ts.unit)
 
     %__MODULE__{
-      offset: Time.Value.diff(ts.ts, converted_lts)
+      offset: Time.Value.diff(ts.ts, converted_monotonic_lts)
     }
   end
-
-  # WRONG
-  #  def with_previous(
-  #        %__MODULE__{} = current,
-  #        %__MODULE__{} = previous
-  #      )
-  #      when current.offset.unit == previous.offset.unit do
-  #    skew =
-  #      if previous.offset.value == 0 do
-  #        nil
-  #      else
-  #        current.offset.value / previous.offset.value
-  #      end
-  #
-  #    # TODO : is there any point to get longer skew list over time ??
-  #    # if not, how to prove it ?
-  #
-  #    %{current | skew: skew}
-  #  end
 
   def compute(enum) do
     Stream.transform(enum, nil, fn
@@ -63,47 +45,64 @@ defmodule XestClock.Stream.Timed.LocalDelta do
         local_time_delta = Timed.LocalStamp.elapsed_since(lts, previous_lts)
         delta_without_skew = new(ts, lts)
 
-        delta = %{
-          delta_without_skew
-          | skew:
-              Time.Value.div(
-                Time.Value.diff(delta_without_skew.offset, previous_delta.offset),
-                local_time_delta
-              )
-        }
+        skew =
+          if local_time_delta.value == 0 do
+            # special case where no time passed between the two timestamps
+            # This can happen during monotonic time correction...
+            # => we reuse skew as a fallback in this (rare) case,
+            # as we cannot recompute it with the information we currently have.
+            previous_delta.skew
+          else
+            Time.Value.div(
+              Time.Value.diff(delta_without_skew.offset, previous_delta.offset),
+              local_time_delta
+            )
+          end
+
+        delta = %{delta_without_skew | skew: skew}
 
         {[{ts, lts, delta}], {delta, lts}}
     end)
   end
 
-  @spec error_since(t(), Timed.LocalStamp.t()) :: Time.Value.t() | nil
-  def error_since(%__MODULE__{} = dv, %Timed.LocalStamp{} = lts) do
+  @spec offset(t(), Time.LocalStamp.t()) :: Time.Value.t() | nil
+  def offset(%__MODULE__{} = dv, %Timed.LocalStamp{} = lts) do
     # take local time now
     lts_now = Timed.LocalStamp.now(lts.unit)
-    error_since_at(dv, lts, lts_now)
+    offset_at(dv, lts, lts_now)
   end
 
-  def error_since_at(
+  def offset_at(
         %__MODULE__{} = dv,
         %Timed.LocalStamp{} = _lts,
         %Timed.LocalStamp{} = _lts_now
       )
-      # assumes no skew -> offset constant -> no error (best effort)
       when is_nil(dv.skew),
-      do: nil
+      do: %{dv.offset | error: nil}
 
-  # TODO : maybe we should get rid of this particular nil case for skew ??
-  # assumes it is 1.0 ??? 0.0 ??? offset ??? default to initial object ??
+  # in this case we pass an error of nil as semantics for "cannot compute"
+  # as a signal for the client to update the delta struct
 
-  def error_since_at(%__MODULE__{} = dv, %Timed.LocalStamp{} = lts, %Timed.LocalStamp{} = lts_now) do
+  def offset_at(
+        %__MODULE__{} = dv,
+        %Timed.LocalStamp{} = lts,
+        %Timed.LocalStamp{} = lts_now
+      ) do
     # determine elapsed time
     local_time_delta =
       Time.Value.diff(
-        Timed.LocalStamp.system_time(lts_now),
-        Timed.LocalStamp.system_time(lts)
+        Timed.LocalStamp.as_timevalue(lts_now),
+        Timed.LocalStamp.as_timevalue(lts)
       )
 
     # multiply with previously measured skew (we assume it didn't change on the remote...)
-    Time.Value.scale(local_time_delta, dv.skew)
+    adjustment = Time.Value.scale(local_time_delta, dv.skew) |> IO.inspect()
+
+    # do not forget the error coming from the delta measurement landing into the adjustment,
+    # if there is any...
+    error_estimate = abs(dv.offset.error) + abs(adjustment.value) + abs(adjustment.error)
+    value_estimate = dv.offset.value + adjustment.value
+
+    %{dv.offset | error: error_estimate, value: value_estimate}
   end
 end

@@ -19,10 +19,7 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
                },
                %Timed.LocalStamp{
                  unit: :millisecond,
-                 monotonic: %Time.Value{
-                   value: 1042,
-                   unit: :millisecond
-                 },
+                 monotonic: 1042,
                  vm_offset: 51
                }
              ) == %Timed.LocalDelta{
@@ -57,18 +54,12 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
       lts_enum = [
         %Timed.LocalStamp{
           unit: :millisecond,
-          monotonic: %Time.Value{
-            value: 1042,
-            unit: :millisecond
-          },
+          monotonic: 1042,
           vm_offset: 51
         },
         %Timed.LocalStamp{
           unit: :millisecond,
-          monotonic: %Time.Value{
-            value: 1051,
-            unit: :millisecond
-          },
+          monotonic: 1051,
           vm_offset: 49
         }
       ]
@@ -100,8 +91,8 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
     end
   end
 
-  describe "error_since_at/2" do
-    test "estimate the potential error" do
+  describe "offset_at/2" do
+    test "estimate the offset with a potential error" do
       delta = %Timed.LocalDelta{
         offset: %Time.Value{
           unit: :millisecond,
@@ -110,25 +101,26 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
         skew: 0.9
       }
 
-      assert Timed.LocalDelta.error_since_at(
+      assert Timed.LocalDelta.offset_at(
                delta,
                %Timed.LocalStamp{
                  unit: :millisecond,
-                 monotonic: %Time.Value{
-                   value: 42,
-                   unit: :millisecond
-                 },
+                 monotonic: 42,
                  vm_offset: 49
                },
                %Timed.LocalStamp{
                  unit: :millisecond,
-                 monotonic: %Time.Value{
-                   value: 51,
-                   unit: :millisecond
-                 },
+                 monotonic: 51,
                  vm_offset: 49
                }
-             ) == Time.Value.new(:millisecond, round((51 - 42) * 0.9))
+             ) ==
+               Time.Value.new(
+                 :millisecond,
+                 # offset measured last + estimated
+                 33 + round((51 - 42) * 0.9),
+                 # error: part that is estimated and a potential error
+                 round((51 - 42) * 0.9)
+               )
     end
   end
 end
