@@ -23,28 +23,28 @@ defmodule XestClock.Stream.Timed.LocalDelta do
   @doc """
       builds a delta value from values inside a timestamp and a local timestamp
   """
-  def new(%Time.Stamp{} = ts, %Timed.LocalStamp{} = lts) do
+  def new(%Time.Value{} = tv, %Timed.LocalStamp{} = lts) do
     # convert to the stamp unit (higher local precision is not meaningful for the result)
     # CAREFUL! we should only take monotonic component in account.
     # Therefore the offset might be bigger than naively expected (vm_offset is not taken into account).
-    converted_monotonic_lts = Timed.LocalStamp.monotonic_time(lts, ts.ts.unit)
+    converted_monotonic_lts = Timed.LocalStamp.monotonic_time(lts, tv.unit)
 
     %__MODULE__{
-      offset: Time.Value.diff(ts.ts, converted_monotonic_lts)
+      offset: Time.Value.diff(tv, converted_monotonic_lts)
     }
   end
 
   def compute(enum) do
     Stream.transform(enum, nil, fn
-      {%Time.Stamp{} = ts, %Timed.LocalStamp{} = lts}, nil ->
-        delta = new(ts, lts)
-        {[{ts, lts, delta}], {delta, lts}}
+      {%Time.Value{} = tv, %Timed.LocalStamp{} = lts}, nil ->
+        delta = new(tv, lts)
+        {[{tv, lts, delta}], {delta, lts}}
 
-      {%Time.Stamp{} = ts, %Timed.LocalStamp{} = lts},
+      {%Time.Value{} = tv, %Timed.LocalStamp{} = lts},
       {%__MODULE__{} = previous_delta, %Timed.LocalStamp{} = previous_lts} ->
         # TODO: wait... is this a scan ???
         local_time_delta = Timed.LocalStamp.elapsed_since(lts, previous_lts)
-        delta_without_skew = new(ts, lts)
+        delta_without_skew = new(tv, lts)
 
         skew =
           if local_time_delta.value == 0 do
@@ -62,7 +62,7 @@ defmodule XestClock.Stream.Timed.LocalDelta do
 
         delta = %{delta_without_skew | skew: skew}
 
-        {[{ts, lts, delta}], {delta, lts}}
+        {[{tv, lts, delta}], {delta, lts}}
     end)
   end
 
@@ -97,7 +97,9 @@ defmodule XestClock.Stream.Timed.LocalDelta do
       )
 
     # multiply with previously measured skew (we assume it didn't change on the remote...)
-    adjustment = Time.Value.scale(local_time_delta, dv.skew)
+    adjustment =
+      Time.Value.scale(local_time_delta, dv.skew)
+      |> Time.Value.convert(dv.offset.unit)
 
     # Note: error is always positive and adjustment error comes from local measurement -> 0
     #  we add hte adjustment value to the offset error,

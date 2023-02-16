@@ -15,7 +15,7 @@ defmodule XestClock.Server do
   #  alias XestClock.Time
 
   # TODO : better type for continuation ?
-  @type internal_state :: {XestClock.StreamClock.t(), continuation :: any()}
+  @type internal_state :: {Stream.t(), continuation :: any()}
 
   #  # the actual callback needed by the server
   #    @callback init({atom(), System.time_unit()}) ::
@@ -29,7 +29,7 @@ defmodule XestClock.Server do
   # callbacks to nudge the user towards code clarity with an explicit interface
   # good or bad idae ???
   @callback start_link(atom, System.time_unit()) :: GenServer.on_start()
-  @callback ticks(pid(), integer()) :: [XestClock.Timestamp.t()]
+  @callback ticks(pid(), integer()) :: [XestClock.Time.Value.t()]
 
   #  @optional_callbacks init: 1
   # TODO : see GenServer to add appropriate behaviours one may want to (re)define...
@@ -102,25 +102,27 @@ defmodule XestClock.Server do
   end
 
   # TODO : better interface for min_handle_remote_period...
-  def init({origin, unit}, remote_unit_time_handler, min_handle_remote_period \\ 1000) do
+  def init({_origin, unit}, remote_unit_time_handler, min_handle_remote_period \\ 1000) do
     # time_unit also function as a rate (parts per second)
     #    min_period = if is_nil(min_handle_remote_period), do: round(unit), else: min_handle_remote_period
 
     # here we leverage streamclock, although we keep a usual server interface...
+    #      XestClock.StreamClock.new(
+    #        origin,
+    #        unit,
+    # throttling remote requests, adding local timestamp
     streamclock =
-      XestClock.StreamClock.new(
-        origin,
-        unit,
-        # throttling remote requests, adding local timestamp
-        XestClock.Stream.repeatedly_throttled(
-          min_handle_remote_period,
-          # getting remote time via callback (should have been setup by __using__ macro)
-          fn -> remote_unit_time_handler.(unit) end
-        )
-        #        |> Stream.map(fn   # adding local timestamp error to time value error
-        #          {tv, lts} ->
-        #        end)
+      XestClock.Stream.repeatedly_throttled(
+        min_handle_remote_period,
+        # getting remote time via callback (should have been setup by __using__ macro)
+        fn -> remote_unit_time_handler.(unit) end
       )
+      #        |> Stream.map(fn   # adding local timestamp error to time value error
+      #          {tv, lts} ->
+      #        end)
+      # TODO :: use this as indicator of what to do in streamclock... or not ???
+      |> XestClock.Stream.monotone_increasing()
+
       # we compute local delta here in place where we have easy access to element in the stream
       |> Timed.LocalDelta.compute()
 

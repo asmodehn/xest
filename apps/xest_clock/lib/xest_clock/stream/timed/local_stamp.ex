@@ -79,6 +79,7 @@ defmodule XestClock.Stream.Timed.LocalStamp do
     }
   end
 
+  # TODO : make the rturn type a time value (again) so that we track long response time as a potential measurement error...
   def middle_stamp_estimate(%__MODULE__{} = lts_before, %__MODULE__{} = lts_after)
       when lts_before.unit == lts_after.unit do
     %__MODULE__{

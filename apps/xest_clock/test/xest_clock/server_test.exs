@@ -47,12 +47,9 @@ defmodule XestClock.ServerTest do
         end
 
         assert ExampleServer.tick(example_srv) == {
-                 %XestClock.Time.Stamp{
-                   origin: ExampleServer,
-                   ts: %XestClock.Time.Value{
-                     value: 42 * unit_pps.(unit),
-                     unit: unit
-                   }
+                 %XestClock.Time.Value{
+                   value: 42 * unit_pps.(unit),
+                   unit: unit
                  },
                  # Local stamp is always in millisecond (sleep pecision)
                  %XestClock.Stream.Timed.LocalStamp{
@@ -91,12 +88,9 @@ defmodule XestClock.ServerTest do
 
         # second tick
         assert ExampleServer.tick(example_srv) == {
-                 %XestClock.Time.Stamp{
-                   origin: ExampleServer,
-                   ts: %XestClock.Time.Value{
-                     value: 42 * unit_pps.(unit),
-                     unit: unit
-                   }
+                 %XestClock.Time.Value{
+                   value: 42 * unit_pps.(unit),
+                   unit: unit
                  },
                  # Local stamp is always in millisecond (sleep pecision)
                  %XestClock.Stream.Timed.LocalStamp{

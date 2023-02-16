@@ -46,10 +46,23 @@ defmodule XestClock.Stream do
   @spec monotone_decreasing(Enumerable.t()) :: Enumerable.t()
   def monotone_decreasing(enum) do
     Stream.transform(enum, nil, fn
-      {i, %Timed.LocalStamp{} = ts}, nil -> {[{i, ts}], i}
-      i, nil -> {[i], i}
-      {i, %Timed.LocalStamp{} = ts}, acc -> if acc >= i, do: {[{i, ts}], i}, else: {[acc], acc}
-      i, acc -> if acc >= i, do: {[i], i}, else: {[acc], acc}
+      # init
+      {i, %Timed.LocalStamp{} = ts}, nil ->
+        {[{i, ts}], i}
+
+      i, nil ->
+        {[i], i}
+
+      # from less generic combination to most generic
+      {%Time.Value{value: v} = i, %Timed.LocalStamp{} = ts}, acc ->
+        if acc.value >= v, do: {[{i, ts}], i}, else: {[acc], acc}
+
+      # Note this likely works on Time.Value, given the semantics of >=, but it is very non-explicit...
+      {i, %Timed.LocalStamp{} = ts}, acc ->
+        if acc >= i, do: {[{i, ts}], i}, else: {[acc], acc}
+
+      i, acc ->
+        if acc >= i, do: {[i], i}, else: {[acc], acc}
     end)
   end
 
@@ -191,5 +204,15 @@ defmodule XestClock.Stream do
       ),
       fun
     )
+  end
+
+  def as_timevalues(enum, unit) do
+    Stream.map(enum, fn
+      {elem, %XestClock.Stream.Timed.LocalStamp{} = lts} ->
+        {Time.Value.new(unit, elem), lts}
+
+      elem ->
+        Time.Value.new(unit, elem)
+    end)
   end
 end

@@ -339,9 +339,9 @@ end
 
 First, at this frequency a remote web server might block our request, and the proxy will error.
 
-Notice however, how the offset increment still oscillates around 0, with a shorter period than before, yet we still have an amplitude of around a second.
+Notice how the offset increment still oscillates around 0, with a shorter period than before, yet we still have an amplitude of around a second.
 
-Since the remote precision is only in `:second` we cannot do much more to adjust the precision here than correct the offset faster when we happen to know there is a difference between what we estimated and the reality, and we "see" that happening more often than before.
+Since the remote precision is only in `:second` we cannot do much more to adjust the precision here than correct the offset when we happen to know there is a difference between what we estimated and the reality, and we "see" that happening more often than before.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -353,7 +353,7 @@ Is there a way to get better precision on a clock, without sending requests as f
 
 A request every second is also not really ideal (network traffic !), and we know it is possible to do better (NTP works over internet with a few requests).
 
-In our usecase, we send request to another clock, so we have a sensible constraint: the skew of the remote is "not chainging too fast" => we do approximate it as a constant (which is the same as approximating the remote clock linearly).
+In our usecase, we send request to another clock, so we have a sensible constraint: the skew of the remote is "not changing too fast" => we do approximate it as a constant (which is the same as approximating the remote clock linearly).
 
 With this approximation we know it is best to send a request with a period matching the time necessary for the simulated clock to go over the remote clock precision (assumed to be its unit). This is what the Proxy does internally when calling `WorldClockProxy.monotonic_time/1`.
 

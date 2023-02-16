@@ -10,12 +10,9 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
   describe "new/2" do
     test "compute difference between a teimstamp and a local timestamp" do
       assert Timed.LocalDelta.new(
-               %Time.Stamp{
-                 origin: :some_server,
-                 ts: %Time.Value{
-                   value: 42,
-                   unit: :millisecond
-                 }
+               %Time.Value{
+                 value: 42,
+                 unit: :millisecond
                },
                %Timed.LocalStamp{
                  unit: :millisecond,
@@ -34,20 +31,14 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
 
   describe "compute/1" do
     test "compute skew on a stream" do
-      ts_enum = [
-        %Time.Stamp{
-          origin: :some_server,
-          ts: %Time.Value{
-            value: 42,
-            unit: :millisecond
-          }
+      tv_enum = [
+        %Time.Value{
+          value: 42,
+          unit: :millisecond
         },
-        %Time.Stamp{
-          origin: :some_server,
-          ts: %Time.Value{
-            value: 51,
-            unit: :millisecond
-          }
+        %Time.Value{
+          value: 51,
+          unit: :millisecond
         }
       ]
 
@@ -64,10 +55,10 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
         }
       ]
 
-      assert Timed.LocalDelta.compute(Stream.zip(ts_enum, lts_enum))
+      assert Timed.LocalDelta.compute(Stream.zip(tv_enum, lts_enum))
              |> Enum.to_list() ==
                Stream.zip([
-                 ts_enum,
+                 tv_enum,
                  lts_enum,
                  [
                    %Timed.LocalDelta{
@@ -92,7 +83,7 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
   end
 
   describe "offset_at/2" do
-    test "estimate the offset with a potential error" do
+    test "estimate the offset with a potential error, adjusting units" do
       delta = %Timed.LocalDelta{
         offset: %Time.Value{
           unit: :millisecond,
@@ -104,14 +95,14 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
       assert Timed.LocalDelta.offset_at(
                delta,
                %Timed.LocalStamp{
-                 unit: :millisecond,
-                 monotonic: 42,
-                 vm_offset: 49
+                 unit: :nanosecond,
+                 monotonic: 42_000_000,
+                 vm_offset: 49_000_000
                },
                %Timed.LocalStamp{
-                 unit: :millisecond,
-                 monotonic: 51,
-                 vm_offset: 49
+                 unit: :nanosecond,
+                 monotonic: 51_000_000,
+                 vm_offset: 49_000_000
                }
              ) ==
                Time.Value.new(
