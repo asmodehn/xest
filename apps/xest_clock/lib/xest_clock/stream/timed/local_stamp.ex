@@ -1,6 +1,9 @@
 defmodule XestClock.Stream.Timed.LocalStamp do
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
+  # hiding Elixir.Process to make sure we do not inadvertently use it
+  alias XestClock.Process
+
   alias XestClock.Time
 
   @enforce_keys [:monotonic]
@@ -15,7 +18,7 @@ defmodule XestClock.Stream.Timed.LocalStamp do
           vm_offset: integer()
         }
 
-  def now(unit) do
+  def now(unit \\ System.Extra.native_time_unit()) do
     %__MODULE__{
       unit: unit,
       monotonic: System.monotonic_time(unit),
@@ -64,6 +67,18 @@ defmodule XestClock.Stream.Timed.LocalStamp do
     )
   end
 
+  def after_a_while(%__MODULE__{} = lts, %Time.Value{} = tv) do
+    converted_tv = Time.Value.convert(tv, lts.unit)
+
+    %__MODULE__{
+      unit: lts.unit,
+      # guessing monotonic value then. remove possible error to be conservative.
+      monotonic: lts.monotonic + converted_tv.value - converted_tv.error,
+      # just a guess
+      vm_offset: lts.vm_offset
+    }
+  end
+
   def middle_stamp_estimate(%__MODULE__{} = lts_before, %__MODULE__{} = lts_after)
       when lts_before.unit == lts_after.unit do
     %__MODULE__{
@@ -88,6 +103,26 @@ defmodule XestClock.Stream.Timed.LocalStamp do
       # TODO : how can we force vm_offset to always be same unit as monotonic ??
       # maybe make vm_offset also a time value ??
     }
+  end
+
+  @spec wake_up_at(t()) :: t()
+  def wake_up_at(%__MODULE__{} = lts) do
+    bef = now(lts.unit)
+
+    # difference (ms)
+    to_wait =
+      System.convert_time_unit(lts.monotonic, lts.unit, :millisecond) -
+        System.convert_time_unit(bef.monotonic, bef.unit, :millisecond)
+
+    # SIDE_EFFECT !
+    # and always return current timestamp, since we have to measure it anyway...
+    if to_wait > 0 do
+      Process.sleep(to_wait)
+      now(lts.unit)
+    else
+      # lets avoid another probably useless System call
+      bef
+    end
   end
 end
 

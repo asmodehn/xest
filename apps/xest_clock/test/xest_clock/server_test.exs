@@ -27,13 +27,13 @@ defmodule XestClock.ServerTest do
         XestClock.System.OriginalMock
         |> expect(:monotonic_time, 2, fn
           #          :second -> 42
-          :millisecond -> 42_000
+          #          :millisecond -> 42_000
           #          :microsecond -> 42_000_000
-          #          :nanosecond -> 42_000_000_000
+          :nanosecond -> 42_000_000_000
           # default and parts per seconds
           pps -> 42 * pps
         end)
-        |> expect(:time_offset, 2, fn :millisecond -> 0 end)
+        |> expect(:time_offset, 2, fn _ -> 0 end)
         |> allow(self(), example_srv)
 
         # Note : the local timestamp calls these one time only.
@@ -56,8 +56,8 @@ defmodule XestClock.ServerTest do
                  },
                  # Local stamp is always in millisecond (sleep pecision)
                  %XestClock.Stream.Timed.LocalStamp{
-                   monotonic: 42_000,
-                   unit: :millisecond,
+                   monotonic: 42_000_000_000,
+                   unit: :nanosecond,
                    vm_offset: 0
                  },
                  %XestClock.Stream.Timed.LocalDelta{
@@ -80,13 +80,13 @@ defmodule XestClock.ServerTest do
         XestClock.System.OriginalMock
         |> expect(:monotonic_time, 3, fn
           #          :second -> 42
-          :millisecond -> 42_000
+          #          :millisecond -> 42_000
           #          :microsecond -> 42_000_000
-          #          :nanosecond -> 42_000_000_000
+          :nanosecond -> 42_000_000_000
           # default and parts per seconds
           pps -> 42 * pps
         end)
-        |> expect(:time_offset, 3, fn :millisecond -> 0 end)
+        |> expect(:time_offset, 3, fn _ -> 0 end)
         |> allow(self(), example_srv)
 
         # second tick
@@ -100,8 +100,8 @@ defmodule XestClock.ServerTest do
                  },
                  # Local stamp is always in millisecond (sleep pecision)
                  %XestClock.Stream.Timed.LocalStamp{
-                   monotonic: 42_000,
-                   unit: :millisecond,
+                   monotonic: 42_000_000_000,
+                   unit: :nanosecond,
                    vm_offset: 0
                  },
                  %XestClock.Stream.Timed.LocalDelta{
@@ -129,9 +129,12 @@ defmodule XestClock.ServerTest do
       # This is used for local stamp -> only in ms
       XestClock.System.OriginalMock
       |> expect(:monotonic_time, 4, fn
+        # millisecond for the precision required locally on the client (test genserver)
         :millisecond -> 51_000
+        # nano second for the precision internal to the proxy server (and its internal stream)
+        :nanosecond -> 51_000_000_000
       end)
-      |> expect(:time_offset, 4, fn :millisecond -> 0 end)
+      |> expect(:time_offset, 4, fn _ -> 0 end)
       |> allow(self(), example_srv)
 
       # getting monotonic_time of the server gives us the value received from the remote clock
@@ -153,8 +156,9 @@ defmodule XestClock.ServerTest do
       XestClock.System.OriginalMock
       |> expect(:monotonic_time, 4, fn
         :millisecond -> 51_000
+        :nanosecond -> 51_000_000_000
       end)
-      |> expect(:time_offset, 4, fn :millisecond -> 0 end)
+      |> expect(:time_offset, 4, fn _ -> 0 end)
       |> allow(self(), example_srv)
 
       # getting monotonic_time of the server gives us the value received from the remote clock

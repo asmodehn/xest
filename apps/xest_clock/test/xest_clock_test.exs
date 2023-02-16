@@ -23,6 +23,9 @@ defmodule XestClockTest do
     end
 
     test "returns streamclock with proxy if  a pid is provided" do
+      # all test constant setup for recent linux nano second precision
+      assert XestClock.System.Extra.native_time_unit() == :nanosecond
+
       example_srv = start_supervised!({ExampleServer, :second}, id: :example_sec)
       # TODO : child_spec for orign / pid ??? some better way ???
       clock = XestClock.new(:millisecond, ExampleServer, example_srv)
@@ -34,13 +37,15 @@ defmodule XestClockTest do
       XestClock.System.OriginalMock
       # 7 times because sleep...
       |> expect(:monotonic_time, 12, fn
-        # for local proxy clock
+        # for client stream in test process
         :millisecond -> 51_000
+        # for proxy clock internal stream
+        :nanosecond -> 51_000_000_000
       end)
       # 7 times because sleep...
       |> expect(:time_offset, 12, fn
-        # for local proxy clock
-        :millisecond -> 0
+        # for local proxy clock and client stream
+        _ -> 0
       end)
       |> allow(self(), example_srv)
 

@@ -26,6 +26,7 @@ defmodule XestClock.Stream.Timed.LocalDelta do
   def new(%Time.Stamp{} = ts, %Timed.LocalStamp{} = lts) do
     # convert to the stamp unit (higher local precision is not meaningful for the result)
     # CAREFUL! we should only take monotonic component in account.
+    # Therefore the offset might be bigger than naively expected (vm_offset is not taken into account).
     converted_monotonic_lts = Timed.LocalStamp.monotonic_time(lts, ts.ts.unit)
 
     %__MODULE__{
@@ -96,11 +97,12 @@ defmodule XestClock.Stream.Timed.LocalDelta do
       )
 
     # multiply with previously measured skew (we assume it didn't change on the remote...)
-    adjustment = Time.Value.scale(local_time_delta, dv.skew) |> IO.inspect()
+    adjustment = Time.Value.scale(local_time_delta, dv.skew)
 
-    # do not forget the error coming from the delta measurement landing into the adjustment,
-    # if there is any...
-    error_estimate = abs(dv.offset.error) + abs(adjustment.value) + abs(adjustment.error)
+    # Note: error is always positive and adjustment error comes from local measurement -> 0
+    #  we add hte adjustment value to the offset error,
+    # in case the current skew is nothing like the one we measured previously
+    error_estimate = dv.offset.error + abs(adjustment.value)
     value_estimate = dv.offset.value + adjustment.value
 
     %{dv.offset | error: error_estimate, value: value_estimate}

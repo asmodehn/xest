@@ -1,9 +1,4 @@
 defmodule XestClock.Stream do
-  # hiding Elixir.System to make sure we do not inadvertently use it
-  alias XestClock.System
-  # hiding Elixir.System to make sure we do not inadvertently use it
-  alias XestClock.Process
-
   @moduledoc """
       A module holding stream operators similar to Elixir's but with some extra  stuff
   """
@@ -63,26 +58,27 @@ defmodule XestClock.Stream do
 
     This extends Elixir's Stream.repeatedly by adding a timestamp to each element of the stream
   """
-  @spec repeatedly_timed(System.time_unit(), (() -> Stream.element())) :: Enumerable.t()
-  def repeatedly_timed(precision, generator_fun) when is_function(generator_fun, 0) do
-    &do_repeatedly_timed(precision, generator_fun, &1, &2)
+  @spec repeatedly_timed((() -> Stream.element())) :: Enumerable.t()
+  def repeatedly_timed(generator_fun) when is_function(generator_fun, 0) do
+    &do_repeatedly_timed(generator_fun, &1, &2)
   end
 
-  defp do_repeatedly_timed(precision, generator_fun, {:suspend, acc}, fun) do
-    {:suspended, acc, &do_repeatedly_timed(precision, generator_fun, &1, fun)}
+  # TODO :get rid of precision here, lets use native precision for local timestamps.
+
+  defp do_repeatedly_timed(generator_fun, {:suspend, acc}, fun) do
+    {:suspended, acc, &do_repeatedly_timed(generator_fun, &1, fun)}
   end
 
-  defp do_repeatedly_timed(_precision, _generator_fun, {:halt, acc}, _fun) do
+  defp do_repeatedly_timed(_generator_fun, {:halt, acc}, _fun) do
     {:halted, acc}
   end
 
-  defp do_repeatedly_timed(precision, generator_fun, {:cont, acc}, fun) do
-    bef = Timed.LocalStamp.now(precision)
+  defp do_repeatedly_timed(generator_fun, {:cont, acc}, fun) do
+    bef = Timed.LocalStamp.now()
     result = generator_fun.()
-    aft = Timed.LocalStamp.now(precision)
+    aft = Timed.LocalStamp.now()
 
     do_repeatedly_timed(
-      precision,
       generator_fun,
       fun.(
         {
@@ -109,6 +105,20 @@ defmodule XestClock.Stream do
       when is_function(generator_fun, 0) do
     repeatedly_throttled(Time.Value.convert(min_period, :millisecond).value, generator_fun)
   end
+
+  @spec repeatedly_throttled(atom(), (() -> Stream.element())) :: Enumerable.t()
+  def repeatedly_throttled(min_period, generator_fun)
+      when is_atom(min_period) and is_function(generator_fun, 0) do
+    case min_period do
+      :second -> repeatedly_throttled(1_000, generator_fun)
+      :millisecond -> repeatedly_throttled(1, generator_fun)
+      # support time_unit atoms, but doesn't throttle (no point since sleep() precision is 1 ms)
+      :microsecond -> repeatedly_timed(generator_fun)
+      :nanosecond -> repeatedly_timed(generator_fun)
+    end
+  end
+
+  # TODO : semantics of interger (part paer second like in time_unit, or direct implicit ms meaning ?
 
   # TODO : a debug flag to print something when sleeping...
   @spec repeatedly_throttled(integer, (() -> Stream.element())) :: Enumerable.t()
@@ -138,10 +148,10 @@ defmodule XestClock.Stream do
   # in do_repeatedly_throttled own accumulator in the first arg
   defp do_repeatedly_throttled({min_period_ms, nil}, generator_fun, {:cont, acc}, fun) do
     # Note : min_period_ms is supposed to be in millisecond.
-    # no point to be more precise here.
-    bef = Timed.LocalStamp.now(:millisecond)
+
+    bef = Timed.LocalStamp.now()
     result = generator_fun.()
-    aft = Timed.LocalStamp.now(:millisecond)
+    aft = Timed.LocalStamp.now()
 
     do_repeatedly_throttled(
       {min_period_ms, aft},
@@ -159,29 +169,15 @@ defmodule XestClock.Stream do
 
   defp do_repeatedly_throttled({min_period_ms, lts}, generator_fun, {:cont, acc}, fun) do
     # Note : min_period_ms is supposed to be in millisecond.
-    # no point to be more precise here.
-    bef = Timed.LocalStamp.now(:millisecond)
 
-    # offset difference
-    current_offset = bef.monotonic - lts.monotonic
+    then = lts |> Timed.LocalStamp.after_a_while(Time.Value.new(:millisecond, min_period_ms))
 
-    # if the current time is far enough from previous ts
-    to_wait = min_period_ms - current_offset
-    # timeout always in milliseconds !
-
-    #    IO.inspect("to_wait: #{to_wait}")
-
-    bef_again =
-      if to_wait > 0 do
-        # SIDE_EFFECT !
-        Process.sleep(to_wait)
-        Timed.LocalStamp.now(:millisecond)
-      else
-        bef
-      end
+    # CAREFUL: this might sleep for a little while...
+    bef = Timed.LocalStamp.wake_up_at(then)
 
     result = generator_fun.()
-    aft = Timed.LocalStamp.now(:millisecond)
+
+    aft = Timed.LocalStamp.now()
 
     do_repeatedly_throttled(
       {min_period_ms, aft},
@@ -189,7 +185,7 @@ defmodule XestClock.Stream do
       fun.(
         {
           result,
-          Timed.LocalStamp.middle_stamp_estimate(bef_again, aft)
+          Timed.LocalStamp.middle_stamp_estimate(bef, aft)
         },
         acc
       ),

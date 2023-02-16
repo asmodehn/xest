@@ -10,30 +10,34 @@ defmodule XestClock.StreamTest do
   # Make sure mocks are verified when the test exits
   setup :verify_on_exit!
 
-  describe "repeatedly_timed/2" do
+  describe "repeatedly_timed/1" do
     test " adds a local timestamp to the element" do
+      native = XestClock.System.Extra.native_time_unit()
+      # test constants calibrated for recent linux
+      assert native == :nanosecond
+
       XestClock.System.OriginalMock
       # since we take mid time-of-flight, monotonic_time and time_offset are called a double number of times !
-      |> expect(:monotonic_time, fn :second -> 50_998 end)
-      |> expect(:monotonic_time, fn :second -> 51_002 end)
-      |> expect(:monotonic_time, fn :second -> 51_499 end)
-      |> expect(:monotonic_time, fn :second -> 51_501 end)
-      |> expect(:time_offset, 4, fn :second -> -33 end)
+      |> expect(:monotonic_time, fn ^native -> 50_998_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 51_002_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 51_499_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 51_501_000_000 end)
+      |> expect(:time_offset, 4, fn ^native -> -33_000_000 end)
 
-      assert Stream.repeatedly_timed(:second, fn -> 42 end)
+      assert Stream.repeatedly_timed(fn -> 42 end)
              |> Enum.take(2) == [
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 51_000,
-                  unit: :second,
-                  vm_offset: -33
+                  monotonic: 51_000_000_000,
+                  unit: :nanosecond,
+                  vm_offset: -33_000_000
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
                   # Note the rounding precision error...
-                  monotonic: 51_500,
-                  unit: :second,
-                  vm_offset: -33
+                  monotonic: 51_500_000_000,
+                  unit: :nanosecond,
+                  vm_offset: -33_000_000
                 }}
              ]
     end
@@ -41,6 +45,10 @@ defmodule XestClock.StreamTest do
 
   describe "repeatedly_throttled/2" do
     test " allows the whole stream to be generated as usual, if the pulls are slow enough" do
+      native = XestClock.System.Extra.native_time_unit()
+      # test constants calibrated for recent linux
+      assert native == :nanosecond
+
       XestClock.System.OriginalMock
       # we dont care about offset here
       |> expect(:time_offset, 10, fn _ -> 0 end)
@@ -49,16 +57,16 @@ defmodule XestClock.StreamTest do
       # BUT since we take mid time-of-flight,
       # monotonic_time and time_offset are called a double number of times !
 
-      |> expect(:monotonic_time, fn :millisecond -> 41_998 end)
-      |> expect(:monotonic_time, fn :millisecond -> 42_002 end)
-      |> expect(:monotonic_time, fn :millisecond -> 43_498 end)
-      |> expect(:monotonic_time, fn :millisecond -> 43_502 end)
-      |> expect(:monotonic_time, fn :millisecond -> 44_998 end)
-      |> expect(:monotonic_time, fn :millisecond -> 45_002 end)
-      |> expect(:monotonic_time, fn :millisecond -> 46_498 end)
-      |> expect(:monotonic_time, fn :millisecond -> 46_502 end)
-      |> expect(:monotonic_time, fn :millisecond -> 47_998 end)
-      |> expect(:monotonic_time, fn :millisecond -> 48_002 end)
+      |> expect(:monotonic_time, fn ^native -> 41_998_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 42_002_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 43_498_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 43_502_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 44_998_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 45_002_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 46_498_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 46_502_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 47_998_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 48_002_000_000 end)
 
       # minimal period of 100 millisecond.
       # the period of time checks is much slower (1.5 s)
@@ -66,38 +74,42 @@ defmodule XestClock.StreamTest do
              |> Enum.take(5) == [
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 42000,
-                  unit: :millisecond,
+                  monotonic: 42_000_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 43500,
-                  unit: :millisecond,
+                  monotonic: 43_500_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 45000,
-                  unit: :millisecond,
+                  monotonic: 45_000_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 46500,
-                  unit: :millisecond,
+                  monotonic: 46_500_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 48000,
-                  unit: :millisecond,
+                  monotonic: 48_000_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }}
              ]
     end
 
     test " throttles the stream generation, if the pulls are too fast" do
+      native = XestClock.System.Extra.native_time_unit()
+      # test constants calibrated for recent linux
+      assert native == :nanosecond
+
       XestClock.System.OriginalMock
       # we dont care about offset here
       |> expect(:time_offset, 11, fn _ -> 0 end)
@@ -105,23 +117,23 @@ defmodule XestClock.StreamTest do
       # as one is timed measurement, and the other for the rate.
       # BUT since we take mid time-of-flight,
       # monotonic_time and time_offset are called a double number of times !
-      |> expect(:monotonic_time, fn :millisecond -> 41_998 end)
-      |> expect(:monotonic_time, fn :millisecond -> 42_002 end)
-      |> expect(:monotonic_time, fn :millisecond -> 43_498 end)
-      |> expect(:monotonic_time, fn :millisecond -> 43_502 end)
+      |> expect(:monotonic_time, fn ^native -> 41_998_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 42_002_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 43_498_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 43_502_000_000 end)
 
       # except for the third, which will be too fast, meaning the process will sleep...
-      |> expect(:monotonic_time, fn :millisecond -> 44_000 end)
+      |> expect(:monotonic_time, fn ^native -> 44_000_000_000 end)
       # it will be called another time to correct the timestamp
-      |> expect(:monotonic_time, fn :millisecond -> 44_999 end)
+      |> expect(:monotonic_time, fn ^native -> 44_999_000_000 end)
       # and once more after the request
-      |> expect(:monotonic_time, fn :millisecond -> 45_001 end)
+      |> expect(:monotonic_time, fn ^native -> 45_001_000_000 end)
       # but then we revert to slow enough timing
 
-      |> expect(:monotonic_time, fn :millisecond -> 46_498 end)
-      |> expect(:monotonic_time, fn :millisecond -> 46_502 end)
-      |> expect(:monotonic_time, fn :millisecond -> 47_998 end)
-      |> expect(:monotonic_time, fn :millisecond -> 48_002 end)
+      |> expect(:monotonic_time, fn ^native -> 46_498_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 46_502_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 47_998_000_000 end)
+      |> expect(:monotonic_time, fn ^native -> 48_002_000_000 end)
 
       XestClock.Process.OriginalMock
       # sleep should be called with 0.5 ms = 500 us
@@ -132,32 +144,32 @@ defmodule XestClock.StreamTest do
              |> Enum.take(5) == [
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 42000,
-                  unit: :millisecond,
+                  monotonic: 42_000_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 43500,
-                  unit: :millisecond,
+                  monotonic: 43_500_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 45000,
-                  unit: :millisecond,
+                  monotonic: 45_000_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 46500,
-                  unit: :millisecond,
+                  monotonic: 46_500_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }},
                {42,
                 %XestClock.Stream.Timed.LocalStamp{
-                  monotonic: 48000,
-                  unit: :millisecond,
+                  monotonic: 48_000_000_000,
+                  unit: :nanosecond,
                   vm_offset: 0
                 }}
              ]
