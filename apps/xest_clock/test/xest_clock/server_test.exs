@@ -19,7 +19,17 @@ defmodule XestClock.ServerTest do
 
       srv_id = String.to_atom("example_tick")
 
-      example_srv = start_supervised!(ExampleServer, id: srv_id)
+      example_srv =
+        start_supervised!(
+          {ExampleServer,
+           fn ->
+             XestClock.Time.Value.new(
+               :second,
+               XestClock.System.monotonic_time(:second)
+             )
+           end},
+          id: srv_id
+        )
 
       # Preparing mocks for 2 calls for first tick...
       # This is used for local stamp -> only in ms
@@ -102,15 +112,24 @@ defmodule XestClock.ServerTest do
   end
 
   describe "compute_offset" do
-    test "works" do
-    end
+    # TODO
   end
 
   describe "monotonic_time" do
     test "returns a local estimation of the remote clock" do
       srv_id = String.to_atom("example_monotonic")
 
-      example_srv = start_supervised!(ExampleServer, id: srv_id)
+      example_srv =
+        start_supervised!(
+          {ExampleServer,
+           fn ->
+             XestClock.Time.Value.new(
+               :second,
+               XestClock.System.monotonic_time(:second)
+             )
+           end},
+          id: srv_id
+        )
 
       # Preparing mocks for 2 + 1 + 1 ticks...
       # This is used for local stamp -> only in ms
@@ -136,7 +155,17 @@ defmodule XestClock.ServerTest do
     test "on first tick returns offset without error" do
       srv_id = String.to_atom("example_error_nil")
 
-      example_srv = start_supervised!(ExampleServer, id: srv_id)
+      example_srv =
+        start_supervised!(
+          {ExampleServer,
+           fn ->
+             XestClock.Time.Value.new(
+               :second,
+               XestClock.System.monotonic_time(:second)
+             )
+           end},
+          id: srv_id
+        )
 
       # Preparing mocks for only 1 measurement ticks...
       # This is used for local stamp -> only in ms
@@ -160,5 +189,9 @@ defmodule XestClock.ServerTest do
       assert XestClock.Server.monotonic_time_value(example_srv, :millisecond) ==
                %XestClock.Time.Value{unit: :millisecond, value: 42000, error: 0}
     end
+  end
+
+  describe "start_link" do
+    # TODO
   end
 end

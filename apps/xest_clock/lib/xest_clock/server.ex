@@ -7,30 +7,15 @@ defmodule XestClock.Server do
 
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
-  # hiding Elixir.System to make sure we do not inadvertently use it
-  alias XestClock.Process
 
   alias XestClock.Stream.Timed
   #  alias XestClock.Stream.Limiter
   #  alias XestClock.Time
 
-  # TODO : better type for continuation ?
-  @type internal_state :: {Stream.t(), continuation :: any()}
+  alias XestClock.Server.StreamStepper
 
-  #  # the actual callback needed by the server
-  #    @callback init({atom(), System.time_unit()}) ::
-  #              {:ok, state}
-  #              | {:ok, state, timeout | :hibernate | {:continue, continue_arg :: term}}
-  #              | :ignore
-  #              | {:stop, reason :: any}
-  #            when state: any
-  @callback handle_remote_unix_time() :: Time.Value.t()
-  @callback handle_offset({Enumerable.t(), any(), internal_state}) ::
-              {Time.Value.t(), internal_state}
-
-  # callbacks to nudge the user towards code clarity with an explicit interface
-  # good or bad idae ???
-  @callback ticks(pid(), integer()) :: [XestClock.Time.Value.t()]
+  @callback handle_offset({Enumerable.t(), any(), StreamStepper.t()}) ::
+              {Time.Value.t(), StreamStepper.t()}
 
   #  @optional_callbacks init: 1
   # TODO : see GenServer to add appropriate behaviours one may want to (re)define...
@@ -44,50 +29,41 @@ defmodule XestClock.Server do
 
       # Let GenServer do the usual GenServer stuff...
       # After all the start and init work the same...
-      use GenServer
+      use StreamStepper
 
       # GenServer child_spec is good enough for now.
+
+      # Lets define a start_link by default:
+      def start_link(stream, opts \\ []) when is_list(opts) do
+        XestClock.Server.start_link(__MODULE__, stream, opts)
+      end
 
       # we define the init matching the callback
       @doc false
       @impl GenServer
-      def init(_init_arg) do
+      def init(function_call) do
         #  default init behaviour (overridable)
-        XestClock.Server.init(
-          XestClock.Stream.repeatedly_throttled(
-            # default period limit of a second
-            1000,
-            # getting remote time via callback (should have been setup by __using__ macro)
-            &handle_remote_unix_time/0
-          )
-        )
+        {:ok,
+         XestClock.Server.init(
+           XestClock.Stream.repeatedly_throttled(
+             # default period limit of a second
+             1000,
+             # getting remote time via callback (should have been setup by __using__ macro)
+             function_call
+           )
+         )}
       end
 
       defoverridable init: 1
 
-      # TODO : :ticks to more specific atom (library style)...
-      # IDEA : stamp for passive, ticks for proactive ticking
-      # possibly out of band/without client code knowing -> events / pubsub
       @doc false
       @impl GenServer
-      def handle_call({:ticks, demand}, _from, {stream, continuation, last_result}) do
-        # cache on the client side (it is impure, so better keep it on the outside)
-        # REALLY ???
-
-        #        max_call_rate(fn ->
-        # Ref: https://hexdocs.pm/gen_stage/GenStage.html#c:handle_call/3
-        # we immediately return the result of the computation,
-        # TODO: but we also set it to be dispatch as an event (other subscribers ?),
-        # just as a demand of 1 would have.
-        {result, new_continuation} = XestClock.Stream.Ticker.next(demand, continuation)
-
-        {:reply, result, {stream, new_continuation, List.last(result)}}
-      end
-
-      @doc false
-      @impl GenServer
-      def handle_call({:offset}, _from, {stream, continuation, last_result}) do
-        {result, new_state} = handle_offset({stream, continuation, last_result})
+      def handle_call(
+            {:offset},
+            _from,
+            %StreamStepper{stream: s, continuation: c, backstep: b} = state
+          ) do
+        {result, %StreamStepper{} = new_state} = handle_offset(state)
 
         {:reply, result, new_state}
       end
@@ -95,39 +71,17 @@ defmodule XestClock.Server do
       #  a simple default implementation, straight forward...
       @doc false
       @impl XestClock.Server
-      def handle_offset(state) do
+      def handle_offset(%StreamStepper{} = state) do
         XestClock.Server.compute_offset(state)
       end
 
-      # this is the default signaling to the user it has not been defined
-      @doc false
-      @impl XestClock.Server
-      def handle_remote_unix_time() do
-        proc =
-          case Process.info(self(), :registered_name) do
-            {_, []} -> self()
-            {_, name} -> name
-          end
-
-        # We do this to trick Dialyzer to not complain about non-local returns.
-        case :erlang.phash2(1, 1) do
-          0 ->
-            raise "attempted to call XestClock.Template #{inspect(proc)} but no handle_remote_unix_time/3 clause was provided"
-
-          1 ->
-            # state here could be the current (last in stream) time ?
-            {:stop, {:bad_call}, nil}
-        end
-      end
-
       defoverridable handle_offset: 1
-      defoverridable handle_remote_unix_time: 0
     end
   end
 
   # TODO : better interface for min_handle_remote_period...
   def init(timevalue_stream) do
-    streamclock =
+    stream =
       timevalue_stream
       # TODO :: use this as indicator of what to do in streamclock... or not ???
       |> XestClock.Stream.monotone_increasing()
@@ -135,29 +89,24 @@ defmodule XestClock.Server do
       # we compute local delta here in place where we have easy access to element in the stream
       |> Timed.LocalDelta.compute()
 
-    # TODO : maybe we can make the first tick here, so the second one needed for estimation
-    # will be done on first request ? seems better than two at first request time...
-    # TODO : if requests are implicit in here we can just schedule the first one...
-
     # GOAL : At this stage the stream at one element has all information
     # related to previous elements for a client to be able
     # to build his own estimation of the remote clock
-
-    {:ok, {streamclock, XestClock.Stream.Ticker.new(streamclock), nil}}
+    StreamStepper.init(stream)
   end
 
-  def compute_offset({stream, continuation, last_result}) do
-    case last_result do
+  def compute_offset(%StreamStepper{stream: s, continuation: c, backstep: b}) do
+    case List.last(b) do
       nil ->
         # force tick
-        {result, new_continuation} = XestClock.Stream.Ticker.next(1, continuation)
+        {result, new_continuation} = XestClock.Stream.Ticker.next(1, c)
         {rts, lts, dv} = List.last(result)
 
         {
           # CAREFUL erasing error: nil here
           %{Timed.LocalDelta.offset(dv, lts) | error: 0},
-          # new state
-          {stream, new_continuation, {rts, lts, dv}}
+          # new state  # TODO : adjust backstep... in streamstepper !!
+          %StreamStepper{stream: s, continuation: new_continuation, backstep: [{rts, lts, dv}]}
         }
 
       # TODO : this in a special stream ??
@@ -176,49 +125,30 @@ defmodule XestClock.Server do
           # force tick
           # TODO : can we do something here so that the next request can come a bit later ???
           #
-          {result, new_continuation} = XestClock.Stream.Ticker.next(1, continuation)
+          {result, new_continuation} = XestClock.Stream.Ticker.next(1, c)
           {rts, lts, dv} = List.last(result)
 
           {
             Timed.LocalDelta.offset(dv, lts),
-            # new_state
-            {stream, new_continuation, {rts, lts, dv}}
+            # new_state # TODO : adjust backstep... in stream stepper !!!
+            %StreamStepper{stream: s, continuation: new_continuation, backstep: [{rts, lts, dv}]}
           }
         else
           {
             offset,
-            # new_state
-            {stream, continuation, {rts, lts, dv}}
+            # new_state  # TODO : adjust backstep... in stream stepper !!!
+            %StreamStepper{stream: s, continuation: c, backstep: [{rts, lts, dv}]}
           }
         end
     end
   end
 
   # we define a default start_link matching the default child_spec of genserver
-  def start_link(module, opts \\ []) do
+  def start_link(module, stream, opts \\ []) do
     # TODO: use this to pass options to the server
 
-    GenServer.start_link(
-      module,
-      opts
-    )
+    StreamStepper.start_link(module, stream, opts)
   end
-
-  @spec ticks(pid(), integer()) :: [
-          {XestClock.Timestamp.t(), XestClock.Stream.Timed.LocalStamp.t(),
-           XestClock.Stream.Timed.LocalDelta.t()}
-        ]
-  def ticks(pid \\ __MODULE__, demand) do
-    GenServer.call(pid, {:ticks, demand})
-  end
-
-  #  @spec previous_tick(pid()) ::
-  #          {XestClock.Timestamp.t(), XestClock.Stream.Timed.LocalStamp.t(),
-  #           XestClock.Stream.Timed.LocalDelta.t()}
-  #  def previous_tick(pid \\ __MODULE__) do
-  #    {_stream, _continuation, last} = :sys.get_state(pid)
-  #    last
-  #  end
 
   def offset(pid \\ __MODULE__) do
     GenServer.call(pid, {:offset})

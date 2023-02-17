@@ -142,24 +142,12 @@ defmodule WorldClockProxy do
 
   # Client Code
 
-  @impl true
-  def init(_state) do
-    # Note we limit to 1 ms the request period to allow later pathologic 100 ms usecase
-    XestClock.Server.init(
-      XestClock.Stream.repeatedly_throttled(
-        :millisecond,
-        &handle_remote_unix_time/0
-      )
-    )
-  end
-
   def monotonic_time(pid \\ __MODULE__, unit) do
     XestClock.Server.monotonic_time_value(pid, unit)
   end
 
-  @impl true
   def ticks(pid \\ __MODULE__, demand) do
-    XestClock.Server.ticks(pid, demand)
+    XestClock.Server.StreamStepper.ticks(pid, demand)
   end
 
   def offset(pid \\ __MODULE__, unit) do
@@ -168,21 +156,32 @@ defmodule WorldClockProxy do
   end
 
   # Callbacks
+
+  # This is not necessary, but we can override with our preferences for the throttling
+  def init(remote_call) do
+    # Note we limit to 1 ms the request period to allow later pathologic 100 ms usecase
+    {:ok,
+     XestClock.Server.init(
+       XestClock.Stream.repeatedly_throttled(
+         :millisecond,
+         remote_call
+       )
+     )}
+  end
+
   @impl true
   def handle_offset(state) do
     {result, new_state} = XestClock.Server.compute_offset(state)
     {result, new_state}
   end
-
-  @impl true
-  def handle_remote_unix_time() do
-    XestClock.Time.Value.new(:second, WorldClock.unixtime())
-    # |> IO.inspect()
-  end
 end
 
 # a server that tracks a remote clock internally in milliseconds
-{:ok, spid} = XestClock.Server.start_link(WorldClockProxy)
+{:ok, spid} =
+  XestClock.Server.start_link(
+    WorldClockProxy,
+    fn -> XestClock.Time.Value.new(:second, WorldClock.unixtime()) end
+  )
 ```
 
 A one time call, asking for a remote time (estimated) in `:millisecond`.
@@ -367,7 +366,7 @@ Since the remote precision is only in `:second` we cannot do much more to adjust
 
 <!-- livebook:{"break_markdown":true} -->
 
-For increased precision, we would need more, faster, requests to the remote clock. But as we just saw, this is not practically feasible over the internet.
+For increased precision, we would need more, faster, requests to the remote clock. But as we just saw, this is not practically feasible over the internet, and although we would be able to adjust faster, the uncertainty on hte value will remain the same...
 
 Is there a way to get better precision on a clock, without sending requests as fast as possible ? This problem has been solved by NTP before, but here we cannot enforce the remote server behaviour.
 

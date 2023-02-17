@@ -26,7 +26,18 @@ defmodule XestClockTest do
       # all test constant setup for recent linux nano second precision
       assert XestClock.System.Extra.native_time_unit() == :nanosecond
 
-      example_srv = start_supervised!(ExampleServer, id: :example_sec)
+      example_srv =
+        start_supervised!(
+          {ExampleServer,
+           fn ->
+             XestClock.Time.Value.new(
+               :second,
+               XestClock.System.monotonic_time(:second)
+             )
+           end},
+          id: :example_sec
+        )
+
       # TODO : child_spec for orign / pid ??? some better way ???
       clock = XestClock.new(:millisecond, ExampleServer, example_srv)
 

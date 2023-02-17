@@ -12,47 +12,40 @@ defmodule ExampleServer do
   # Client code
 
   # already defined in macro. good or not ?
-  def start_link(opts \\ []) when is_list(opts) do
-    XestClock.Server.start_link(__MODULE__, opts)
-  end
+  #  def start_link(stream, opts \\ []) when is_list(opts) do
+  #    XestClock.Server.start_link(__MODULE__, stream, opts)
+  #  end
 
-  @impl true
-  def init(_state) do
-    XestClock.Server.init(
-      # TODO : maybe we can get rid of this for test ???
-      XestClock.Stream.repeatedly_throttled(
-        # default period limit of a second
-        1000,
-        &handle_remote_unix_time/0
-      )
-    )
+  # we redefine init to setup our own constraints on throttling
+  def init(timevalue_stream) do
+    {:ok,
+     XestClock.Server.init(
+       # TODO : maybe we can get rid of this for test ???
+       XestClock.Stream.repeatedly_throttled(
+         # default period limit of a second
+         1000,
+         timevalue_stream
+       )
+     )}
   end
 
   def tick(pid \\ __MODULE__) do
     List.first(ticks(pid, 1))
   end
 
-  @impl true
+  # in case we want to expose internal ticks to the client
   def ticks(pid \\ __MODULE__, demand) do
-    XestClock.Server.ticks(pid, demand)
-  end
-
-  ## Callbacks
-  @impl true
-  def handle_offset(state) do
-    {result, new_state} = XestClock.Server.compute_offset(state)
-    {result, new_state}
-  end
-
-  @impl true
-  def handle_remote_unix_time() do
-    XestClock.Time.Value.new(
-      :second,
-      XestClock.System.monotonic_time(:second)
-    )
+    XestClock.Server.StreamStepper.ticks(pid, demand)
   end
 
   def monotonic_time(pid \\ __MODULE__, unit) do
     XestClock.Server.monotonic_time(pid, unit)
+  end
+
+  ## Callbacks
+  @impl XestClock.Server
+  def handle_offset(state) do
+    {result, new_state} = XestClock.Server.compute_offset(state)
+    {result, new_state}
   end
 end
