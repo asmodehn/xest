@@ -83,7 +83,7 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
   end
 
   describe "offset_at/2" do
-    test "estimate the offset with a potential error, adjusting units" do
+    test "estimate the offset with a potential error, keeping best unit" do
       delta = %Timed.LocalDelta{
         offset: %Time.Value{
           unit: :millisecond,
@@ -106,11 +106,13 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
                }
              ) ==
                Time.Value.new(
-                 :millisecond,
+                 # Note we want maximum precision here,
+                 # to make sure adjustment is visible
+                 :nanosecond,
                  # offset measured last + estimated
-                 33 + round((51 - 42) * 0.9),
+                 33_000_000 + round((51_000_000 - 42_000_000) * 0.9),
                  # error: part that is estimated and a potential error
-                 round((51 - 42) * 0.9)
+                 round((51_000_000 - 42_000_000) * 0.9)
                )
     end
   end

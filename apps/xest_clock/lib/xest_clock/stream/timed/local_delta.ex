@@ -24,10 +24,9 @@ defmodule XestClock.Stream.Timed.LocalDelta do
       builds a delta value from values inside a timestamp and a local timestamp
   """
   def new(%Time.Value{} = tv, %Timed.LocalStamp{} = lts) do
-    # convert to the stamp unit (higher local precision is not meaningful for the result)
     # CAREFUL! we should only take monotonic component in account.
     # Therefore the offset might be bigger than naively expected (vm_offset is not taken into account).
-    converted_monotonic_lts = Timed.LocalStamp.monotonic_time(lts, tv.unit)
+    converted_monotonic_lts = Timed.LocalStamp.monotonic_time(lts)
 
     %__MODULE__{
       offset: Time.Value.diff(tv, converted_monotonic_lts)
@@ -97,16 +96,17 @@ defmodule XestClock.Stream.Timed.LocalDelta do
       )
 
     # multiply with previously measured skew (we assume it didn't change on the remote...)
-    adjustment =
-      Time.Value.scale(local_time_delta, dv.skew)
-      |> Time.Value.convert(dv.offset.unit)
+    adjustment = Time.Value.scale(local_time_delta, dv.skew)
 
-    # Note: error is always positive and adjustment error comes from local measurement -> 0
-    #  we add hte adjustment value to the offset error,
-    # in case the current skew is nothing like the one we measured previously
-    error_estimate = dv.offset.error + abs(adjustment.value)
-    value_estimate = dv.offset.value + adjustment.value
+    # summing while keeping maximum precision to keep estimation visible
+    adjusted_offset = Time.Value.sum(dv.offset, adjustment)
 
-    %{dv.offset | error: error_estimate, value: value_estimate}
+    # We need to add the adjustment as error since this is an estimation based on past skew
+    %{
+      adjusted_offset
+      | error:
+          adjusted_offset.error +
+            System.convert_time_unit(abs(adjustment.value), adjustment.unit, adjusted_offset.unit)
+    }
   end
 end

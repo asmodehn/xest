@@ -117,6 +117,16 @@ end
 WorldClock.stream(:second) |> Enum.take(3)
 ```
 
+## TODO: Delta / offset computation
+
+Now that we have access to a (potentially infinite) list of ticks, we can build estimation algorithms on top of it.
+
+```elixir
+# TODO : delta offset computation
+```
+
+## The StreamStepper
+
 ## The Server
 
 We can now build a local "image" of the remote clock, with `XestClock.Server`.
@@ -131,15 +141,16 @@ defmodule WorldClockProxy do
   use XestClock.Server
 
   # Client Code
-  @impl true
-  def start_link(unit, opts \\ []) when is_list(opts) do
-    XestClock.Server.start_link(__MODULE__, unit, opts)
-  end
 
   @impl true
-  def init(state) do
+  def init(_state) do
     # Note we limit to 1 ms the request period to allow later pathologic 100 ms usecase
-    XestClock.Server.init(state, &handle_remote_unix_time/1, :millisecond)
+    XestClock.Server.init(
+      XestClock.Stream.repeatedly_throttled(
+        :millisecond,
+        &handle_remote_unix_time/0
+      )
+    )
   end
 
   def monotonic_time(pid \\ __MODULE__, unit) do
@@ -151,18 +162,27 @@ defmodule WorldClockProxy do
     XestClock.Server.ticks(pid, demand)
   end
 
-  @impl true
-  def handle_remote_unix_time(unit) do
-    XestClock.Time.Value.new(:second, WorldClock.unixtime())
-    # we need to convert to whatever unit is expected in stream
+  def offset(pid \\ __MODULE__, unit) do
+    XestClock.Server.offset(pid)
     |> XestClock.Time.Value.convert(unit)
+  end
 
+  # Callbacks
+  @impl true
+  def handle_offset(state) do
+    {result, new_state} = XestClock.Server.compute_offset(state)
+    {result, new_state}
+  end
+
+  @impl true
+  def handle_remote_unix_time() do
+    XestClock.Time.Value.new(:second, WorldClock.unixtime())
     # |> IO.inspect()
   end
 end
 
 # a server that tracks a remote clock internally in milliseconds
-{:ok, spid} = WorldClockProxy.start_link(:millisecond)
+{:ok, spid} = XestClock.Server.start_link(WorldClockProxy)
 ```
 
 A one time call, asking for a remote time (estimated) in `:millisecond`.
@@ -199,11 +219,11 @@ chart =
   |> Kino.render()
 
 local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
-remote_start = WorldClockProxy.monotonic_time(spid, :second)
+remote_start = WorldClockProxy.monotonic_time(spid, :millisecond)
 
 for _ <- 1..30 do
   # This will emulate remote time and if necessary do a remote call
-  mono_time = WorldClockProxy.monotonic_time(spid, :second) |> IO.inspect()
+  mono_time = WorldClockProxy.monotonic_time(spid, :millisecond) |> IO.inspect()
 
   now = XestClock.Stream.Timed.LocalStamp.now(:second)
 
@@ -232,18 +252,18 @@ chart =
   |> Kino.render()
 
 local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
-# This will do a remote call
-{_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+# This will force a remote call
+List.first(WorldClockProxy.ticks(spid, 1))
 
 # we want to watch the current error on the server with millisecond precision !
-offset_start = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts)
+offset_start = WorldClockProxy.offset(spid, :millisecond)
 
 for _ <- 1..60 do
-  # This will do a remote call
-  {_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+  # This will force a remote call
+  List.first(WorldClockProxy.ticks(spid, 1))
 
   # we want to watch the current error on the server with millisecond precision !
-  offset = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts) |> IO.inspect()
+  offset = WorldClockProxy.offset(spid, :millisecond) |> IO.inspect()
 
   # lets take now with a second precision to measure elasped time.
   now = XestClock.Stream.Timed.LocalStamp.now(:second)
@@ -261,7 +281,9 @@ for _ <- 1..60 do
 end
 ```
 
-We can see the offset varying periodically. When second ticks are not aligned between local and remote, it effectuates an offset correction, otherwise there is a linear variation that corresponds to the skew being taken into accout to estimate the current remote time.
+We can see the offset varying between 1 and -1, because it aligns on the precision of the remote clock.
+
+When `:second` ticks are not aligned between local and remote, it effectuates an offset correction. Note the skew is taken into accout to estimate the current remote time if no request is made.
 
 ## Millisecond precision ?
 
@@ -297,7 +319,7 @@ for _ <- 1..100 do
 end
 ```
 
-And similarly visualize the offset in such usecase, when we force updates every 100 ms.
+And similarly visualize the offset in such usecase, when we force updates every 100 ms. In practice these are slower as the network (internet) is not that fast...
 
 ```elixir
 chart =
@@ -309,18 +331,18 @@ chart =
   |> Kino.render()
 
 local_start = XestClock.Stream.Timed.LocalStamp.now(:millisecond)
-# This will do a remote call
-{_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+# This will force a remote call
+List.first(WorldClockProxy.ticks(spid, 1))
 
 # we want to watch the current error on the server with millisecond precision !
-offset_start = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts)
+offset_start = XestClock.Server.offset(spid)
 
 for _ <- 1..60 do
-  # This will do a remote call
-  {_ts, lts, ldt} = List.first(WorldClockProxy.ticks(spid, 1))
+  # This will force a remote call
+  List.first(WorldClockProxy.ticks(spid, 1))
 
   # we want to watch the current error on the server with millisecond precision !
-  offset = XestClock.Stream.Timed.LocalDelta.offset(ldt, lts) |> IO.inspect()
+  offset = XestClock.Server.offset(spid) |> IO.inspect()
 
   # lets take now with a second precision to measure elasped time.
   now = XestClock.Stream.Timed.LocalStamp.now(:millisecond)

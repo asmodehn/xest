@@ -26,7 +26,7 @@ defmodule XestClockTest do
       # all test constant setup for recent linux nano second precision
       assert XestClock.System.Extra.native_time_unit() == :nanosecond
 
-      example_srv = start_supervised!({ExampleServer, :second}, id: :example_sec)
+      example_srv = start_supervised!(ExampleServer, id: :example_sec)
       # TODO : child_spec for orign / pid ??? some better way ???
       clock = XestClock.new(:millisecond, ExampleServer, example_srv)
 
@@ -36,7 +36,10 @@ defmodule XestClockTest do
       # In order to get 3 estimates.
       XestClock.System.OriginalMock
       # 7 times because sleep...
-      |> expect(:monotonic_time, 12, fn
+      |> expect(:monotonic_time, 13, fn
+        # second to simulate the remote clock, required by the example genserver
+        # TODO : make this a mock ? need a stable behaviour for the server...
+        :second -> 42
         # for client stream in test process
         :millisecond -> 51_000
         # for proxy clock internal stream

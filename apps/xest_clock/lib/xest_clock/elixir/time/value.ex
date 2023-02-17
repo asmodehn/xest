@@ -4,6 +4,8 @@ defmodule XestClock.Time.Value do
   It is use for implicit conversion between various units when doing time arithmetic
   """
 
+  # TODO : time value as a protocol ? (we have local timestamps, remote timestamp, delta, offset, etc.)
+
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
 
