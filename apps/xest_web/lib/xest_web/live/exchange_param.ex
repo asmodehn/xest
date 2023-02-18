@@ -1,13 +1,14 @@
 defmodule XestWeb.ExchangeParam do
   @moduledoc false
 
+  import Phoenix.Component
   alias Phoenix.LiveView
 
   def assign_exchange(socket, params) do
     case params do
       %{"exchange" => exchange} when exchange in ["binance", "kraken"] ->
         # assign exchange to socket if valid, otherwise redirects
-        socket |> LiveView.assign(exchange: String.to_existing_atom(exchange))
+        socket |> assign(exchange: String.to_existing_atom(exchange))
 
       %{"exchange" => exchange} ->
         LiveView.redirect(

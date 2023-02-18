@@ -1,5 +1,7 @@
 defmodule Xest.Clock do
-  require Xest.DateTime
+  # NOT an alias.
+  require XestClock.DateTime
+  # In this module the DateTime.t() type is the core Elixir one.
 
   defmodule Behaviour do
     @moduledoc "Behaviour to allow mocking a xest clock for tests"
@@ -7,10 +9,14 @@ defmodule Xest.Clock do
     @callback utc_now() :: DateTime.t()
   end
 
+  @behaviour Behaviour
+
+  @impl true
   def utc_now() do
     datetime().utc_now()
   end
 
+  @impl true
   def utc_now(:binance) do
     binance().utc_now(
       # finding the process (or nil if mocked)
@@ -18,6 +24,7 @@ defmodule Xest.Clock do
     )
   end
 
+  @impl true
   def utc_now(:kraken) do
     kraken().utc_now(
       # finding the process (or nil if mocked)
@@ -26,7 +33,7 @@ defmodule Xest.Clock do
   end
 
   defp datetime() do
-    Application.get_env(:xest, :datetime_module, Xest.DateTime)
+    Application.get_env(:xest_clock, :datetime_module, XestClock.DateTime)
   end
 
   defp kraken() do

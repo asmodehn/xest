@@ -3,7 +3,7 @@ defmodule Xest.Exchange.ServerTime do
   import Algae
 
   defdata do
-    servertime :: Xest.DateTime.t()
+    servertime :: XestClock.DateTime.t()
   end
 end
 

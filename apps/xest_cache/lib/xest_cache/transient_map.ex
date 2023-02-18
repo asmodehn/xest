@@ -1,4 +1,4 @@
-defmodule Xest.TransientMap do
+defmodule XestCache.TransientMap do
   @moduledoc """
     A map that forgets its content after some time...
   """
@@ -7,7 +7,7 @@ defmodule Xest.TransientMap do
   #        OR another, simpler, more standard package ?
 
   require Timex
-  require Xest.DateTime
+  require XestClock.DateTime
 
   @type key() :: any()
   @type value() :: any()
@@ -22,7 +22,7 @@ defmodule Xest.TransientMap do
           store: map()
         }
 
-  def new(lifetime \\ ~T[00:05:00], birthdate \\ Xest.DateTime.utc_now()) do
+  def new(lifetime \\ ~T[00:05:00], birthdate \\ XestClock.DateTime.utc_now()) do
     # TODO : prevent negative lifetime ??
     %__MODULE__{
       lifetime: lifetime,
@@ -67,6 +67,6 @@ defmodule Xest.TransientMap do
   # careful : all tests must specify the expected mock calls
   # But this is usually behind the Clock module, so it shouldnt spill too far out...
   defp datetime() do
-    Application.get_env(:xest, :datetime_module, Xest.DateTime)
+    Application.get_env(:xest_clock, :datetime_module, XestClock.DateTime)
   end
 end

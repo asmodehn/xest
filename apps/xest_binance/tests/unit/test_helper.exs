@@ -7,10 +7,10 @@
 ExUnit.start()
 
 # defining Datetime.Mock module is not defined yet
-if !:erlang.function_exported(Xest.DateTime.Mock, :module_info, 0) do
+if !:erlang.function_exported(XestClock.DateTime.Mock, :module_info, 0) do
   # Datetime configuration for an optional mock,
   # when setting local clock is required.
-  Hammox.defmock(Xest.DateTime.Mock, for: Xest.DateTime.Behaviour)
+  Hammox.defmock(XestClock.DateTime.Mock, for: XestClock.DateTime.Behaviour)
 end
 
 # Authenticated Server mock to use server interface in tests

@@ -40,7 +40,7 @@ defmodule Xest.Clock.Proxy do
 
   def expired?(proxy) do
     # only request local utc_now when actually needed
-    expired?(proxy, Xest.DateTime.utc_now())
+    expired?(proxy, XestClock.DateTime.utc_now())
   end
 
   @spec expired?(t(), DateTime.t()) :: boolean()
@@ -59,7 +59,7 @@ defmodule Xest.Clock.Proxy do
   end
 
   @spec retrieve(t(), DateTime.t()) :: t()
-  def retrieve(proxy, requested_on \\ Xest.DateTime.utc_now())
+  def retrieve(proxy, requested_on \\ XestClock.DateTime.utc_now())
 
   def retrieve(%__MODULE__{remote_clock: nil} = proxy, requested_on) do
     proxy

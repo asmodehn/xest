@@ -32,11 +32,19 @@ defmodule Xest.Clock.Test do
 
   describe "For local default:" do
     setup do
-      Application.put_env(:xest, :datetime_module, Xest.DateTime.Mock)
+      # saving XestClock.DateTime implementation
+      previous_datetime = Application.get_env(:xest_clock, :datetime_module)
+      # Setup XestClock.DateTime Mock for these tests
+      Application.put_env(:xest_clock, :datetime_module, XestClock.DateTime.Mock)
+
+      on_exit(fn ->
+        # restoring config
+        Application.put_env(:xest_clock, :datetime_module, previous_datetime)
+      end)
     end
 
     test "clock works" do
-      Xest.DateTime.Mock
+      XestClock.DateTime.Mock
       |> expect(:utc_now, fn -> @time_stop end)
 
       assert Clock.utc_now() == @time_stop

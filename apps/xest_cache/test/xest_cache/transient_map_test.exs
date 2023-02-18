@@ -1,10 +1,9 @@
 defmodule Xest.TransientMap.Test do
   # since we depend here on a global mock being setup...
   use ExUnit.Case, async: false
-  use FlowAssertions
 
-  alias Xest.DateTime
-  alias Xest.TransientMap
+  alias XestClock.DateTime
+  alias XestCache.TransientMap
 
   # cf https://medium.com/genesisblock/elixir-concurrent-testing-architecture-13c5e37374dc
   import Hammox
@@ -16,8 +15,15 @@ defmodule Xest.TransientMap.Test do
   @child_valid_clock_time ~U[1970-01-02 12:47:56Z]
 
   setup do
-    # setting up datetime mock
-    Application.put_env(:xest, :datetime_module, DateTime.Mock)
+    # saving XestClock.DateTime implementation
+    previous_datetime = Application.get_env(:xest_clock, :datetime_module)
+    # Setup XestClock.DateTime Mock for these tests
+    Application.put_env(:xest_clock, :datetime_module, XestClock.DateTime.Mock)
+
+    on_exit(fn ->
+      # restoring config
+      Application.put_env(:xest_clock, :datetime_module, previous_datetime)
+    end)
   end
 
   describe "Given an empty transient map (with a clock)" do

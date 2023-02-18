@@ -2,12 +2,19 @@ ExUnit.start()
 
 # Datetime configuration for an optional mock,
 # when setting local clock is required.
-Hammox.defmock(Xest.DateTime.Mock, for: Xest.DateTime.Behaviour)
-Hammox.stub_with(Xest.DateTime.Mock, Xest.DateTime.Stub)
+Hammox.defmock(XestClock.DateTime.Mock, for: XestClock.DateTime.Behaviour)
+# Hammox.stub_with(XestClock.DateTime.Mock, XestClock.DateTime.Stub)
 
 Hammox.defmock(TestServerMock, for: Xest.APIServer)
 
 Application.put_env(:xest, :api_test_server, TestServerMock)
+
+# NOTE :here we depend on connector implementations,
+# But only dynamically, and only for tests !!
+# Therefore, the connectors should be built (for test mix env) previously to running the tests here
+# TODO: investigate Protocols for a better design here...
+#   because current design breaks when renaming modules in different apps
+#   and running only some app's tests => dependency not detected -> not recompiled
 
 # Mocking connector using provided behavior
 Hammox.defmock(XestKraken.Exchange.Mock, for: XestKraken.Exchange.Behaviour)

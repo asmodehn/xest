@@ -8,13 +8,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     name: Build and Test on OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
-    strategy:
-      matrix:
-        otp: ['24.1.2'] #, '25.1.2']
-        elixir: ['1.12.3', '1.13.4']
     steps:
 
     - uses: actions/checkout@v2
@@ -25,8 +21,8 @@ jobs:
 
     - uses: erlef/setup-beam@v1
       with:
-        otp-version: ${{matrix.otp}}
-        elixir-version: ${{matrix.elixir}}
+        version-type: strict
+        version-file: .tool-versions
 
     - name: Install dependencies
       run: mix deps.get
