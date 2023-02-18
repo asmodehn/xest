@@ -18,15 +18,14 @@ defmodule ExampleServer do
 
   # we redefine init to setup our own constraints on throttling
   def init(timevalue_stream) do
-    {:ok,
-     XestClock.Server.init(
-       # TODO : maybe we can get rid of this for test ???
-       XestClock.Stream.repeatedly_throttled(
-         # default period limit of a second
-         1000,
-         timevalue_stream
-       )
-     )}
+    XestClock.Server.init(
+      # TODO : maybe we can get rid of this for test ???
+      XestClock.Stream.repeatedly_throttled(
+        # default period limit of a second
+        1000,
+        timevalue_stream
+      )
+    )
   end
 
   def tick(pid \\ __MODULE__) do

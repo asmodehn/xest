@@ -104,11 +104,11 @@ defmodule WorldClock do
 
   def stream(unit) do
     XestClock.Stream.repeatedly_throttled(1000, fn ->
-      unixtime()
+      Time.Value.new(:second, unixtime())
     end)
+    # Just to demonstrate compatibility with Elixir Stream functions
     |> Elixir.Stream.map(fn {rv, _lts} ->
-      Time.Value.new(:second, rv)
-      |> Time.Value.convert(unit)
+      Time.Value.convert(rv, unit)
     end)
     |> IO.inspect()
   end
@@ -117,15 +117,54 @@ end
 WorldClock.stream(:second) |> Enum.take(3)
 ```
 
+## The StreamStepper
+
+This stream of ticks can be used by a StreamStepper, which will be able get ticks from the stream, one at a time via function call (just like `Elixir.System.monotonic_time/0` does).
+
+It is usable directly:
+
+```elixir
+# a server that tracks a remote clock internally in milliseconds
+{:ok, spid} =
+  XestClock.Server.StreamStepper.start_link(
+    XestClock.Server.StreamStepper,
+    WorldClock.stream(:millisecond)
+  )
+```
+
+```elixir
+XestClock.Server.StreamStepper.ticks(spid, 2)
+```
+
+But it can also be reused to implement your own stepper. default callbacks will be provided by the `__using__` macro.
+
+```elixir
+defmodule WorldClockStepper do
+  use XestClock.Server.StreamStepper
+
+  def ticks(pid \\ __MODULE__, demand) do
+    XestClock.Server.StreamStepper.ticks(pid, demand)
+  end
+end
+
+{:ok, wcspid} =
+  XestClock.Server.StreamStepper.start_link(
+    WorldClockStepper,
+    WorldClock.stream(:millisecond)
+  )
+```
+
+```elixir
+WorldClockStepper.ticks(wcspid, 2)
+```
+
 ## TODO: Delta / offset computation
 
-Now that we have access to a (potentially infinite) list of ticks, we can build estimation algorithms on top of it.
+Now that we have access to a (potentially infinite) list of ticks, one after the other, we can build estimation algorithms on top of multiple ticks.
 
 ```elixir
 # TODO : delta offset computation
 ```
-
-## The StreamStepper
 
 ## The Server
 
@@ -160,13 +199,12 @@ defmodule WorldClockProxy do
   # This is not necessary, but we can override with our preferences for the throttling
   def init(remote_call) do
     # Note we limit to 1 ms the request period to allow later pathologic 100 ms usecase
-    {:ok,
-     XestClock.Server.init(
-       XestClock.Stream.repeatedly_throttled(
-         :millisecond,
-         remote_call
-       )
-     )}
+    XestClock.Server.init(
+      XestClock.Stream.repeatedly_throttled(
+        :millisecond,
+        remote_call
+      )
+    )
   end
 
   @impl true
@@ -366,7 +404,7 @@ Since the remote precision is only in `:second` we cannot do much more to adjust
 
 <!-- livebook:{"break_markdown":true} -->
 
-For increased precision, we would need more, faster, requests to the remote clock. But as we just saw, this is not practically feasible over the internet, and although we would be able to adjust faster, the uncertainty on hte value will remain the same...
+For increased precision, we would need more, faster, requests to the remote clock. But as we just saw, this is not practically feasible over the internet, and although we would be able to adjust faster, the uncertainty on the value will remain the same...
 
 Is there a way to get better precision on a clock, without sending requests as fast as possible ? This problem has been solved by NTP before, but here we cannot enforce the remote server behaviour.
 

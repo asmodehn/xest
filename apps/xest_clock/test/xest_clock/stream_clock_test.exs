@@ -419,98 +419,99 @@ defmodule XestClock.StreamClockTest do
     #    end
   end
 
-  describe "Xestclock.StreamClock in a GenServer" do
-    setup [:mocks, :test_stream, :stepper_setup]
-
-    defp mocks(_) do
-      #      # mocks expectations are needed since clock also tracks local time internally
-      #      XestClock.System.ExtraMock
-      #      |> expect(:native_time_unit, fn -> :nanosecond end)
-      #
-      #      XestClock.System.OriginalMock
-      #      |> expect(:time_offset, 5, fn _ -> 0 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
-      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
-
-      # TODO : split expectations used at initialization and those used afterwards...
-      # => maybe thoes used as initialization should be setup differently?
-      # maybe via some other form of dependency injection ?
-
-      %{mocks: [XestClock.System.OriginMock, XestClock.System.OriginalMock]}
-    end
-
-    defp test_stream(%{usecase: usecase}) do
-      case usecase do
-        :streamclock ->
-          %{
-            test_stream:
-              StreamClock.new(
-                :testclock,
-                :millisecond,
-                [1, 2, 3, 4, 5]
-              )
-          }
-      end
-    end
-
-    defp stepper_setup(%{test_stream: test_stream, mocks: mocks}) do
-      # We use start_supervised! from ExUnit to manage gen_stage
-      # and not with the gen_stage :link option
-      streamstpr = start_supervised!({StreamStepper, test_stream})
-
-      # Setup allowance for stepper to access all mocks
-      for m <- mocks do
-        allow(m, self(), streamstpr)
-      end
-
-      %{streamstpr: streamstpr}
-    end
-
-    @tag usecase: :streamclock
-    test "with StreamClock return proper Timestamp on tick()", %{streamstpr: streamstpr} do
-      _before = Process.info(streamstpr)
-
-      assert StreamStepper.tick(streamstpr) == %Time.Stamp{
-               origin: :testclock,
-               ts: 1
-             }
-
-      _first = Process.info(streamstpr)
-
-      # Note the memory does NOT stay constant for a clock because of extra operations.
-      # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
-
-      assert StreamStepper.tick(streamstpr) == %Time.Stamp{
-               origin: :testclock,
-               ts: 2
-             }
-
-      _second = Process.info(streamstpr)
-
-      # Note the memory does NOT stay constant for a clockbecuase of extra operations.
-      # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
-
-      assert StreamStepper.ticks(streamstpr, 3) == [
-               %Time.Stamp{
-                 origin: :testclock,
-                 ts: 3
-               },
-               %Time.Stamp{
-                 origin: :testclock,
-                 ts: 4
-               },
-               %Time.Stamp{
-                 origin: :testclock,
-                 ts: 5
-               }
-             ]
-
-      # TODO : seems we should return the last one instead of nil ??
-      assert StreamStepper.tick(streamstpr) == nil
-      # Note : the Process is still there (in case more data gets written into the stream...)
-    end
-  end
+  # NOT A VLID USECASE ANYMORE ??
+  #  describe "Xestclock.StreamClock in a GenServer" do
+  #    setup [:mocks, :test_stream, :stepper_setup]
+  #
+  #    defp mocks(_) do
+  #      #      # mocks expectations are needed since clock also tracks local time internally
+  #      #      XestClock.System.ExtraMock
+  #      #      |> expect(:native_time_unit, fn -> :nanosecond end)
+  #      #
+  #      #      XestClock.System.OriginalMock
+  #      #      |> expect(:time_offset, 5, fn _ -> 0 end)
+  #      #      |> expect(:monotonic_time, fn :nanosecond -> 1 end)
+  #      #      |> expect(:monotonic_time, fn :nanosecond -> 2 end)
+  #      #      |> expect(:monotonic_time, fn :nanosecond -> 3 end)
+  #      #      |> expect(:monotonic_time, fn :nanosecond -> 4 end)
+  #      #      |> expect(:monotonic_time, fn :nanosecond -> 5 end)
+  #
+  #      # TODO : split expectations used at initialization and those used afterwards...
+  #      # => maybe thoes used as initialization should be setup differently?
+  #      # maybe via some other form of dependency injection ?
+  #
+  #      %{mocks: [XestClock.System.OriginMock, XestClock.System.OriginalMock]}
+  #    end
+  #
+  #    defp test_stream(%{usecase: usecase}) do
+  #      case usecase do
+  #        :streamclock ->
+  #          %{
+  #            test_stream:
+  #              StreamClock.new(
+  #                :testclock,
+  #                :millisecond,
+  #                [1, 2, 3, 4, 5]
+  #              )
+  #          }
+  #      end
+  #    end
+  #
+  #    defp stepper_setup(%{test_stream: test_stream, mocks: mocks}) do
+  #      # We use start_supervised! from ExUnit to manage gen_stage
+  #      # and not with the gen_stage :link option
+  #      streamstpr = start_supervised!({StreamStepper, test_stream})
+  #
+  #      # Setup allowance for stepper to access all mocks
+  #      for m <- mocks do
+  #        allow(m, self(), streamstpr)
+  #      end
+  #
+  #      %{streamstpr: streamstpr}
+  #    end
+  #
+  #    @tag usecase: :streamclock
+  #    test "with StreamClock return proper Timestamp on tick()", %{streamstpr: streamstpr} do
+  #      _before = Process.info(streamstpr)
+  #
+  #      assert StreamStepper.tick(streamstpr) == %Time.Stamp{
+  #               origin: :testclock,
+  #               ts: 1
+  #             }
+  #
+  #      _first = Process.info(streamstpr)
+  #
+  #      # Note the memory does NOT stay constant for a clock because of extra operations.
+  #      # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
+  #
+  #      assert StreamStepper.tick(streamstpr) == %Time.Stamp{
+  #               origin: :testclock,
+  #               ts: 2
+  #             }
+  #
+  #      _second = Process.info(streamstpr)
+  #
+  #      # Note the memory does NOT stay constant for a clockbecuase of extra operations.
+  #      # Lets just hope garbage collection works with it as expected (TODO : long running perf test in livebook)
+  #
+  #      assert StreamStepper.ticks(streamstpr, 3) == [
+  #               %Time.Stamp{
+  #                 origin: :testclock,
+  #                 ts: 3
+  #               },
+  #               %Time.Stamp{
+  #                 origin: :testclock,
+  #                 ts: 4
+  #               },
+  #               %Time.Stamp{
+  #                 origin: :testclock,
+  #                 ts: 5
+  #               }
+  #             ]
+  #
+  #      # TODO : seems we should return the last one instead of nil ??
+  #      assert StreamStepper.tick(streamstpr) == nil
+  #      # Note : the Process is still there (in case more data gets written into the stream...)
+  #    end
+  #  end
 end

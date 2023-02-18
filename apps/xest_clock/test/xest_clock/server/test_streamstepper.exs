@@ -18,8 +18,20 @@ defmodule XestClock.StreamStepperTest do
     end
   end
 
-  describe "generated child_spec" do
-    test "works as expected" do
+  describe "child_spec" do
+    test "works for streamstepper" do
+      assert StreamStepper.child_spec(42) == %{
+               id: StreamStepper,
+               start: {
+                 StreamStepper,
+                 :start_link,
+                 # Note we need the extra argument here to
+                 [StreamStepper, 42]
+               }
+             }
+    end
+
+    test "works for a server using streamstepper" do
       assert TestServer.child_spec(42) == %{
                id: XestClock.StreamStepperTest.TestServer,
                start: {
@@ -32,22 +44,32 @@ defmodule XestClock.StreamStepperTest do
 
     test "is usable by test framework" do
       {:ok, _pid} = start_supervised({TestServer, Stream.repeatedly(fn -> 42 end)})
+      :ok = stop_supervised(TestServer)
     end
   end
 
   describe "start_link" do
-    test "works as expected" do
-      {:ok, _pid} = StreamStepper.start_link(TestServer, Stream.repeatedly(fn -> 42 end))
+    test "starts a streamstepper" do
+      stream = Stream.repeatedly(fn -> 42 end)
+
+      {:ok, pid} = StreamStepper.start_link(StreamStepper, stream)
+      GenServer.stop(pid)
+    end
+
+    test "starts a genserver using streamstepper" do
+      {:ok, pid} = StreamStepper.start_link(TestServer, Stream.repeatedly(fn -> 42 end))
+      GenServer.stop(pid)
     end
   end
 
   describe "init" do
-    test "works as expected" do
-      %StreamStepper{
-        stream: stream,
-        continuation: c,
-        backstep: bs
-      } = StreamStepper.init(Stream.repeatedly(fn -> 42 end))
+    test "handles initializing a streamstepper" do
+      {:ok,
+       %StreamStepper{
+         stream: stream,
+         continuation: c,
+         backstep: bs
+       }} = StreamStepper.init(Stream.repeatedly(fn -> 42 end))
 
       # valid stream
       assert stream |> Enum.take(2) == [42, 42]
@@ -57,7 +79,7 @@ defmodule XestClock.StreamStepperTest do
       assert bs == []
     end
 
-    test "is setup as default via __using__" do
+    test "handles initializing a genserver using streamstepper" do
       {:ok,
        %StreamStepper{
          stream: stream,
@@ -76,12 +98,25 @@ defmodule XestClock.StreamStepperTest do
 
   describe "ticks" do
     setup do
-      srv = start_supervised!({TestServer, Stream.repeatedly(fn -> 42 end)})
-      %{test_server: srv}
+      stream =
+        Stream.unfold(5, fn
+          0 -> nil
+          n -> {n, n - 1}
+        end)
+
+      # Notice how the stream is implicitely "duplicated"/ independently used in two different stepper...
+      # -> the "state" of the stream is not shared between processes.
+      {:ok, spid} = start_supervised({StreamStepper, stream})
+      {:ok, tpid} = start_supervised({TestServer, stream})
+      %{stepper: spid, testsrv: tpid}
     end
 
-    test "returns ticks from __using__ server", %{test_server: srv} do
-      assert StreamStepper.ticks(srv, 3) == [42, 42, 42]
+    test "works as expected for a streamstepper", %{stepper: spid} do
+      assert StreamStepper.ticks(spid, 2) == [5, 4]
+    end
+
+    test "works as expected for a server using streamstepper", %{testsrv: tpid} do
+      assert StreamStepper.ticks(tpid, 2) == [5, 4]
     end
   end
 end
