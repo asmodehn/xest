@@ -189,14 +189,25 @@ defmodule XestClock.Server do
 
   """
 
+  def remote_time_value(pid \\ __MODULE__, unit) do
+    # Check if retrieving time is actually needed
+    offset = offset(pid) |> IO.inspect()
+
+    XestClock.Time.Value.sum(
+      Timed.LocalStamp.now(unit)
+      |> Timed.LocalStamp.system_time(),
+      offset
+    )
+    |> XestClock.Time.Value.convert(unit)
+  end
+
   @spec monotonic_time_value(pid, System.time_unit()) :: Time.Value.t()
   def monotonic_time_value(pid \\ __MODULE__, unit) do
     # Check if retrieving time is actually needed
     offset = offset(pid) |> IO.inspect()
 
     XestClock.Time.Value.sum(
-      Timed.LocalStamp.now(unit)
-      |> Timed.LocalStamp.as_timevalue(),
+      XestClock.Time.Value.new(unit, Timed.LocalStamp.now(unit).monotonic),
       offset
     )
     |> XestClock.Time.Value.convert(unit)

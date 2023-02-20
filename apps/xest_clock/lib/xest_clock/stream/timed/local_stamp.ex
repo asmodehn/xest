@@ -26,14 +26,14 @@ defmodule XestClock.Stream.Timed.LocalStamp do
     }
   end
 
-  @spec as_timevalue(t()) :: Time.Value.t()
-  def as_timevalue(%__MODULE__{} = lts) do
+  @spec system_time(t(), System.time_unit()) :: Time.Value.t()
+  def system_time(%__MODULE__{} = lts) do
     Time.Value.new(lts.unit, lts.monotonic + lts.vm_offset)
   end
 
   @spec system_time(t(), System.time_unit()) :: Time.Value.t()
   def system_time(%__MODULE__{} = lts, unit) do
-    as_timevalue(lts)
+    system_time(lts)
     |> Time.Value.convert(unit)
   end
 

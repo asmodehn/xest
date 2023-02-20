@@ -26,7 +26,7 @@ defmodule XestClock.Stream.Timed.LocalStampTest do
       |> expect(:monotonic_time, fn _unit -> 42 end)
       |> expect(:time_offset, fn _unit -> 33 end)
 
-      assert LocalStamp.now(:millisecond) |> LocalStamp.as_timevalue() ==
+      assert LocalStamp.now(:millisecond) |> LocalStamp.system_time() ==
                %XestClock.Time.Value{unit: :millisecond, value: 42 + 33}
     end
   end

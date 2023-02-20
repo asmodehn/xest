@@ -26,10 +26,10 @@ defmodule XestClock.Stream.Timed.LocalDelta do
   def new(%Time.Value{} = tv, %Timed.LocalStamp{} = lts) do
     # CAREFUL! we should only take monotonic component in account.
     # Therefore the offset might be bigger than naively expected (vm_offset is not taken into account).
-    converted_monotonic_lts = Timed.LocalStamp.monotonic_time(lts)
+    converted_lts = Timed.LocalStamp.system_time(lts)
 
     %__MODULE__{
-      offset: Time.Value.diff(tv, converted_monotonic_lts)
+      offset: Time.Value.diff(tv, converted_lts)
     }
   end
 
@@ -91,8 +91,8 @@ defmodule XestClock.Stream.Timed.LocalDelta do
     # determine elapsed time
     local_time_delta =
       Time.Value.diff(
-        Timed.LocalStamp.as_timevalue(lts_now),
-        Timed.LocalStamp.as_timevalue(lts)
+        Timed.LocalStamp.system_time(lts_now),
+        Timed.LocalStamp.system_time(lts)
       )
 
     # multiply with previously measured skew (we assume it didn't change on the remote...)

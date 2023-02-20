@@ -8,7 +8,7 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
   alias XestClock.Stream.Timed
 
   describe "new/2" do
-    test "compute difference between a teimstamp and a local timestamp" do
+    test "compute difference between a timestamp and a local timestamp" do
       assert Timed.LocalDelta.new(
                %Time.Value{
                  value: 42,
@@ -21,7 +21,8 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
                }
              ) == %Timed.LocalDelta{
                offset: %Time.Value{
-                 value: -1000,
+                 # Note: vm_offset is taken into account
+                 value: -1051,
                  unit: :millisecond
                },
                skew: nil
@@ -50,8 +51,8 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
         },
         %Timed.LocalStamp{
           unit: :millisecond,
-          monotonic: 1051,
-          vm_offset: 49
+          monotonic: 1050,
+          vm_offset: 52
         }
       ]
 
@@ -63,14 +64,14 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
                  [
                    %Timed.LocalDelta{
                      offset: %Time.Value{
-                       value: -1000,
+                       value: -1051,
                        unit: :millisecond
                      },
                      skew: nil
                    },
                    %Timed.LocalDelta{
                      offset: %Time.Value{
-                       value: -1000,
+                       value: -1051,
                        unit: :millisecond
                      },
                      # Zero since the offset between the clock is constant over time.

@@ -16,13 +16,17 @@ alias VegaLite, as: Vl
 XestClock is a small library, providing functionality for following a remote clock without spamming it with requests...
 The remote clock can indicate a different time, or even tick at a different speed.
 
-XestClock assumes the deviation (skew) of the remote clock is not permanent, and should be equal to 1.0 most of the time. Apart from that, no other assumption is made. The remote time is verified to be monotonic before being taken into account.
+XestClock assumes the deviation of the remote clock is not permanent, so its **skew should be equal to 1.0** most of the time. Apart from that, no other assumption is made. Few other things may be important to keep in mind however:
 
-However when sending a request for time, the network can delay the packet, the clock might be changing to summer time, etc. but our local clock must always remain as close as possible to the remote time, yet provide a meaningful time indicator (it has to be monotonic to avoid unexpected surprises once a year or so...)
+* The remote time is verified to be monotonic before being taken into account. Often on the web one URL refer to multiple servers in multiple locations, so this seems necessary to avoid remote time needlessly fluctuating. The effect of such a limitation should be limited since a clock precision on the network is around 100ms, and communication time is about the same.
+
+However when sending a request for time, the **network can delay the packet**. But our locally-estimated clock must always remain as close as possible to the remote time, yet provide a meaningful time indicator. It should also be monotonic to avoid unexpected surprises once a year or so...
 A stream of remote clock ticks can be built and operated on, to extract from it an offset to apply to the current local clock in order to estimate the time at the remote location.
 
 XestClock provides building blocks for the task of simulating an "untrusted clock" locally.
 It is useful when the remote clock is somewhat "high-level" / "human-usable" and doesnt expose itself via NTP.
+
+In practice... TODO : insert here some measurement of quality of estimation ?
 
 ## The remote clock
 
@@ -158,20 +162,137 @@ end
 WorldClockStepper.ticks(wcspid, 2)
 ```
 
-## TODO: Delta / offset computation
+## Offset adjustment
 
-Now that we have access to a (potentially infinite) list of ticks, one after the other, we can build estimation algorithms on top of multiple ticks.
+Now that we have access to a (potentially infinite) list of ticks, one after the other, we can build complex algorithms on top of multiple ticks.
+
+Here is a simple diagram of what we wish to achieve: We take the difference of the local clock and the remote clock, in order to get an offset we can now add to the local time to simulate the remote clock.
+
+<!-- livebook:{"break_markdown":true} -->
+
+<!-- Learn more at https://mermaid-js.github.io/mermaid -->
+
+```mermaid
+graph LR
+    R[Remote]  -.-> B
+    L[Local] --> B([Measure Offset])
+
+    B -- Offset --> S([Local + Offset]) 
+
+    L ==> S ==> Z[Simulated Remote]
+
+```
 
 ```elixir
-# TODO : delta offset computation
+# TODO
 ```
+
+However we have very different timescales here:
+
+* the local clock can be accessed very quickly, whenever we like,
+* the remote clock should be accessed much less often, as it has a cost in time and precision.
+
+Therefore we cannot measure the offset precisely -> we have to estimate it, and adjust this estimate when we are able to do a remote request.
+
+That estimation of offset can also provide an estimation of an error in our simulation, and we can use that estimation to drive our requests to the remote clock. Then we can use the response to get an offset and an error:
+
+* The offset is used for simulating the remote clock.
+* The error is used to correct our estimation
+
+<!-- livebook:{"break_markdown":true} -->
+
+<!-- Learn more at https://mermaid-js.github.io/mermaid -->
+
+```mermaid
+graph LR
+    L[Local] --> B([Estimate Offset & Error]) -.- estimated_error_too_big -.-> C
+
+    R[Remote]  -.-> C([Measure Offset])
+    C -.- Offset -.-> S
+    C -- Measured Error --> B
+
+    B -- Offset --> S([Local + Offset]) 
+
+    L == Time Value ==> S == Estimated Time Value ==> Z[Simulated Remote]
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+We can notice here that we have a closed loop system, with an error being used to correct an algorithm. We can (informally) leverage some control theory results, and recognize here similarities with a PID controller.
+
+More exactly, this seems to be the dual of a PID controlled circuit, where the measurement loop is happening on the input, and the "controlled" value is the output, which we directly consume.
+-> "PID adapter" ?
+
+Also our **input** value is clear: it is **the last (measured) offset relative to the remote clock**. Note: *using local value instead would assume the remote clock to be indicating same time as the local clock, kind of killing the whole point here...*
+
+To reflect this, let's make the Local Time Value implicit, as we can always do another measurement, and get rid of the Time Value arrow.
+
+Our **output** is therefore the estimated offset to add to the local time in order to recover the remote time.
+
+The **error** in this model is **part of the adjusted offset**. Since we estimate the offset progression to be linear (clocks ticking apart slowly , if ever), the meaningful part is `offset * P` (constant offset for a simulated remote if there is no skew between the two clocks). Therefore the error is here represented by `offset * (I * Δt + D / Δt)` (the impact of deviations between the two clocks).
+
+Another constraint we can infer from the assumptions is `P + I + D == 1`.
+
+The meaningful gains here therefore are `P = 1, I = 0, D = 0`, but lets keep I and D around in case we need them later...
+
+<!-- livebook:{"break_markdown":true} -->
+
+<!-- Learn more at https://mermaid-js.github.io/mermaid -->
+
+```mermaid
+graph LR
+    R[Remote] -.-> RL[Remote - Local] -- offset --> Δ
+      Δ -- offset_error --> P[P * offset] --> O[Σ = Adjusted Offset]
+    Δ -- offset_error --> I[I * offset * elapsed_time] --> O
+    Δ -- offset_error --> D[D * offset / elapsed_time] --> O
+
+    I  --> EP{Error > Precision ?} -.-> R
+    D --> EP
+
+    O -- adjusted_offset --> Δ 
+
+    O --> S[Local + Adjusted Offset]
+
+    S -- Estimated Time Value --> SR[Simulated Remote]
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+Now if we forget the offset flow, which is mostly constant, and focus on the skew -> PID -> adjustment part:
+
+<!-- livebook:{"break_markdown":true} -->
+
+<!-- Learn more at https://mermaid-js.github.io/mermaid -->
+
+```mermaid
+graph LR;
+
+R[Remote] -- Measurement --> C
+L[Local] --> C
+
+C([skew]) --> P[P: 1? * skew ] --> A([sum])
+C --> I[I: 0? * skew Integral ] --> A
+C --> D[D: ?? * skew Derivative ] --> A
+
+
+A -- adjustment should be 0 ! --> C
+A --> B([Local + Offset + adjustment]) --> Z[Simulated Remote]
+
+```
+
+<!-- livebook:{"break_markdown":true} -->
+
+Note : The skew is indeed a derivative of the offset. But beware, we dont want both local clock and remote clock value to be identical, we want them to have a definite, measured offset difference. However we want the skew to be "close to" 0, to maximise the fidelity of the simulation in between requests to the remote clock.
+
+Therefore we apply a pid controller on the skew itself.
+Note the integral of the skew is indeed the offset difference, multiplied by the elapsed (local) time.
 
 ## The Server
 
 We can now build a local "image" of the remote clock, with `XestClock.Server`.
 This internally uses `XestClock.Stream` and allow us to simulate the remote clock locally.
 
-Notice how `XestClock.Server` provides the usual `monotonic_time/2` impure function to retrieve the time. We try to stay close to `Elixir.System` API.
+Notice how `XestClock.Server` provides the usual `system_time/2` impure function to retrieve the time. We try to stay close to `Elixir.System` API.
 
 <!-- livebook:{"reevaluate_automatically":true} -->
 
@@ -181,8 +302,8 @@ defmodule WorldClockProxy do
 
   # Client Code
 
-  def monotonic_time(pid \\ __MODULE__, unit) do
-    XestClock.Server.monotonic_time_value(pid, unit)
+  def system_time(pid \\ __MODULE__, unit) do
+    XestClock.Server.remote_time_value(pid, unit)
   end
 
   def ticks(pid \\ __MODULE__, demand) do
@@ -230,7 +351,7 @@ Note: if we add an `IO.inspect()` call in `WorldClockProxy.handle_remote_unix_ti
 
 ```elixir
 # a one time call, asking for a remote time (estimated) in millisecond
-WorldClockProxy.monotonic_time(spid, :millisecond)
+WorldClockProxy.system_time(spid, :millisecond)
 ```
 
 With a few ticks, we can get different estimation for the monotonic time.
@@ -256,19 +377,20 @@ chart =
   |> Kino.render()
 
 local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
-remote_start = WorldClockProxy.monotonic_time(spid, :millisecond)
+remote_start = WorldClockProxy.system_time(spid, :millisecond)
 
 for _ <- 1..30 do
   # This will emulate remote time and if necessary do a remote call
-  mono_time = WorldClockProxy.monotonic_time(spid, :millisecond) |> IO.inspect()
+  remote_time = WorldClockProxy.system_time(spid, :millisecond) |> IO.inspect()
 
   now = XestClock.Stream.Timed.LocalStamp.now(:second)
 
   # Note x is only local measurement of time (nothing remote)
   # Only y measure of error, is the difference in offset between remote estimation and local value
   point = %{
+    # we use the difference in monotonic time to measure elapsed time
     x: now.monotonic - local_start.monotonic,
-    y: mono_time.value - remote_start.value
+    y: remote_time.value - remote_start.value
   }
 
   Kino.VegaLite.push(chart, point)
