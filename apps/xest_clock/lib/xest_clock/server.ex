@@ -85,9 +85,13 @@ defmodule XestClock.Server do
       timevalue_stream
       # TODO :: use this as indicator of what to do in streamclock... or not ???
       |> XestClock.Stream.monotone_increasing()
-
+      |> XestClock.Time.Derivatives.compute()
       # we compute local delta here in place where we have easy access to element in the stream
       |> Timed.LocalDelta.compute()
+
+    # TODO : this should be split in two parts :
+    # - offset computation
+    # - pid adapter.
 
     # GOAL : At this stage the stream at one element has all information
     # related to previous elements for a client to be able

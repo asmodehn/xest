@@ -60,7 +60,8 @@ defmodule XestClock.ServerTest do
                    unit: :nanosecond,
                    value: 0
                  },
-                 skew: nil
+                 # skew defaults to 0 on the first tick
+                 skew: 0.0
                }
              }
 
@@ -102,8 +103,9 @@ defmodule XestClock.ServerTest do
                    unit: :nanosecond,
                    value: 0
                  },
-                 # offset 0 : skew is nil (like the previous one, since it is not computable without time moving forward)
-                 skew: nil
+                 # offset 0
+                 # skew is 0.0 (like the previous one, since it is not computable without time moving forward)
+                 skew: 0.0
                }
              }
 

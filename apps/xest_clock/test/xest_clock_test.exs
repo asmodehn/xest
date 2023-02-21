@@ -74,18 +74,18 @@ defmodule XestClockTest do
       assert clock |> Enum.take(3) == [
                %XestClock.Time.Estimate{
                  # error estimated from first
-                 error: -9000,
+                 error: -9000.0,
                  unit: :millisecond,
                  # returned value from the remote server
                  value: 42000
                },
                %XestClock.Time.Estimate{
-                 error: -9000,
+                 error: -9000.0,
                  unit: :millisecond,
                  value: 42000
                },
                %XestClock.Time.Estimate{
-                 error: -9000,
+                 error: -9000.0,
                  unit: :millisecond,
                  value: 42000
                }

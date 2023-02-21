@@ -34,34 +34,12 @@ defmodule XestClock.Stream.Timed.LocalDelta do
   end
 
   def compute(enum) do
-    Stream.transform(enum, nil, fn
-      {%Time.Value{} = tv, %Timed.LocalStamp{} = lts}, nil ->
-        delta = new(tv, lts)
-        {[{tv, lts, delta}], {delta, lts}}
-
-      {%Time.Value{} = tv, %Timed.LocalStamp{} = lts},
-      {%__MODULE__{} = previous_delta, %Timed.LocalStamp{} = previous_lts} ->
-        # TODO: wait... is this a scan ???
-        local_time_delta = Timed.LocalStamp.elapsed_since(lts, previous_lts)
-        delta_without_skew = new(tv, lts)
-
-        skew =
-          if local_time_delta.value == 0 do
-            # special case where no time passed between the two timestamps
-            # This can happen during monotonic time correction...
-            # => we reuse skew as a fallback in this (rare) case,
-            # as we cannot recompute it with the information we currently have.
-            previous_delta.skew
-          else
-            Time.Value.div(
-              Time.Value.diff(delta_without_skew.offset, previous_delta.offset),
-              local_time_delta
-            )
-          end
-
-        delta = %{delta_without_skew | skew: skew}
-
-        {[{tv, lts, delta}], {delta, lts}}
+    Stream.map(enum, fn
+      {%Time.Value{} = tv, %Timed.LocalStamp{} = lts, %Time.Derivatives{} = drv} ->
+        # build delta from derivatives, as a transition...
+        # TODO : PID integration to replace delta...
+        delta = %__MODULE__{offset: drv.prop, skew: drv.derv |> elem(0)}
+        {tv, lts, delta}
     end)
   end
 

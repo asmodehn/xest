@@ -16,9 +16,10 @@ alias VegaLite, as: Vl
 XestClock is a small library, providing functionality for following a remote clock without spamming it with requests...
 The remote clock can indicate a different time, or even tick at a different speed.
 
-XestClock assumes the deviation of the remote clock is not permanent, so its **skew should be equal to 1.0** most of the time. Apart from that, no other assumption is made. Few other things may be important to keep in mind however:
+XestClock assumes the deviation of the remote clock is not permanent, so its **skew should be equal to 1.0** most of the time (jitter close to 0.0). Apart from that, no other assumption is made. Few other things may be important to keep in mind however:
 
-* The remote time is verified to be monotonic before being taken into account. Often on the web one URL refer to multiple servers in multiple locations, so this seems necessary to avoid remote time needlessly fluctuating. The effect of such a limitation should be limited since a clock precision on the network is around 100ms, and communication time is about the same.
+* The remote time is verified to be monotonic before being taken into account. Often on the web one URL refer to multiple servers in multiple locations, so this seems necessary to avoid remote time needlessly fluctuating.
+  The undesirable side-effect of such a limitation should be limited since a clock precision on the network is around 100ms, and communication time is about the same.
 
 However when sending a request for time, the **network can delay the packet**. But our locally-estimated clock must always remain as close as possible to the remote time, yet provide a meaningful time indicator. It should also be monotonic to avoid unexpected surprises once a year or so...
 A stream of remote clock ticks can be built and operated on, to extract from it an offset to apply to the current local clock in order to estimate the time at the remote location.
@@ -111,10 +112,9 @@ defmodule WorldClock do
       Time.Value.new(:second, unixtime())
     end)
     # Just to demonstrate compatibility with Elixir Stream functions
-    |> Elixir.Stream.map(fn {rv, _lts} ->
-      Time.Value.convert(rv, unit)
+    |> Elixir.Stream.map(fn {rv, lts} ->
+      {Time.Value.convert(rv, unit) |> IO.inspect(), lts}
     end)
-    |> IO.inspect()
   end
 end
 
@@ -184,7 +184,29 @@ graph LR
 ```
 
 ```elixir
-# TODO
+# Measure offset with local clock
+offset =
+  XestClock.Time.Value.diff(
+    List.last(WorldClockStepper.ticks(wcspid, 1)) |> elem(0),
+    XestClock.Stream.Timed.LocalStamp.system_time(
+      # careful with units !
+      XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+    )
+  )
+  |> IO.inspect()
+
+# sleep 42ms to wait a bit...
+Process.sleep(42)
+
+# Then add it when needed to a local clock
+local_time =
+  XestClock.Stream.Timed.LocalStamp.system_time(
+    # careful with units !
+    XestClock.Stream.Timed.LocalStamp.now(:millisecond)
+  )
+
+# and we get an estimation of the remote clock
+XestClock.Time.Value.sum(local_time, offset)
 ```
 
 However we have very different timescales here:
@@ -192,7 +214,73 @@ However we have very different timescales here:
 * the local clock can be accessed very quickly, whenever we like,
 * the remote clock should be accessed much less often, as it has a cost in time and precision.
 
-Therefore we cannot measure the offset precisely -> we have to estimate it, and adjust this estimate when we are able to do a remote request.
+Therefore we can *never exactly measure neither the time, nor the offset, precisely*, and we are also limited by the remote clock precision.
+
+If we attempt it, we get an offset that seem to "randomly" oscillates within a +/- 1second precision (the precision of the clock).
+
+---
+
+So, we have to estimate these, and adjust this estimate whenever we are able to do a remote request.
+
+---
+
+So to estimate the *offset* itself, we can start at 0 by default (usual UTC clocks - but this can also be made into a parameter) and we can now **recurivelymeasure the skew**.
+The skew is the **derivative of the offset**, and requires two remote request to be measured.
+Also it is a quotient over the local clock, and the remote clock is not broken, the two clocks should tick closely enough, therefore we should have **skew ~= 1.0**
+
+The **offset can be computed** as the **integral of the skew**. This gives us a much closer approximation of the remote clock.
+
+```elixir
+defmodule WorldClockDerivativesProvider do
+  use XestClock.Server.StreamStepper
+
+  def ticks(pid \\ __MODULE__, demand) do
+    XestClock.Server.StreamStepper.ticks(pid, demand)
+  end
+end
+
+{:ok, wcdppid} =
+  XestClock.Server.StreamStepper.start_link(
+    WorldClockDerivativesProvider,
+    WorldClock.stream(:second)
+    |> XestClock.Time.Derivatives.compute()
+    # we only want the derivative part of the stream.
+    |> Stream.map(fn el -> elem(el, 2) end)
+  )
+
+chart =
+  Vl.new(width: 800, height: 400)
+  |> Vl.mark(:line)
+  |> Vl.encode_field(:x, "x", type: :quantitative)
+  |> Vl.encode_field(:y, "y", type: :quantitative)
+  |> Kino.VegaLite.new()
+  |> Kino.render()
+
+# lets take now with a second precision to measure elasped time.
+local_start = XestClock.Stream.Timed.LocalStamp.now(:second)
+
+for _ <- 1..60 do
+  deriv = List.first(WorldClockDerivativesProvider.ticks(wcdppid, 1))
+
+  # lets take now with a second precision to measure elasped time.
+  now = XestClock.Stream.Timed.LocalStamp.now(:second)
+
+  # Note x is only local measurement of time (nothing remote)
+  # Only y measure of error, is the difference in offset between remote estimation and local value
+  offset = %{
+    x: now.monotonic - local_start.monotonic,
+    # CAREFUL this is in nanosecond, we convert to second just for display purposes.
+    y: deriv.prop.value * 10 ** -9
+  }
+
+  Kino.VegaLite.push(chart, offset)
+
+  # TODO: other derivatives
+  :ok = Process.sleep(1000)
+end
+```
+
+---
 
 That estimation of offset can also provide an estimation of an error in our simulation, and we can use that estimation to drive our requests to the remote clock. Then we can use the response to get an offset and an error:
 
@@ -209,7 +297,7 @@ graph LR
 
     R[Remote]  -.-> C([Measure Offset])
     C -.- Offset -.-> S
-    C -- Measured Error --> B
+    C -.-> Measured_Error -.-> B
 
     B -- Offset --> S([Local + Offset]) 
 
@@ -220,20 +308,29 @@ graph LR
 
 We can notice here that we have a closed loop system, with an error being used to correct an algorithm. We can (informally) leverage some control theory results, and recognize here similarities with a PID controller.
 
-More exactly, this seems to be the dual of a PID controlled circuit, where the measurement loop is happening on the input, and the "controlled" value is the output, which we directly consume.
--> "PID adapter" ?
+More exactly, this seems to be the "dual of a PID controlled system", where the measurement loop with uncertainties is happening on the input, and the "controlled" value is the output, which we directly consume.
+=> "PID adapter" ?
 
-Also our **input** value is clear: it is **the last (measured) offset relative to the remote clock**. Note: *using local value instead would assume the remote clock to be indicating same time as the local clock, kind of killing the whole point here...*
+Anyway, our **input** value is:
 
-To reflect this, let's make the Local Time Value implicit, as we can always do another measurement, and get rid of the Time Value arrow.
+* **not the local time value**: it would assume the remote clock should be indicating the same time as the local clock when correcting! That would kill the point of simulating a remote clock entirely.
+* **not the local offset**: retrieving it is too slow, and would condemn our simulation to effectively correct it step by step, only when a request is made.
+* the **remote skew**, ie. the derivative compared to our local clock, seems to be the appropriate input signal. Its PID components (offset, skew, jitter) indicate how to simply simulate the remote clock locally.
 
-Our **output** is therefore the estimated offset to add to the local time in order to recover the remote time.
+On top of that we know its value should be around `1.0`, which gives us:
 
-The **error** in this model is **part of the adjusted offset**. Since we estimate the offset progression to be linear (clocks ticking apart slowly , if ever), the meaningful part is `offset * P` (constant offset for a simulated remote if there is no skew between the two clocks). Therefore the error is here represented by `offset * (I * Δt + D / Δt)` (the impact of deviations between the two clocks).
+* initial values for derivatives, so we require less remote ticks to get started: only two will suffice.
+* meaningful target values for tuning the gains of the PID adapter.
 
-Another constraint we can infer from the assumptions is `P + I + D == 1`.
+Note the error is embedded in the measurement in our case ! Tracking it through various computations will indicate when it is time to do another request to the remote clock.
 
-The meaningful gains here therefore are `P = 1, I = 0, D = 0`, but lets keep I and D around in case we need them later...
+For clarity, let's make the Local Time Value implicit, as we can always do another measurement, and get rid of the Time Value arrow.
+We'll keep the dotted arrows for "slow update" for the remote request, and the continuous arrows for "fast local compute"
+
+Our **output** is therefore the estimated offset/skew/jitter to apply to the local time in order to make our simulated clock continuously get closer to the remote time.
+
+As a consequence, our formula to approach the remote time is:
+`Gd * Jitter ** 2 + Gp * Skew + Gi * Offset` with Gp, Gi, Gd gains for the PID adapter.
 
 <!-- livebook:{"break_markdown":true} -->
 
@@ -241,19 +338,21 @@ The meaningful gains here therefore are `P = 1, I = 0, D = 0`, but lets keep I a
 
 ```mermaid
 graph LR
-    R[Remote] -.-> RL[Remote - Local] -- offset --> Δ
-      Δ -- offset_error --> P[P * offset] --> O[Σ = Adjusted Offset]
-    Δ -- offset_error --> I[I * offset * elapsed_time] --> O
-    Δ -- offset_error --> D[D * offset / elapsed_time] --> O
+    R[Remote] -.-> Os[Offset = Σskew] --> I
+    R -.-> Skew --> P
+    R -.-> J[Jitter = Δskew] --> D
 
-    I  --> EP{Error > Precision ?} -.-> R
-    D --> EP
+    P[P * skew] --> SL
+    I[I * offset * elapsed_time = O] --> O --> S
+    D[D * jitter / elapsed_time = J] --> JlS[J * Local ^ 2] --> S
 
-    O -- adjusted_offset --> Δ 
+    S --> EP{Error > Precision ?} -.-> R
 
-    O --> S[Local + Adjusted Offset]
 
-    S -- Estimated Time Value --> SR[Simulated Remote]
+    SL[Skew * Local] --> S[J *Local ^ 2 + Skew * Local + O]
+
+
+    EP -- Estimated Time Value --> SR[Simulated Remote]
 ```
 
 <!-- livebook:{"break_markdown":true} -->

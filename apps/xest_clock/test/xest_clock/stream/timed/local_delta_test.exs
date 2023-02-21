@@ -56,7 +56,9 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
         }
       ]
 
-      assert Timed.LocalDelta.compute(Stream.zip(tv_enum, lts_enum))
+      assert Stream.zip(tv_enum, lts_enum)
+             |> Time.Derivatives.compute()
+             |> Timed.LocalDelta.compute()
              |> Enum.to_list() ==
                Stream.zip([
                  tv_enum,
@@ -67,7 +69,8 @@ defmodule XestClock.Stream.Timed.LocalDeltaTest do
                        value: -1051,
                        unit: :millisecond
                      },
-                     skew: nil
+                     # defaults to one, until we get 3 ticks to actually measure it.
+                     skew: 0.0
                    },
                    %Timed.LocalDelta{
                      offset: %Time.Value{

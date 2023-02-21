@@ -13,7 +13,7 @@ defmodule XestClock.Stream.Timed.LocalStamp do
 
   @typedoc "LocalStamp struct"
   @type t() :: %__MODULE__{
-          monotonic: TimeValue.t(),
+          monotonic: integer(),
           unit: System.time_unit(),
           vm_offset: integer()
         }

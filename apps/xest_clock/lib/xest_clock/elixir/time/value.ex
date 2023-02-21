@@ -4,7 +4,7 @@ defmodule XestClock.Time.Value do
   It is use for implicit conversion between various units when doing time arithmetic
   """
 
-  # TODO : time value as a protocol ? (we have local timestamps, remote timestamp, delta, offset, etc.)
+  # TODO : time value as a protocol ? (we have local timestamps, remote timestamp, offset, at least!)
 
   # hiding Elixir.System to make sure we do not inadvertently use it
   alias XestClock.System
@@ -18,6 +18,7 @@ defmodule XestClock.Time.Value do
   @type t() :: %__MODULE__{
           unit: System.time_unit(),
           value: integer(),
+          # usually assumed to be much smaller than value.
           error: integer()
         }
 
@@ -100,17 +101,6 @@ defmodule XestClock.Time.Value do
       tv.value * factor,
       tv.error * factor
     )
-  end
-
-  @spec div(t(), t()) :: float
-  def div(%__MODULE__{} = tv_num, %__MODULE__{} = tv_den)
-      when tv_den.value != 0 do
-    if System.convert_time_unit(1, tv_num.unit, tv_den.unit) < 1 do
-      # invert conversion to avoid losing precision
-      tv_num.value / convert(tv_den, tv_num.unit).value
-    else
-      convert(tv_num, tv_den.unit).value / tv_den.value
-    end
   end
 
   @doc """
